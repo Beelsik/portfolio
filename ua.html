@@ -590,27 +590,30 @@ pre.code {
 footer { background: var(--paper-raised); border: var(--stroke-main) solid var(--ink); padding: var(--space-3) var(--space-4); display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; font-size: 14px; color: var(--ink-muted); }
 .foot-links { display: flex; gap: 16px; flex-wrap: wrap; font: 500 12.5px/18px var(--font-mono); text-transform: uppercase; }
 
-/* ====== v2: меньше декора — белый лист, обычные подписи, рамки только у листа и таблиц ====== */
+/* ====== Clean editorial surfaces, controls & semantic status indicators ====== */
 :root, :root[data-theme="light"] {
   --paper: #ffffff;
   --paper-raised: #ffffff;
-  --panel: #f3f4f5;       /* фон вложенных блоков вместо рамок */
+  --panel: #f3f4f5;
   --ink: #161616;
-  --ink-muted: #5f6368;   /* 6.3:1 на белом, 5.8:1 на panel */
+  --ink-muted: #5f6368;
   --hairline: #e3e5e8;
-  --redline: #c8261b;
+  --redline: #b42318;
+  --ok-ink: #166534;
+  --line: #dfe2e6;
 }
-:root[data-theme="dark"] { --panel: #0f3356; }
+:root[data-theme="dark"] {
+  --panel: #0f3356;
+  --redline: #ff8b82;
+  --ok-ink: #6ee7b7;
+  --line: #2c5784;
+}
 
-/* без миллиметровки и дырокола */
 body { background-image: none; }
 .ch-sheet { border: 0; padding: 0; background: transparent; }
 .ch-sheet::before, .ch-sheet::after { content: none; display: none; }
-
-/* без анимации появления */
 .ch-sheet.ch-reveal .ch-sheet__frame, .ch-sheet__frame { animation: none !important; clip-path: none !important; }
 
-/* подписи — обычным текстом; моноширинные прописные остаются только в штампе и на схеме */
 .ch-label, .lbl, .ident-sub, .case-head, .split-col strong, .kv-list div strong,
 .bench-title, .crm-head, .telem-bar, .foot-links, .seg button, .tab, .fbtn, select,
 .pill, .sev, .counter, .icon-btn, .btn, .ch-btn {
@@ -620,20 +623,14 @@ body { background-image: none; }
 }
 .ch-label, .lbl { font-size: 13px; line-height: 18px; font-weight: 500; }
 .btn, .ch-btn, .icon-btn { font-size: 14px; line-height: 20px; font-weight: 500; }
-.fbtn, .seg button, .tab, .pill, .sev, .counter { font-size: 13px; }
+.fbtn, .seg button, .tab { font-size: 13px; }
 .ident-sub::before { content: none; }
-.ch-stamp-block .ch-label {
-  font-family: var(--font-mono); font-size: 10.5px; line-height: 14px;
-  letter-spacing: 0.08em; text-transform: uppercase;
-}
 
-/* маркер — подчёркивание вместо жёлтой заливки */
 .ch-mark, mark {
   background: none; color: inherit; padding: 0;
   text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px;
 }
 
-/* вложенные блоки — фон вместо рамки */
 .answer, .bench, .callout-note, .kv-list, .rt-trace, .subbox, .ch-pipe, .scan-wrap {
   border: 0; background: var(--panel);
 }
@@ -643,21 +640,18 @@ body { background-image: none; }
 }
 .benchbar { border-bottom: 0; background: transparent; }
 .cv-banner { border-bottom: 0; }
-footer { border: 0; border-top: var(--stroke-main) solid var(--ink); }
 th, .ch-spec th { font-family: var(--font-sans); text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; }
 .album-sidebar { border: 0; background: transparent; padding-left: 0; }
 .toc a { font-family: var(--font-sans); font-size: 14px; line-height: 20px; }
 .toc a .num { font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted); }
 .toc a.is-active .num { color: var(--ink); }
 
-/* ====== Анимации: только в ответ на событие, контент никогда не прячется ====== */
 .btn, .ch-btn, .chip, .fbtn, .tab, .seg button, .toc a {
   transition: background-color .15s ease, color .15s ease, border-color .15s ease, transform .08s ease;
 }
 .btn:active, .ch-btn:active, .chip:active, .fbtn:active { transform: translateY(1px); }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* подпись карандашом под именем — один раз при загрузке */
   .cv-copy .display-xl { position: relative; display: inline-block; }
   .cv-copy .display-xl::after {
     content: ""; position: absolute; left: 4px; right: -6px; bottom: -4px; height: 3px;
@@ -667,28 +661,9 @@ th, .ch-spec th { font-family: var(--font-sans); text-transform: none; letter-sp
   }
   @keyframes ch-pencil { to { transform: scaleX(1) rotate(-1deg); } }
 
-  /* схема чертится слева направо после разбора ТЗ */
   .ch-pipe svg.ch-drawn { animation: ch-wipe 1s cubic-bezier(.45, 0, .2, 1) both; }
   @keyframes ch-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 
-  /* печать «ударяет» по результату */
-  .ch-seal.ch-hit { animation: ch-stamp .5s cubic-bezier(.2, 1.5, .35, 1); }
-  @keyframes ch-stamp {
-    0% { transform: rotate(-14deg) scale(1.9); opacity: 0; }
-    55% { opacity: 1; }
-    100% { transform: rotate(-4deg) scale(1); opacity: 1; }
-  }
-
-  /* красный карандаш подчёркивает найденную ошибку */
-  td.st-bad {
-    background-image: linear-gradient(var(--redline), var(--redline));
-    background-repeat: no-repeat; background-position: 8px calc(100% - 6px);
-    background-size: 0 2px;
-    animation: ch-redpen .55s .2s cubic-bezier(.6, 0, .3, 1) forwards;
-  }
-  @keyframes ch-redpen { to { background-size: calc(100% - 16px) 2px; } }
-
-  /* модель думает: под кнопкой бежит штриховая линия (штрих = модель) */
   .btn[disabled], .ch-btn[disabled] { position: relative; }
   .btn[disabled]::after, .ch-btn[disabled]::after {
     content: ""; position: absolute; left: 0; right: 0; bottom: -7px; height: 2px;
@@ -697,7 +672,6 @@ th, .ch-spec th { font-family: var(--font-sans); text-transform: none; letter-sp
   }
   @keyframes ch-ants { from { background-position: 0 0; } to { background-position: 12px 0; } }
 
-  /* смена темы: синька растекается от кнопки, как проявитель */
   ::view-transition-old(root) { animation: none; }
   ::view-transition-new(root) { animation: ch-develop .75s cubic-bezier(.3, .6, .2, 1); }
   @keyframes ch-develop {
@@ -710,136 +684,121 @@ th, .ch-spec th { font-family: var(--font-sans); text-transform: none; letter-sp
   .ch-spec th:first-child, .ch-spec td.pos { display: none; }
 }
 
-/* ====== v3: без печатей, прописи, красного и коробок ====== */
-:root, :root[data-theme="light"] { --redline: var(--ink); --line: #d9dce0; }
-:root[data-theme="dark"] { --redline: var(--ink); --line: #33618f; }
 a:hover { color: var(--ink); text-decoration-thickness: 2px; }
-
-/* печати и рукописные правки убраны */
 .ch-seal { display: none !important; }
 .ch-redline del { color: var(--ink-muted); text-decoration-color: var(--ink-muted); text-decoration-thickness: 1px; }
 .ch-redline ins {
   font-family: var(--font-sans); font-weight: 600; font-size: inherit; line-height: inherit;
-  color: var(--ink); transform: none; margin-left: 6px;
-  text-decoration: underline wavy; text-decoration-thickness: 1px; text-underline-offset: 4px;
+  color: var(--redline); transform: none; margin-left: 6px;
+  text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px;
 }
 
-/* ошибка = знак ✕ + волнистое подчёркивание, без цвета */
-td.st-bad {
-  color: var(--ink); font-weight: 600; background: none !important; animation: none !important;
-  text-decoration: underline wavy; text-decoration-thickness: 1px; text-underline-offset: 5px;
-}
-.verbatim s { text-decoration-color: var(--ink); text-decoration-thickness: 1px; }
-.verbatim .ill { border: 0; color: var(--ink); text-decoration: underline wavy; text-underline-offset: 4px; }
-.term-out.block { color: var(--ink); }
+td.st-bad { color: var(--redline); font-weight: 600; background: none !important; animation: none !important; }
+td.st-ok { color: var(--ok-ink); font-weight: 500; }
+.verbatim s { text-decoration-color: var(--ink-muted); text-decoration-thickness: 1px; }
+.verbatim .ill { border: 0; color: var(--redline); font-weight: 500; text-decoration: underline wavy; text-underline-offset: 4px; }
+.term-out.block { color: var(--redline); }
+.term-out.pass { color: var(--ok-ink); }
 
-/* статусы — текст со знаком, без плашек */
-.pill, .sev, .counter { border: 0 !important; background: none !important; padding: 0; color: var(--ink) !important; font-weight: 600; }
+.pill, .sev, .counter {
+  border: 0 !important; background: none !important; padding: 0;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+}
+.pill.bad, .sev.c, .sev.h, .counter.over { color: var(--redline) !important; }
+.pill.ok { color: var(--ok-ink) !important; }
+.sev.m, .sev.l, .pill.warn, .counter { color: var(--ink-muted) !important; }
 .pill.bad::before, .sev.c::before, .sev.h::before, .counter.over::before { content: "✕ "; }
 .pill.ok::before { content: "✓ "; }
 
-/* лист: без рамки, разделитель — одна линия сверху */
-.ch-sheet__frame { border: 0; border-top: 1px solid var(--ink); background: transparent; }
-.ch-sheet__body { padding: var(--space-4) 0; }
-.cv-banner { padding: var(--space-5) 0 var(--space-3); background: transparent; }
-.album-main { gap: var(--space-6); }
+.ch-sheet__frame { border: 0; border-top: 1px solid var(--ink); background: transparent; padding-top: var(--space-4); }
+.ch-sheet__body { padding: var(--space-3) 0 var(--space-4); }
+.cv-banner { padding: var(--space-4) 0 var(--space-3); background: transparent; }
+.cv-lead { font-size: clamp(18px, 2vw, 21px); line-height: 1.5; max-width: 64ch; color: var(--ink); font-weight: 500; }
+.cv-sub { font-size: 15.5px; line-height: 1.6; max-width: 66ch; color: var(--ink-muted); margin-top: 10px; }
+.album-main { gap: calc(var(--space-6) * 1.25); }
+.case-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 6px; color: var(--ink-muted); font-size: 13.5px; }
 .case-idx::before, .case-idx::after { content: none; }
-.case-idx { color: var(--ink-muted); }
+.case-idx {
+  display: inline-block; font-family: var(--font-display); font-style: normal; font-weight: 600;
+  font-size: clamp(36px, 4.5vw, 52px); line-height: 1; letter-spacing: -0.03em;
+  color: var(--ink); margin-right: 10px;
+}
 
-/* штамп → строка метаданных */
 .ch-stamp-block {
-  display: flex; flex-wrap: wrap; gap: 6px 28px; width: auto;
+  display: flex; flex-wrap: wrap; gap: 6px 24px; width: auto;
   border: 0 !important; background: none; padding: var(--space-3) 0 0;
   border-top: 1px solid var(--line) !important;
 }
 .ch-stamp-block tbody, .ch-stamp-block tr { display: contents; }
 .ch-stamp-block td { display: block; border: 0 !important; padding: 0 !important; width: auto !important; }
 .ch-stamp-block .ch-label {
-  display: inline; margin: 0 6px 0 0; font-family: var(--font-sans); font-size: 13px;
+  display: inline; margin: 0 6px 0 0; font-family: var(--font-sans); font-size: 12.5px;
   text-transform: none; letter-spacing: 0; color: var(--ink-muted); font-weight: 400;
 }
 .ch-stamp-block .v, .ch-stamp-block .name {
-  display: inline; font: 400 13px/20px var(--font-sans); font-style: normal; color: var(--ink);
+  display: inline; font: 400 12.5px/18px var(--font-sans); font-style: normal; color: var(--ink);
+}
+.ch-stamp-block [data-st-tok], .ch-stamp-block [data-st-ms], #router-badge {
+  font-family: var(--font-mono); font-size: 12px;
 }
 .ch-stamp-block .ch-mark { text-decoration: none; }
 
-/* таблицы: только горизонтальные линии */
 table, .ch-spec { border: 0 !important; background: transparent; }
 th, .ch-spec th { border: 0 !important; border-bottom: 1px solid var(--ink) !important; padding-left: 0; }
 td, .ch-spec td { border: 0 !important; border-bottom: 1px solid var(--line) !important; padding-left: 0; }
 th + th, td + td { padding-left: var(--space-3); }
 
-/* вложенные блоки — фон без рамок */
 .split-col, .frag, .lead, .crm, .contract, .verbatim, pre.code, .term-out, .rt-card, .rt-card.vuln, .rt-card.guard,
 .msg.a, .chat, .scan-wrap, .subbox, .rt-trace { border: 0 !important; }
-.split-col, .frag, pre.code, .rt-card, .msg.a { background: var(--panel); }
+.split-col, .frag, pre.code, .rt-card, .msg.a { background: var(--panel); border-radius: 4px; }
+.bench { border-radius: 6px; }
 .bench .rt-card, .bench .frag, .bench .msg.a { background: var(--paper); }
+.rt-card { border-top: 2px solid var(--line) !important; border-radius: 0 0 4px 4px; }
+.rt-card.vuln.is-breached { border-top-color: var(--redline) !important; }
+.rt-card.guard { border-top-color: var(--ok-ink) !important; }
 
-/* контролы */
-.chip { border: 0; background: var(--panel); font-family: var(--font-sans); font-size: 13px; }
-.chip:hover { background: var(--line); }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
-.seg, .tabs { border: 0; gap: 4px; }
-.seg button, .tab { border: 0 !important; background: transparent; }
-.fbtn { border: 0; background: transparent; padding: 4px 8px; }
-.btn.ghost, .ch-btn--ghost, .icon-btn { border: 0; background: transparent; color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
-.btn.ghost:hover, .icon-btn:hover { background: var(--panel); }
-textarea, input[type="text"], select { border-color: var(--ink-muted); }
-:focus-visible, textarea:focus, input[type="text"]:focus, select:focus { outline-color: var(--ink); }
+#hout, #crm, #rt-guard-trace, #rt-vuln-tool, #cc-result, #spec-summary,
+#spec-tbody td:nth-child(3), #spec-tbody td:nth-child(4), #fields td:nth-child(2) {
+  font-family: var(--font-mono); font-style: normal; font-size: 13px;
+}
+
+.chip { border: 1px solid var(--line); background: var(--paper); font-family: var(--font-sans); font-size: 13px; border-radius: 4px; }
+.chip:hover { border-color: var(--ink); background: var(--panel); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+
+.seg, .tabs {
+  display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px;
+  border: 1px solid var(--line); background: var(--paper); border-radius: 5px;
+}
+.seg button, .tab {
+  border: 0 !important; background: transparent; color: var(--ink-muted);
+  padding: 5px 10px; border-radius: 3px; font-weight: 500;
+}
+.seg button:hover, .tab:hover { color: var(--ink); background: var(--panel); }
+.seg button[aria-pressed="true"], .tab[aria-selected="true"] {
+  background: var(--ink) !important; color: var(--on-ink) !important;
+}
+
+.filters { gap: 4px; }
+.fbtn { border: 1px solid transparent; background: transparent; padding: 4px 9px; border-radius: 4px; color: var(--ink-muted); }
+.fbtn:hover { color: var(--ink); background: var(--panel); }
+.fbtn[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+
+.btn { border-radius: 4px; }
+.btn.ghost, .ch-btn--ghost, .icon-btn {
+  border: 1px solid var(--line); background: transparent; color: var(--ink);
+  text-decoration: none; border-radius: 4px; padding: 5px 10px;
+}
+.btn.ghost:hover, .icon-btn:hover { border-color: var(--ink); background: var(--panel); }
+textarea, input[type="text"], select { border-color: var(--line); border-radius: 4px; background: var(--paper); }
+textarea:focus, input[type="text"]:focus, select:focus { border-color: var(--ink); outline-color: var(--ink); }
+:focus-visible { outline-color: var(--ink); }
 .topbar { border-bottom: 1px solid var(--line); }
 footer { border-top: 1px solid var(--ink); }
-.bench .chip, .answer .chip { background: var(--paper); }
-.bench .chip:hover { background: var(--line); }
-.bench .chip[aria-pressed="true"] { background: var(--ink); }
 
-/* ====== v4: два почерка (модель / код), развороты, живой счётчик ====== */
-:root { --font-model: "Source Serif 4", "PT Serif", Georgia, serif; }
-
-/* Почерк модели: всё, что написала LLM */
-.ink-model,
-#arch-summary, #arch-code-list, #arch-ai-list, #arch-qs, #arch-ops,
-#chat .msg.a, #raganswer, #hout, #rt-vuln-reply, #rt-guard-reply,
-#aud-live-tbody td:nth-child(2), #aud-live-tbody td:nth-child(3),
-#gost-virt-body td, #spec-tbody td:nth-child(2) {
-  font-family: var(--font-model); font-style: italic; font-weight: 400;
-  font-size: 1.06em; letter-spacing: 0;
-}
-/* Почерк кода: всё, что посчитал или проверил код */
-.ink-code,
-[data-st-tok], [data-st-ms], #fields td:nth-child(2), #fields td:nth-child(3),
-#spec-tbody td:nth-child(3), #spec-tbody td:nth-child(4), #spec-summary,
-#contract, #crm, #ragfrags, #raglocked, #rt-guard-trace, #cc-result {
-  font-family: var(--font-mono); font-style: normal; font-size: .92em; letter-spacing: -0.01em;
-}
-.ink-model { font-size: 1.04em; }
-.ink-code { font-size: .9em; }
-
-/* Подсказка «кто это написал» */
-[data-ink] { position: relative; }
-[data-ink]:hover { outline: 1px solid var(--line); outline-offset: 3px; }
-[data-ink]:hover::after {
-  content: attr(data-ink);
-  position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 5; pointer-events: none;
-  font: 500 11px/16px var(--font-sans); font-style: normal; letter-spacing: 0;
-  background: var(--ink); color: var(--on-ink); padding: 2px 7px; white-space: nowrap;
-}
-.ink-legend { font-size: 14px; line-height: 22px; color: var(--ink-muted); margin: var(--space-3) 0 0; max-width: 62ch; }
-.ink-legend .ink-model, .ink-legend .ink-code { color: var(--ink); }
-
-/* Развороты: огромный номер стенда */
-.case-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
-.case-idx {
-  display: block; font-family: var(--font-display); font-style: italic; font-weight: 600;
-  font-size: clamp(88px, 12vw, 176px); line-height: .78; letter-spacing: -0.03em;
-  color: var(--ink); margin-bottom: 4px;
-}
-.ch-sheet__frame { padding-top: var(--space-4); }
-.album-main { gap: calc(var(--space-6) * 1.5); }
-
-/* Живой счётчик в шапке */
-.live-meter { font: 400 12.5px/18px var(--font-mono); color: var(--ink-muted); white-space: nowrap; }
+.live-meter { font: 400 12px/18px var(--font-mono); color: var(--ink-muted); white-space: nowrap; }
 .live-meter b { color: var(--ink); font-weight: 500; }
-@media (max-width: 900px) { .live-meter { display: none; } }
+@media (max-width: 960px) { .live-meter { display: none; } }
 .term-out, #cc-result { max-width: 100%; overflow-x: auto; overflow-wrap: anywhere; }
 </style>
 </head>
@@ -849,46 +808,46 @@ footer { border-top: 1px solid var(--ink); }
   <div class="wrap topbar-in">
     <a href="#" class="ident">
       <span class="ident-text">BEELSIK</span>
-      <span class="ident-sub">10 робочих прикладів</span>
+      <span class="ident-sub">Python · боти, документи, інтеграції</span>
     </a>
     <div class="controls">
       <span class="live-meter" id="live-meter" hidden></span>
-      <button class="icon-btn" id="telem-btn" type="button" title="Журнал випробувань API">
+      <button class="icon-btn" id="telem-btn" type="button" title="Журнал викликів API">
         <span class="dot-live"></span>
         <span id="telem-label">Журнал API · 0</span>
       </button>
       <span class="pill ok" id="global-api-badge" hidden>local</span>
-      <button class="icon-btn" id="theme-btn" type="button" aria-label="Перемкнути папір">
-        <span id="theme-ico">ВАТМАН → СИНЬКА</span>
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Перемкнути тему">
+        <span id="theme-ico">Темна тема</span>
       </button>
     </div>
   </div>
 </header>
 
 <main class="wrap album-layout">
-  <aside class="album-sidebar" aria-label="Зміст альбому">
+  <aside class="album-sidebar" aria-label="Навігація по стендах">
     <div class="ch-sidebar-head">
-      <span class="ch-label">Приклади</span>
+      <span class="ch-label">Стенди</span>
     </div>
     <div class="filters" role="group" aria-label="Фільтр">
       <button class="fbtn" data-cat="all" aria-pressed="true">Усі · 10</button>
-      <button class="fbtn" data-cat="agents" aria-pressed="false">Агенти</button>
+      <button class="fbtn" data-cat="agents" aria-pressed="false">Боти й пошук</button>
       <button class="fbtn" data-cat="docs" aria-pressed="false">Документи</button>
       <button class="fbtn" data-cat="eng" aria-pressed="false">Код і ТЗ</button>
     </div>
     <nav class="toc" aria-label="Кейси">
-      <a href="#cover" class="is-active"><span class="num">ТИТ</span>Початок</a>
-      <a href="#architect"><span class="num">00</span>Розбір ТЗ</a>
-      <a href="#sales"><span class="num">01</span>Продажі + CRM</a>
-      <a href="#rag"><span class="num">02</span>RAG з ролями</a>
-      <a href="#docs"><span class="num">03</span>Договір .docx</a>
+      <a href="#cover" class="is-active"><span class="num">→</span>Огляд</a>
+      <a href="#architect"><span class="num">00</span>Оцінка ТЗ</a>
+      <a href="#sales"><span class="num">01</span>Чат + CRM</a>
+      <a href="#rag"><span class="num">02</span>Пошук із ролями</a>
+      <a href="#docs"><span class="num">03</span>Звірка + .docx</a>
       <a href="#parser"><span class="num">04</span>Кошториси CSV</a>
       <a href="#listing"><span class="num">05</span>Маркетплейси</a>
       <a href="#hand"><span class="num">06</span>Vision OCR</a>
-      <a href="#cc"><span class="num">07</span>Claude Kit</a>
+      <a href="#cc"><span class="num">07</span>Claude Code</a>
       <a href="#spec"><span class="num">08</span>ТЗ та ПМІ</a>
       <a href="#audit"><span class="num">09</span>Аудит SaaS</a>
-      <a href="#redteam"><span class="num">10</span>Red-Team</a>
+      <a href="#redteam"><span class="num">10</span>Захист промпту</a>
     </nav>
   </aside>
 
@@ -898,40 +857,39 @@ footer { border-top: 1px solid var(--ink); }
       <div class="ch-sheet__frame">
         <div class="cv-banner">
           <div class="cv-copy">
-            <span class="ch-label">Розробка ШІ-автоматизацій для бізнесу</span>
+            <span class="ch-label">Прикладна розробка та автоматизація</span>
             <h1 class="display-xl">Beelsik</h1>
-            <p class="cv-lead">Я роблю ботів, пошук по документах і парсери. <span class="ink-model">Модель у мене читає й розуміє текст</span>, а <span class="ink-code">гроші, дати й права доступу перевіряє звичайний код</span>.</p>
-            <p class="cv-sub">Нижче десять прикладів, і всі вони працюють по-справжньому. Можна вставити своє ТЗ, завантажити фото рахунку або спробувати вмовити бота на знижку.</p>
-            <p class="ink-legend">Так влаштований увесь сайт: <span class="ink-model">курсивом</span> пише модель, <span class="ink-code">моноширинним</span> шрифтом ставить код. Наведіть курсор на відповідь, щоб перевірити.</p>
+            <p class="cv-lead">Роблю робочу автоматизацію для бізнесу: ботів першої лінії й запису, пошук по внутрішніх документах, розбір рахунків і кошторисів, інтеграції з CRM та ERP.</p>
+            <p class="cv-sub">Нейромережу підключаю лише там, де плаває формат: живий діалог, криві скани, різнобій у назвах позицій. Підрахунок сум, права доступу й запис у базу залишаються у звичайному перевірюваному коді. Нижче зібрано 10 інтерактивних стендів — можна вставити власне ТЗ, завантажити фото документа або перевірити стійкість бота.</p>
           </div>
         </div>
 
         <div class="ch-sheet__body">
-          <span class="ch-label">Як я працюю</span>
+          <span class="ch-label">Підхід до роботи</span>
           <div class="tbl">
             <table class="ch-spec">
               <thead>
                 <tr>
                   <th style="width:52px">№</th>
-                  <th style="width:240px">Правило</th>
-                  <th>Що це означає для вас</th>
+                  <th style="width:240px">Принцип</th>
+                  <th>Як це влаштовано на практиці</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td class="pos">01</td>
-                  <td><strong>Гроші рахує код</strong></td>
-                  <td>Модель не рахує суми, знижки й вільні слоти. Це робить код, а спірні місця я <span class="ch-mark">показую людині</span>.</td>
+                  <td><strong>Точні розрахунки — у коді</strong></td>
+                  <td>Суми, знижки, залишки й вільні слоти перевіряються скриптом і БД, а рядки з розбіжностями виносяться в <span class="ch-mark">чергу на підтвердження</span> менеджеру.</td>
                 </tr>
                 <tr>
                   <td class="pos">02</td>
-                  <td><strong>Спочатку пілот</strong></td>
-                  <td>До великого договору за <span class="ch-mark">1–2 дні</span> збираю прототип на 10–15 ваших файлах. Одразу видно, працює це чи ні.</td>
+                  <td><strong>Пілот на ваших файлах</strong></td>
+                  <td>Перед основним договором за <span class="ch-mark">1–2 дні</span> проганяю прототип на 10–15 знеособлених файлах чи діалогах, щоб одразу побачити реальну точність.</td>
                 </tr>
                 <tr>
                   <td class="pos">03</td>
-                  <td><strong>Усе залишається у вас</strong></td>
-                  <td>Код у вашому Git, запуск через Docker, є тести. Якщо дані не можна віддавати назовні, ставлю локальну модель (<code>Ollama</code>, <code>Qwen</code>).</td>
+                  <td><strong>Передача без прив'язки до мене</strong></td>
+                  <td>Код у вашому Git, збірка в Docker, автотести й інструкція запуску. Для закритого контуру піднімаю локальні моделі (<code>Ollama</code>, <code>vLLM</code>, <code>Qwen</code>).</td>
                 </tr>
               </tbody>
             </table>
@@ -940,11 +898,9 @@ footer { border-top: 1px solid var(--ink); }
 
         <table class="ch-stamp-block">
           <tr>
-            <td style="width:38%"><span class="ch-label">Найменування</span><span class="name">Портфоліо Beelsik</span></td>
-            <td><span class="ch-label">Позначення</span><span class="v">BLS-00.ALBUM</span></td>
-            <td><span class="ch-label">Контур</span><span class="v" id="router-badge">VERTEX AI + NIM</span></td>
-            <td><span class="ch-label">Літ.</span><span class="v">О</span></td>
-            <td><span class="ch-label">Аркушів</span><span class="v">10</span></td>
+            <td style="width:38%"><span class="ch-label">Стек</span><span class="name">Python · FastAPI · PostgreSQL · Node.js · Docker</span></td>
+            <td><span class="ch-label">Маршрутизація моделей</span><span class="v" id="router-badge">VERTEX AI + NIM</span></td>
+            <td><span class="ch-label">Стендів</span><span class="v">10 + оцінка ТЗ</span></td>
           </tr>
         </table>
       </div>
@@ -956,10 +912,10 @@ footer { border-top: 1px solid var(--ink); }
         <div class="ch-sheet__body">
           <div class="brief">
             <div class="case-head">
-              <span><span class="case-idx">00</span> Розбір ТЗ, Gemini 4 Neon</span>
+              <span><span class="case-idx">00</span> Оцінка архітектури · Gemini 4 Neon</span>
               <button class="btn ghost sm" id="arch-dl" type="button">Завантажити план .md</button>
             </div>
-            <h2 class="ch-sheet__title">Вставте ТЗ: покажу, що тут робить код, що модель і скільки це коштує</h2>
+            <h2 class="ch-sheet__title">Вставте опис задачі — зберу схему конвеєра, поділ «код / LLM» та оцінку за етапами</h2>
           </div>
 
           <div class="chips" id="arch-presets"></div>
@@ -1020,12 +976,12 @@ footer { border-top: 1px solid var(--ink); }
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">01</span><span>Telegram, SIP, KeyCRM, HubSpot</span></div>
-      <h2>Бот для клініки: відповідає, поки адміністратори зайняті, записує на прийом і надсилає заявку в CRM</h2>
-      <p>Бот знає лише те, що є в базі. Відкрийте вкладку «База JSON», змініть ціну, і він одразу відповість по-новому. Про страхування, седацію чи оплату частинами він не вигадує, а кличе людину.</p>
+      <h2>Бот першої лінії для клініки: відповідає за прайсом, записує у вільні слоти й передає лід у CRM</h2>
+      <p>Бот спирається лише на JSON-базу послуг і розкладу: змініть ціну в сусідній вкладці — у діалозі одразу оновиться розрахунок. Щодо страхування, седації чи оплати частинами не вигадує умов, а переводить розмову на адміністратора.</p>
       <div class="kv-list">
         <div>
-          <strong>Як це працює в клієнта</strong>
-          Telegram, віджет на сайті й дзвінки через SIP: відповідь швидше за 800 мс, бота можна перебивати. Персональні дані приховуються до того, як потраплять у модель. Адміністратор може перехопити діалог будь-коли.
+          <strong>У робочому контурі</strong>
+          Telegram, віджет на сайті й голосовий канал через SIP (затримка до 800 мс, підтримка перебивання). Телефони та ПІБ маскуються до звернення в зовнішній API, оператор перехоплює чат однією кнопкою.
         </div>
       </div>
       <div class="stack"><span>FastAPI</span><span>Tool Calling</span><span>KeyCRM / HubSpot / Pipedrive</span><span>SIP Streaming</span><span>GDPR</span></div>
@@ -1097,10 +1053,10 @@ footer { border-top: 1px solid var(--ink); }
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">02</span><span>PostgreSQL, pgvector, права до пошуку</span></div>
-      <h2>Пошук по документах компанії, де кожен бачить лише те, що йому належить</h2>
-      <p>Логістична компанія «ЄвроТранс» (Київ, Львів, Варшава, Лодзь): в одній базі тарифи, листи польських складів, інструкції англійською і закриті нотатки керівництва. Натисніть «+ Додати документ», додайте свій текст із доступом лише для директора і спитайте від імені логіста. Він його не знайде: документ відсікається ще до пошуку.</p>
+      <h2>Корпоративний пошук по регламентах і базі з перевіркою ролей до запиту в модель</h2>
+      <p>Логістична компанія «ЄвроТранс» (Київ, Львів, Варшава, Лодзь): в індексі лежать тарифи, листи польських складів, англомовні інструкції та закриті нотатки керівництва. Додайте власний документ із доступом лише для директора й пошукайте від імені логіста — запис відсіється на рівні SQL ще до формування промпту.</p>
       <div class="callout-note">
-        Цифри на кшталт «скільки рейсів у жовтні» беруться SQL-запитом із бази, а не вгадуються за схожими текстами.
+        Точні показники на кшталт кількості рейсів за жовтень запитуються прямим read-only SQL із бази, а не оцінюються за текстовими фрагментами.
       </div>
       <div class="stack"><span>PostgreSQL + pgvector</span><span>BM25 + Reranker</span><span>RBAC Ізоляція</span><span>Jira / ERP Інтеграція</span></div>
     </div>
@@ -1167,8 +1123,8 @@ footer { border-top: 1px solid var(--ink); }
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">03</span><span>Vision OCR, JSON Schema, .docx</span></div>
-      <h2>Звірка рахунку з реквізитами і готовий договір у .docx</h2>
-      <p>Вставте реквізити й рахунок або сфотографуйте рахунок. Модель витягне дані (ЄДРПОУ, IBAN, підписанта), код перерахує рядки й звірить із підсумком, а розбіжності буде видно прямо в договорі <code>.docx</code>.</p>
+      <h2>Звірка рахунку з карткою контрагента і формування договору в .docx</h2>
+      <p>Завантажте фото рахунку або перемкніть готові набори. Після витягнення полів скрипт перевіряє ЄДРПОУ та IBAN, перераховує рядки специфікації й позначає розбіжності прямо в проєкті договору <code>.docx</code>.</p>
       <div class="stack"><span>Vision OCR</span><span>JSON Schema</span><span>Перевірка ЄДРПОУ / сум</span><span>OOXML (.docx)</span></div>
     </div>
 
@@ -1226,8 +1182,8 @@ footer { border-top: 1px solid var(--ink); }
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">04</span><span>Python, Playwright, LLM</span></div>
-      <h2>Звірка кошторису з прайсом постачальника і вивантаження в CSV</h2>
-      <p>Один і той самий кабель пишуть як <code>3*2,5мм2</code> і <code>3х2.5</code>, зі скороченнями й опечатками. Вставте свої рядки або змініть каталог: модель знайде артикул, код порахує суму й вивантажить <code>.csv</code>.</p>
+      <h2>Прив'язка рядків кошторису до прайсу постачальника з вивантаженням у CSV</h2>
+      <p>У заявках той самий кабель пишуть як <code>3*2,5мм2</code> і <code>3х2.5</code>, скорочують бренди й переставляють характеристики. Підставте власні позиції або поправте JSON-каталог — стенд підбере артикули, перерахує суми й віддасть готовий <code>.csv</code>.</p>
       <div class="stack"><span>Python + Playwright</span><span>LLM Нормалізація</span><span>Матчинг SKU</span><span>Експорт CSV / XLSX</span></div>
     </div>
 
@@ -1289,8 +1245,8 @@ footer { border-top: 1px solid var(--ink); }
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">05</span><span>n8n, LLM API, Rozetka, Prom, eBay</span></div>
-      <h2>Картки товарів для маркетплейсів</h2>
-      <p>Оберіть майданчик (<code>Rozetka / Prom.ua</code>, <code>eBay</code> або <code>Vinted</code>) і опишіть товар кількома словами. Отримаєте заголовок у межах ліміту майданчика, характеристики, чесний опис дефектів і JSON для завантаження.</p>
+      <h2>Підготовка карток товарів під вимоги Rozetka, Prom.ua, eBay та Vinted</h2>
+      <p>Із короткої складської нотатки формується заголовок суворо в межах ліміту символів обраного майданчика (<code>Rozetka / Prom.ua</code>, <code>eBay</code> або <code>Vinted</code>), обов'язкові характеристики, спокійний опис слідів зносу й готовий JSON для публікації по API.</p>
       <div class="stack"><span>n8n / Make</span><span>LLM JSON API</span><span>Rozetka / Prom API</span><span>eBay Sell API</span></div>
     </div>
 
@@ -1341,8 +1297,8 @@ footer { border-top: 1px solid var(--ink); }
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">06</span><span>Vision LLM, дослівний OCR</span></div>
-      <h2>Розпізнавання рукописів і сканів</h2>
-      <p>Завантажте фото нотатки, акту чи чека. У дослівному режимі помилки й закреслення залишаються як є, а те, що прочитати неможливо, позначається <code>[illegible]</code>. Модель нічого не дописує за автора.</p>
+      <h2>Дослівне розпізнавання рукописних аркушів, актів та архівних сканів</h2>
+      <p>Завантажте фото рукопису, накладної чи чека. У дослівному режимі зберігаються авторський правопис і закреслення, а нерозбірливі слова позначаються тегом <code>[illegible]</code> без додумування тексту.</p>
       <div class="stack"><span>Multimodal Vision API</span><span>Дослівна передача</span><span>Завантаження JPG / PNG</span><span>Контроль якості</span></div>
     </div>
 
@@ -1462,8 +1418,8 @@ server/routes/</textarea>
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">08</span><span>ISO/IEC 29148, ТЗ, ПМІ</span></div>
-      <h2>Технічна документація: ТЗ, матриця трасування, ПМІ</h2>
-      <p>Пишу специфікації без «води»: кожне зауваження прив'язане до пункту ТЗ і до конкретного сценарію приймальних випробувань. Введіть свою вимогу нижче й отримаєте готовий тест-кейс.</p>
+      <h2>Технічна документація: ТЗ, матриця трасування та програма випробувань (ПМІ / UAT)</h2>
+      <p>Готую технічні завдання (ДСТУ / ISO/IEC 29148) і програми приймальних випробувань, де кожне зауваження замовника прив'язане до пункту вимог і конкретного сценарію перевірки. Введіть власну вимогу нижче — додасться рядок тест-кейса.</p>
       <div class="stack"><span>ISO/IEC 29148</span><span>Матриця трасування</span><span>ПМІ / UAT</span><span>Хмарна інфраструктура</span></div>
     </div>
 
@@ -1541,8 +1497,8 @@ server/routes/</textarea>
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">09</span><span>React, Supabase, RLS</span></div>
-      <h2>Перевірка й доведення проєктів, зібраних у Lovable, Bolt і Cursor</h2>
-      <p>Такі застосунки виглядають готовими, але часто таблиці Supabase в них відкриті без RLS, ключі лежать у фронтенді, а ціну рахує браузер. Вставте свій React чи SQL у вкладці «Перевірити свій код» і подивіться, що знайдеться.</p>
+      <h2>Аудит безпеки й доведення до продакшену проєктів після Lovable, Bolt і Cursor</h2>
+      <p>Генератори швидко збирають інтерфейс, але регулярно залишають відкриті таблиці Supabase без RLS, сервісні ключі у клієнтському бандлі й підрахунок суми замовлення прямо в браузері. У третій вкладці можна перевірити будь-який фрагмент React або SQL.</p>
       <div class="stack"><span>Supabase RLS &amp; Edge Functions</span><span>React / TypeScript</span><span>SQL Міграції</span><span>PWA &amp; CI/CD</span></div>
     </div>
 
@@ -1637,10 +1593,10 @@ async function checkout(cart, discountPercent) {
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">10</span><span>NIM, Vertex AI, захист промпту</span></div>
-      <h2>Спробуйте вмовити бота на знижку</h2>
-      <p>Тут два справжні боти, нічого не підлаштовано. У вкладці <strong>«Промпт (ред.)»</strong> можна змінити товари, ціни й правила і одразу побачити, як змінюється відповідь.</p>
+      <h2>Перевірка бота на prompt injection: один системний промпт проти трирівневого контуру</h2>
+      <p>Один і той самий запит паралельно йде у два контури: ліворуч — звичайний магазинний бот на одному промпті, праворуч — контур із фільтрацією входу, ізоляцією даних CRM та контролем правил відповіді. У вкладці <strong>«Промпт (ред.)»</strong> можна змінити товари, ціни чи правила й одразу перевірити знову.</p>
       <div class="callout-note">
-        Щоб полігон не коштував грошей, простий бот працює на безкоштовній моделі (<code>NIM 30B</code>). Захищений працює на Vertex AI (<code>gemini-4-neon</code>) із трьома рівнями перевірки й лімітом <code>$1.50/доба</code>. Покупець бачить ввічливу відповідь, а не помилку.
+        Базовий бот працює на безкоштовній моделі <code>NIM 30B</code>, захищений — на <code>Vertex AI (gemini-4-neon)</code> із добовим лімітом стенду <code>$1.50</code>. На нецільовий запит покупець отримує ввічливу відповідь консультанта магазину, а не технічну помилку.
       </div>
       <div class="stack"><span>Редагований промпт</span><span>Free NIM ($0) на наївному</span><span>Paid Vertex Neon на захищеному</span><span>Природна відповідь клієнту</span></div>
     </div>
@@ -1709,8 +1665,8 @@ async function checkout(cart, discountPercent) {
 
   <footer>
     <div>
-      <strong style="color:var(--ink)">Є задача? Напишіть</strong>
-      <p style="margin:5px 0 0;max-width:62ch">Напишіть мені там, де ми спілкуємося, і додайте кілька файлів чи питань. Відповім, скільки це займе і з чого краще почати.</p>
+      <strong style="color:var(--ink)">Обговорити задачу</strong>
+      <p style="margin:5px 0 0;max-width:64ch">Напишіть у переписці на майданчику, де ви відкрили це посилання, і додайте приклад файлу або короткий опис процесу — відповім із термінами, архітектурою та пропозицією щодо пілоту.</p>
       <p class="note mono" style="margin-top:12px;max-width:74ch;opacity:0.85">Усі стенди — демонстрація на вигаданих даних (клініка «Квітень», «ЄвроТранс», «БудІнвест» тощо): реквізити, прайси й замовлення синтетичні, реальні дані клієнтів під NDA не публікуються.</p>
     </div>
     <div class="foot-links">
@@ -1746,7 +1702,7 @@ async function checkout(cart, discountPercent) {
     if (st === 'dark' || st === 'light') theme = st;
     else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
   } catch {}
-  const applyTheme = (t) => { theme = t; document.documentElement.dataset.theme = t; $('#theme-ico').textContent = t === 'dark' ? 'Синька → Ватман' : 'Ватман → Синька'; try { localStorage.setItem('pf-theme', t); } catch {} };
+  const applyTheme = (t) => { theme = t; document.documentElement.dataset.theme = t; $('#theme-ico').textContent = t === 'dark' ? 'Світла тема' : 'Темна тема'; try { localStorage.setItem('pf-theme', t); } catch {} };
   applyTheme(theme);
   $('#theme-btn').onclick = () => applyTheme(theme === 'dark' ? 'light' : 'dark');
 
@@ -2709,7 +2665,7 @@ async function checkout(cart, discountPercent) {
       const b = $('#global-api-badge');
       if (info.llmEnabled) {
         b.className = 'pill ok'; b.textContent = 'Live LLM + Vision API';
-        { const m = String(info.model).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); const heavy = info.heavyVertex?.enabled ? 'Gemini 4 Neon' : 'NIM 120B'; $('#chat-status-note').innerHTML = `Діалог — швидка модель <code>${m}</code>, розбір ТЗ і захищений контур — ${heavy}: модель під задачу`; }
+        { const m = String(info.model).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); const heavy = info.heavyVertex?.enabled ? 'Gemini 4 Neon' : 'NIM 120B'; $('#chat-status-note').innerHTML = `Діалог працює на швидкій моделі <code>${m}</code>, оцінка ТЗ і захищений контур — на ${heavy}`; }
         if (info.heavyVertex?.enabled) {
           $('#router-badge').textContent = `VERTEX AI (${info.heavyVertex.model}) · cap $${info.heavyVertex.dailyBudgetUsd}/day`;
         } else {
@@ -2722,32 +2678,22 @@ async function checkout(cart, discountPercent) {
 </script>
 
 <script>
-/* Анимации на события: схема, печать, счётчики в штампе. Ничего не скрывает. */
+/* Event-driven animations: pipeline draw, telemetry counters, and View Transition theme switch */
 (() => {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const t0 = performance.now();
-  const ready = () => performance.now() - t0 > 1500; // не анимировать первичную отрисовку
+  const ready = () => performance.now() - t0 > 1500;
 
-  const hit = (el) => { el.classList.remove('ch-hit'); void el.offsetWidth; el.classList.add('ch-hit'); };
-
-  // схема конвейера чертится после каждого нового разбора
   const flow = document.getElementById('arch-flow');
   if (flow) new MutationObserver(() => {
     const svg = flow.querySelector('svg');
     if (svg && ready()) { svg.classList.remove('ch-drawn'); void svg.getBBox; svg.classList.add('ch-drawn'); }
   }).observe(flow, { childList: true });
 
-  // печать ударяет, когда меняется результат проверки
-  document.querySelectorAll('.ch-seal').forEach((seal) => {
-    new MutationObserver(() => { if (ready()) hit(seal); })
-      .observe(seal, { childList: true, characterData: true, subtree: true });
-  });
-
-  // цифры в штампе отщёлкивают до нового значения
-  const fmt = (n) => n.toLocaleString('ru-RU');
+  const fmt = (n) => n.toLocaleString('uk-UA');
   const countUp = (cell) => {
     const m = cell.querySelector('.ch-mark') || cell;
-    const mm = m.textContent.match(/^([\d\s ]+)(.*)$/);
+    const mm = m.textContent.match(/^([\d\s\u00A0]+)(.*)$/);
     if (!mm) return;
     const target = parseInt(mm[1].replace(/\D/g, ''), 10);
     if (!target) return;
@@ -2763,7 +2709,6 @@ async function checkout(cart, discountPercent) {
     new MutationObserver(() => countUp(cell)).observe(cell, { childList: true });
   });
 
-  // смена темы через View Transitions: синька растекается от кнопки
   const btn = document.getElementById('theme-btn');
   if (btn && document.startViewTransition) {
     const orig = btn.onclick;
@@ -2778,45 +2723,23 @@ async function checkout(cart, discountPercent) {
 </script>
 
 <script>
-/* Два почерка: подсказка «кто написал» + живой счётчик расходов в шапке */
+/* Live header meter: daily API requests & token usage */
 (() => {
-  const lang = () => document.documentElement.dataset.l || document.documentElement.lang || 'ru';
-  const LBL = {
-    ru: ['написала модель', 'посчитал код'], en: ['written by the model', 'computed by code'],
-    fr: ['écrit par le modèle', 'calculé par le code'], uk: ['написала модель', 'порахував код'],
-  };
-  const MODEL = '.ink-model, #arch-summary, #arch-code-list, #arch-ai-list, #arch-qs, #arch-ops, #chat .msg.a, #raganswer, #hout, #rt-vuln-reply, #rt-guard-reply, #aud-live-tbody td:nth-child(2), #aud-live-tbody td:nth-child(3), #gost-virt-body td, #spec-tbody td:nth-child(2)';
-  const CODE = '.ink-code, [data-st-tok], [data-st-ms], #fields td:nth-child(2), #fields td:nth-child(3), #spec-tbody td:nth-child(3), #spec-tbody td:nth-child(4), #spec-summary, #contract, #crm, #ragfrags, #raglocked, #rt-guard-trace, #cc-result';
-  document.addEventListener('mouseover', (e) => {
-    const t = e.target instanceof Element ? e.target : null;
-    if (!t || t.closest('.ink-legend')) return;
-    const m = t.closest(MODEL), c = t.closest(CODE);
-    const el = m && c ? (m.contains(c) ? c : m) : (m || c);
-    if (!el || !el.textContent.trim()) return;
-    const l = LBL[lang()] || LBL.ru;
-    el.dataset.ink = el === m ? l[0] : l[1];
-  });
-
-  // живой счётчик: реальные запросы и токены за сегодня с сервера
   const meter = document.getElementById('live-meter');
   if (!meter) return;
-  const W = {
-    ru: ['Сегодня', 'запросов', 'токенов', 'из'], en: ['Today', 'requests', 'tokens', 'of'],
-    fr: ["Aujourd'hui", 'requêtes', 'tokens', 'sur'], uk: ['Сьогодні', 'запитів', 'токенів', 'з'],
-  };
-  const nf = (n) => Number(n || 0).toLocaleString('ru-RU');
+  const nf = (n) => Number(n || 0).toLocaleString('uk-UA');
+  const origFetch = window.fetch.bind(window);
   const tick = async () => {
     try {
       const r = await origFetch('/api/health', { cache: 'no-store' });
       if (!r.ok) throw 0;
       const j = await r.json();
-      const w = W[lang()] || W.ru, d = j.today || {}, hv = j.heavyVertex || {};
-      meter.innerHTML = `${w[0]}: <b>${nf(d.requests)}</b> ${w[1]} · <b>${nf(d.tokens)}</b> ${w[2]}` +
-        (hv.enabled ? ` · <b>$${Number(hv.dailySpentUsd || 0).toFixed(2)}</b> ${w[3]} $${Number(hv.dailyBudgetUsd || 1.5).toFixed(2)}` : '');
+      const d = j.today || {}, hv = j.heavyVertex || {};
+      meter.innerHTML = `Сьогодні: <b>${nf(d.requests)}</b> запитів · <b>${nf(d.tokens)}</b> токенів` +
+        (hv.enabled ? ` · <b>$${Number(hv.dailySpentUsd || 0).toFixed(2)}</b> з $${Number(hv.dailyBudgetUsd || 1.5).toFixed(2)}` : '');
       meter.hidden = false;
     } catch { meter.hidden = true; }
   };
-  const origFetch = window.fetch.bind(window);
   window.fetch = async (input, init) => {
     const res = await origFetch(input, init);
     try {
@@ -2825,7 +2748,6 @@ async function checkout(cart, discountPercent) {
     } catch {}
     return res;
   };
-  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => setTimeout(tick, 50)));
   tick();
   setInterval(tick, 30000);
 })();
