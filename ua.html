@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beelsik — ШІ-агенти, RAG, Vision OCR та автоматизація процесів</title>
+<meta name="description" content="Інтерактивні робочі стенди з живим LLM та Vision API: чат-боти з CRM, корпоративний пошук (RAG), звірка первинних документів у DOCX, парсинг прайсів, розпізнавання рукописів, Claude Code та аудит SaaS.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2316181D'/%3E%3Cpath d='M9 11l5 5-5 5M16 21h7' stroke='%235DD39E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #F6F6F3;
+  --surface: #FFFFFF;
+  --sunk: #EDEEE9;
+  --sunk-2: #E2E4DD;
+  --line: #D4D7CE;
+  --line-strong: #B4B9AE;
+  --ink: #16181C;
+  --ink-soft: #2F353E;
+  --muted: #5B6370;
+  --accent: #1856C4;
+  --accent-soft: #E7EFFD;
+  --accent-ink: #FFFFFF;
+  --ok: #126E43;
+  --ok-bg: #DEF2E7;
+  --warn: #945700;
+  --warn-bg: #FCEFD4;
+  --bad: #B42318;
+  --bad-bg: #FCE6E4;
+  --code-bg: #14171D;
+  --code-ink: #E5E9F0;
+  --f-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  --radius: 9px;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0E1116;
+  --surface: #151A22;
+  --sunk: #10141B;
+  --sunk-2: #1C232F;
+  --line: #262F3D;
+  --line-strong: #39465B;
+  --ink: #E6EAF0;
+  --ink-soft: #C4CCD8;
+  --muted: #8A95A7;
+  --accent: #6CA0FF;
+  --accent-soft: #192847;
+  --accent-ink: #09101D;
+  --ok: #5DD39E;
+  --ok-bg: #112B20;
+  --warn: #F3B75E;
+  --warn-bg: #2E2210;
+  --bad: #FF857D;
+  --bad-bg: #351615;
+  --code-bg: #0A0D12;
+  --code-ink: #E5E9F0;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15.5px/1.58 var(--f-sans); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 max(18px, env(safe-area-inset-left, 0px)); }
+a { color: var(--accent); text-underline-offset: 3px; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3, h4 { margin: 0; color: var(--ink); }
+code, pre, .mono { font-family: var(--f-mono); font-size: 0.87em; }
+
+.topbar { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.topbar-in { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 0; flex-wrap: wrap; }
+.ident { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.ident-mark { width: 27px; height: 27px; border-radius: 6px; background: var(--ink); color: var(--bg); font-family: var(--f-mono); font-weight: 600; font-size: 12.5px; display: grid; place-items: center; }
+.ident-text { font-family: var(--f-mono); font-size: 14px; font-weight: 600; }
+.ident-sub { color: var(--muted); font-weight: 400; }
+.controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 2px; }
+.seg button { border: 0; background: none; padding: 4px 9px; border-radius: 4px; cursor: pointer; font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-family: var(--f-mono); font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+.icon-btn:hover { border-color: var(--line-strong); }
+
+.hero { padding: 34px 0 22px; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: end; }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 18px; padding: 24px 0 16px; } }
+.hero h1 { font-size: clamp(25px, 3.4vw, 38px); line-height: 1.15; letter-spacing: -0.02em; font-weight: 700; margin-bottom: 13px; }
+.hero-lead { margin: 0; color: var(--ink-soft); font-size: 16px; max-width: 65ch; }
+.hero-aside { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; font-size: 13.5px; display: grid; gap: 8px; }
+.hero-aside .kicker { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.hero-aside ul { margin: 0; padding-left: 17px; color: var(--ink-soft); display: grid; gap: 5px; }
+
+.nav-strip { padding: 10px 0 24px; display: flex; flex-direction: column; gap: 10px; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.fbtn { border: 1px solid var(--line); background: transparent; padding: 5px 11px; border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--muted); }
+.fbtn[aria-pressed="true"] { background: var(--surface); color: var(--ink); border-color: var(--ink); font-weight: 600; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { text-decoration: none; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); padding: 4px 10px; border-radius: 6px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.toc a:hover { border-color: var(--accent); color: var(--ink); }
+.toc a .num { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+
+.case { display: grid; grid-template-columns: minmax(0, 4.4fr) minmax(0, 7.6fr); gap: 28px; padding: 34px 0; border-top: 1px solid var(--line); scroll-margin-top: 64px; }
+@media (max-width: 920px) { .case { grid-template-columns: 1fr; gap: 18px; padding: 26px 0; } }
+.brief { display: flex; flex-direction: column; gap: 12px; }
+.case-head { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.case-idx { background: var(--sunk); border: 1px solid var(--line); color: var(--ink); padding: 1px 7px; border-radius: 4px; font-weight: 600; }
+.brief h2 { font-size: clamp(19.5px, 2.1vw, 24px); line-height: 1.24; letter-spacing: -0.015em; font-weight: 700; }
+.brief p { margin: 0; color: var(--ink-soft); font-size: 14.8px; }
+.callout-note { border-left: 2px solid var(--line-strong); padding-left: 12px; font-size: 13.5px; color: var(--muted); }
+.callout-note strong { color: var(--ink); font-weight: 600; }
+.kv-list { display: grid; gap: 8px; font-size: 13.5px; background: var(--sunk); border-radius: 7px; padding: 10px 12px; }
+.kv-list div strong { font-family: var(--f-mono); font-size: 11.5px; color: var(--ink); display: block; margin-bottom: 2px; }
+.stack { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.stack span { font-family: var(--f-mono); font-size: 11.5px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); padding: 2px 8px; border-radius: 4px; }
+
+.bench { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.benchbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 13px; border-bottom: 1px solid var(--line); background: var(--sunk); flex-wrap: wrap; }
+.bench-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13.5px; flex-wrap: wrap; }
+.dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); display: inline-block; }
+.tabs { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+.tab { border: 1px solid transparent; background: none; padding: 3px 9px; border-radius: 5px; font-size: 12px; font-family: var(--f-mono); cursor: pointer; color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--surface); border-color: var(--line); color: var(--ink); font-weight: 600; }
+.benchbody { padding: 14px; display: grid; gap: 11px; min-width: 0; }
+
+.btn { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 7px 13px; cursor: pointer; font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; text-decoration: none; }
+.btn:hover { filter: brightness(1.06); }
+.btn:disabled { opacity: 0.55; cursor: wait; }
+.btn.ghost { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+.btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.between { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; }
+.note { font-size: 12.5px; color: var(--muted); margin: 0; }
+.lbl { font-family: var(--f-mono); font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: block; }
+textarea, input[type="text"], select { width: 100%; border: 1px solid var(--line-strong); background: var(--bg); border-radius: 6px; padding: 8px 10px; min-width: 0; font-size: 13.5px; }
+select { width: auto; cursor: pointer; }
+textarea { resize: vertical; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.5; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { border: 1px solid var(--line); background: var(--bg); border-radius: 5px; padding: 4px 9px; font-size: 12.5px; cursor: pointer; text-align: left; color: var(--ink-soft); }
+.chip:hover { border-color: var(--accent); color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+.chatgrid { display: grid; grid-template-columns: minmax(0, 1fr) 235px; gap: 12px; }
+@media (max-width: 660px) { .chatgrid { grid-template-columns: 1fr; } }
+.chat { display: flex; flex-direction: column; gap: 8px; height: 300px; overflow-y: auto; padding: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 7px; }
+.msg { max-width: 86%; padding: 7px 11px; border-radius: 9px; font-size: 13.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.c { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 2px; }
+.msg.a { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 2px; }
+.crm { border: 1px solid var(--line); background: var(--bg); border-radius: 7px; padding: 9px; display: flex; flex-direction: column; gap: 8px; font-size: 12px; max-height: 390px; overflow-y: auto; }
+.crm-head { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; color: var(--muted); text-transform: uppercase; }
+.lead { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 7px 8px; display: grid; gap: 3px; }
+.pill { display: inline-block; width: fit-content; font-family: var(--f-mono); font-size: 10.5px; padding: 1px 6px; border-radius: 3px; font-weight: 600; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+
+.answer { background: var(--bg); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 6px; padding: 10px 12px; font-size: 14px; white-space: pre-wrap; }
+.answer.empty { border-left-color: var(--warn); }
+.cite { font-family: var(--f-mono); font-size: 11px; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); padding: 0 5px; border-radius: 3px; font-weight: 600; }
+.frags { display: grid; gap: 6px; }
+.frag { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; background: var(--bg); display: grid; gap: 3px; }
+.frag-h { display: flex; justify-content: space-between; gap: 8px; font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.frag mark { background: var(--warn-bg); color: var(--ink); padding: 0 2px; border-radius: 2px; }
+
+.subbox { background: var(--bg); border: 1px dashed var(--line-strong); border-radius: 7px; padding: 10px; display: grid; gap: 8px; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 7px; }
+table { border-collapse: collapse; width: 100%; font-size: 12.8px; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { background: var(--sunk); font-weight: 600; font-size: 11px; font-family: var(--f-mono); color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+tr.hl-row td { background: var(--accent-soft); }
+tr[data-trace] { cursor: pointer; }
+tr[data-trace]:hover td { background: var(--sunk); }
+tr.hl-row:hover td { background: var(--accent-soft); }
+td.st-bad { color: var(--bad); font-weight: 500; }
+td.st-warn { color: var(--warn); }
+td.st-ok { color: var(--ok); }
+
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+@media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+
+.contract { background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 11px 13px; font-size: 12.5px; font-family: var(--f-mono); white-space: pre-wrap; max-height: 230px; overflow-y: auto; line-height: 1.55; }
+.contract mark { background: var(--warn-bg); color: var(--ink); border-bottom: 1px dashed var(--warn); padding: 0 2px; }
+
+.counter { font-family: var(--f-mono); font-size: 11.5px; padding: 2px 7px; border-radius: 4px; background: var(--ok-bg); color: var(--ok); }
+.counter.over { background: var(--bad-bg); color: var(--bad); }
+
+.scan-wrap { position: relative; border-radius: 6px; overflow: hidden; border: 1px solid var(--line-strong); background: var(--bg); }
+canvas.scan, img.scan-img { width: 100%; max-height: 360px; object-fit: contain; display: block; }
+.verbatim { font-family: var(--f-mono); font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 11px 13px; white-space: pre-wrap; line-height: 1.65; min-height: 90px; }
+.verbatim s { color: var(--muted); text-decoration-thickness: 1.5px; }
+.verbatim .ill { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); padding: 0 4px; border-radius: 3px; font-weight: 600; }
+
+pre.code { background: var(--code-bg); color: var(--code-ink); border: 1px solid var(--line); border-radius: 7px; padding: 11px 13px; overflow-x: auto; margin: 0; font-size: 12px; line-height: 1.55; }
+.term-out { font-family: var(--f-mono); font-size: 12px; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--line); white-space: pre-wrap; }
+.term-out.pass { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.term-out.block { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+
+.sev { font-family: var(--f-mono); font-size: 10.5px; font-weight: 600; padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
+.sev.c { background: var(--bad); color: #fff; }
+.sev.h { background: var(--bad-bg); color: var(--bad); }
+.sev.m { background: var(--warn-bg); color: var(--warn); }
+.sev.l { background: var(--sunk-2); color: var(--muted); }
+
+footer { margin-top: 20px; padding: 30px 0 54px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.foot-links { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a href="#" class="ident">
+      <span class="ident-mark">&gt;_</span>
+      <span class="ident-text">beelsik <span class="ident-sub">/ автоматизація та ШІ</span></span>
+    </a>
+    <div class="controls">
+      <span class="pill ok" id="global-api-badge">local</span>
+      <button class="icon-btn" id="theme-btn" type="button">
+        <span id="theme-ico">☾</span>
+        <span>Тема</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Прикладна розробка з ШІ: боти з CRM, корпоративний RAG, Vision OCR та парсинг</h1>
+      <p class="hero-lead">
+        Дев'ять інтерактивних стендів, підключених до живого LLM та Vision API. У кожному блоці можна змінити прайс, додати власний документ, завантажити фото рукопису чи рахунку або вставити свій код — і перевірити роботу системи на реальних даних прямо в браузері.
+      </p>
+    </div>
+    <aside class="hero-aside">
+      <span class="kicker">Інженерний підхід</span>
+      <ul>
+        <li>Жорсткі JSON-схеми та валідація кодом: модель не вигадує ціни, суми чи вільні вікна.</li>
+        <li>Швидкий пілот до великого етапу: за 1–2 дні збираю прототип на 10–15 ваших знеособлених файлах.</li>
+        <li>Чиста передача: код у вашому Git, Docker-контейнери, підтримка локальних моделей (Ollama / Qwen) для закритих контурів.</li>
+      </ul>
+    </aside>
+  </section>
+
+  <div class="nav-strip">
+    <div class="filters" role="group" aria-label="Фільтр">
+      <button class="fbtn" data-cat="all" aria-pressed="true">Усі стенди (9)</button>
+      <button class="fbtn" data-cat="agents" aria-pressed="false">Агенти, CRM і RAG</button>
+      <button class="fbtn" data-cat="docs" aria-pressed="false">Документи, OCR та e-com</button>
+      <button class="fbtn" data-cat="eng" aria-pressed="false">Software Factory, аудит і ТЗ</button>
+    </div>
+    <nav class="toc" aria-label="Кейси">
+      <a href="#sales"><span class="num">01</span>Агент продажів + CRM</a>
+      <a href="#rag"><span class="num">02</span>RAG з ролями доступу</a>
+      <a href="#docs"><span class="num">03</span>Звірка документів → .docx</a>
+      <a href="#parser"><span class="num">04</span>Парсинг і прайси → .csv</a>
+      <a href="#listing"><span class="num">05</span>Картки маркетплейсів</a>
+      <a href="#hand"><span class="num">06</span>Vision OCR рукописів</a>
+      <a href="#cc"><span class="num">07</span>Claude Code &amp; Software Factory</a>
+      <a href="#spec"><span class="num">08</span>ТЗ, ПМІ та архітектура</a>
+      <a href="#audit"><span class="num">09</span>Аудит після Lovable / Bolt</a>
+    </nav>
+  </div>
+
+  <!-- ==================== 01 SALES ==================== -->
+  <section class="case" id="sales" data-cat="agents">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">01</span><span>telegram / sip voice / keycrm &amp; hubspot</span></div>
+      <h2>ШІ-адміністратор клініки: перехоплює чати, коли оператори зайняті, і записує в CRM</h2>
+      <p>Працює виключно за верифікованою JSON-базою (відкрийте вкладку «База JSON» і змініть будь-яку ціну чи додайте послугу — бот одразу почне відповідати за новими даними). Питання поза регламентом (страхування, седація, оплата частинами) передає живому менеджеру.</p>
+      <div class="kv-list">
+        <div>
+          <strong>У бойовому проєкті (чат + телефонія + Jira / CRM)</strong>
+          Telegram, віджет на сайті, потокова SIP-телефонія (&lt;800 мс із перебиванням), маскування персональних даних до виклику LLM та адмін-панель із ручним перехопленням діалогу.
+        </div>
+      </div>
+      <div class="stack"><span>FastAPI</span><span>Tool Calling</span><span>KeyCRM / HubSpot / Pipedrive</span><span>SIP Streaming</span><span>GDPR</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span>Клініка «Квітень» (Київ)</span>
+        <div class="row">
+          <div class="seg" id="op-mode" role="group">
+            <button type="button" data-op="busy" aria-pressed="true">Оператори зайняті → ШІ</button>
+            <button type="button" data-op="free" aria-pressed="false">Оператор вільний</button>
+          </div>
+          <div class="tabs" role="tablist">
+            <button class="tab" id="tab-chat-ui" aria-selected="true">Діалог</button>
+            <button class="tab" id="tab-chat-kb" aria-selected="false">База JSON (ред.)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-chat-ui">
+        <div class="chips" id="chat-presets"></div>
+        <div class="chatgrid">
+          <div style="display:grid;gap:8px;min-width:0">
+            <div class="chat" id="chat" aria-live="polite"></div>
+            <form class="row" id="chatform">
+              <input type="text" id="chatin" style="flex:1" placeholder="Напишіть як клієнт: Скільки коштує чистка? / Запишіть на суботу…" autocomplete="off">
+              <button class="btn" id="chatsend" type="submit">Надіслати</button>
+            </form>
+            <div class="between">
+              <button class="btn ghost sm" id="chatreset" type="button">Очистити чат</button>
+              <span class="note" id="chat-status-note">Можна писати довільно або обрати сценарій вище</span>
+            </div>
+          </div>
+          <aside class="crm" aria-label="CRM Webhook Log">
+            <div class="crm-head"><span>CRM Webhook</span><span id="crm-count">0 подій</span></div>
+            <div id="crm" style="display:grid;gap:7px"></div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-chat-kb" hidden>
+        <p class="note">Змініть ціни, лікарів чи слоти й натисніть «Застосувати» — бот у діалозі миттєво підхопить оновлення:</p>
+        <textarea id="kb-editor" rows="13"></textarea>
+        <div class="row">
+          <button class="btn sm" id="kb-apply" type="button">Застосувати базу</button>
+          <button class="btn ghost sm" id="kb-reset" type="button">Скинути</button>
+          <span class="note" id="kb-msg"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 02 RAG ==================== -->
+  <section class="case" id="rag" data-cat="agents">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">02</span><span>postgresql / pgvector / pre-retrieval rbac</span></div>
+      <h2>База знань для мережі філій (RAG) із розмежуванням прав доступу до пошуку</h2>
+      <p>Логістичний оператор «ЄвроТранс» (Київ — Львів — Варшава — Лодзь): в одному індексі тарифи ERP, листи польських складів, інструкції англійською та закриті нотатки керівництва. Натисніть «+ Додати документ», щоб завантажити власний текст із правами доступу та перевірити ізоляцію ролей.</p>
+      <div class="callout-note">
+        <strong>Точні цифри без вигадок:</strong> для запитів на кшталт «скільки рейсів виконано за жовтень» агент звертається до read-only SQL-представлень репліки ERP, а не вгадує числа з векторного індексу.
+      </div>
+      <div class="stack"><span>PostgreSQL + pgvector</span><span>BM25 + Reranker</span><span>RBAC Ізоляція</span><span>Jira / ERP Інтеграція</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span>Індекс «ЄвроТранс» (<span id="rag-doc-count">9</span> док.)</span>
+        <div class="row">
+          <button class="btn ghost sm" id="rag-add-toggle" type="button">+ Додати документ</button>
+          <div class="seg" id="roles">
+            <button type="button" data-role="staff" aria-pressed="true">Логіст</button>
+            <button type="button" data-role="mgmt" aria-pressed="false">Директор</button>
+          </div>
+        </div>
+      </div>
+      <div class="benchbody">
+        <div class="subbox" id="rag-add-box" hidden>
+          <div class="two">
+            <input type="text" id="rag-new-src" placeholder="Джерело (напр. Регламент відпусток 2026)">
+            <select id="rag-new-acc">
+              <option value="all">Усі співробітники (Логіст + Директор)</option>
+              <option value="mgmt">Закритий контур (Тільки директор)</option>
+            </select>
+          </div>
+          <textarea id="rag-new-text" rows="2" placeholder="Вставте текст документа для індексації…"></textarea>
+          <div class="row">
+            <button class="btn sm" id="rag-add-save" type="button">Додати в індекс</button>
+            <button class="btn ghost sm" id="rag-add-cancel" type="button">Скасувати</button>
+          </div>
+        </div>
+
+        <div class="chips" id="ragq"></div>
+        <form class="row" id="ragform">
+          <input type="text" id="ragin" style="flex:1" placeholder="Запитайте щось по базі знань (UA / PL / EN)…" autocomplete="off">
+          <button class="btn" id="ragbtn" type="submit">Знайти</button>
+        </form>
+        <div class="answer" id="raganswer" aria-live="polite"></div>
+        <div>
+          <div class="between" style="margin-bottom:5px">
+            <span class="lbl" style="margin:0">Знайдені фрагменти</span>
+            <span class="note mono" id="raglocked"></span>
+          </div>
+          <div class="frags" id="ragfrags"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 03 DOCS ==================== -->
+  <section class="case" id="docs" data-cat="docs">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">03</span><span>vision ocr / schema check / docx</span></div>
+      <h2>Звірка первинних документів (текст або фото рахунку) та генерація договору .docx</h2>
+      <p>Витягує реквізити (ЄДРПОУ, IBAN, підписанта) й товарні позиції з картки контрагента та рахунку-фактури, перераховує арифметику рядків проти підсумку, підсвічує розбіжності та формує готовий файл <code>.docx</code>. Можна завантажити фото реального рахунку через Vision OCR.</p>
+      <div class="stack"><span>Vision OCR</span><span>JSON Schema</span><span>Перевірка ЄДРПОУ / сум</span><span>OOXML (.docx)</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span>Звірка комплекту → .docx</span>
+        <div class="chips">
+          <button class="chip" type="button" id="doc-preset-bad">Із розбіжностями</button>
+          <button class="chip" type="button" id="doc-preset-clean">Чистий комплект</button>
+          <label class="chip" style="cursor:pointer">
+            Фото рахунку (OCR)
+            <input type="file" id="doc-ocr-file" accept="image/*" hidden>
+          </label>
+        </div>
+      </div>
+      <div class="benchbody">
+        <div class="two">
+          <label><span class="lbl">Джерело А — картка контрагента</span><textarea id="srcA" rows="7"></textarea></label>
+          <label><span class="lbl">Джерело Б — рахунок-фактура</span><textarea id="srcB" rows="7"></textarea></label>
+        </div>
+        <div class="row">
+          <button class="btn" id="docbtn" type="button">Витягти та звірити</button>
+          <button class="btn ghost" id="docdl" type="button">Завантажити .docx</button>
+          <span class="note" id="docnote"></span>
+        </div>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Поле</th><th>Значення</th><th>Результат перевірки</th></tr></thead>
+            <tbody id="fields"></tbody>
+          </table>
+        </div>
+        <div>
+          <span class="lbl">Попередній перегляд договору (спірні поля виділено)</span>
+          <div class="contract" id="contract"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 04 PARSER ==================== -->
+  <section class="case" id="parser" data-cat="docs">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">04</span><span>python / playwright / llm sku matching</span></div>
+      <h2>Парсинг постачальників і ШІ-зіставлення специфікацій із прайсом у CSV</h2>
+      <p>У кошторисах та прайсах одну й ту саму позицію записують десятком способів (<code>3*2,5мм2</code> vs <code>3х2.5</code>, скорочення, опечатки). Вставте власні рядки або відредагуйте каталог постачальника — LLM підбере артикул, порахує суму та вивантажить готовий <code>.csv</code> для Excel.</p>
+      <div class="stack"><span>Python + Playwright</span><span>LLM Нормалізація</span><span>Матчинг SKU</span><span>Експорт CSV / XLSX</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span>Матчинг специфікації</span>
+        <div class="row">
+          <div class="tabs" role="tablist">
+            <button class="tab" id="tab-spec-run" aria-selected="true">Розрахунок</button>
+            <button class="tab" id="tab-spec-cat" aria-selected="false">Каталог (JSON)</button>
+          </div>
+          <button class="btn ghost sm" id="csv-dl" type="button">Завантажити .csv</button>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-spec-run">
+        <label>
+          <span class="lbl">Вхідні рядки кошторису (можна вписувати власні)</span>
+          <textarea id="raw-spec" rows="5"></textarea>
+        </label>
+        <div class="between">
+          <button class="btn" id="match-btn" type="button">Зіставити та порахувати</button>
+          <span class="note mono" id="spec-summary"></span>
+        </div>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Вхідний рядок</th><th>Знайдений SKU</th><th>К-сть × Ціна</th><th>Сума</th></tr></thead>
+            <tbody id="spec-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-spec-cat" hidden>
+        <p class="note">Додайте власні товари чи артикули до JSON-прайсу й натисніть «Зберегти»:</p>
+        <textarea id="cat-editor" rows="10"></textarea>
+        <div class="row">
+          <button class="btn sm" id="cat-save" type="button">Зберегти каталог</button>
+          <span class="note" id="cat-msg"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 05 LISTING ==================== -->
+  <section class="case" id="listing" data-cat="docs">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">05</span><span>n8n / llm api / rozetka, prom &amp; ebay</span></div>
+      <h2>Потокова генерація карток товарів із чернетки складу та вивантаження по API</h2>
+      <p>Оберіть майданчик (<code>Rozetka / Prom.ua</code>, <code>eBay UK/US</code> або <code>Vinted</code>), введіть коротку нотатку про товар — отримаєте заголовок із контролем ліміту символів, атрибути, чесний опис і готовий JSON для API.</p>
+      <div class="stack"><span>n8n / Make</span><span>LLM JSON API</span><span>Rozetka / Prom API</span><span>eBay Sell API</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span>Генератор картки товару</span>
+        <div class="row">
+          <select id="ebay-mp" aria-label="Майданчик">
+            <option value="prom">Rozetka / Prom.ua (UA)</option>
+            <option value="ebay">eBay UK/US (EN)</option>
+            <option value="vinted">Vinted (FR)</option>
+          </select>
+          <div class="tabs" role="tablist">
+            <button class="tab" id="tab-ebay-preview" aria-selected="true">Картка</button>
+            <button class="tab" id="tab-ebay-json" aria-selected="false">API JSON</button>
+          </div>
+        </div>
+      </div>
+      <div class="benchbody">
+        <div class="chips" id="ebay-presets"></div>
+        <label><span class="lbl">Нотатка про товар (введіть будь-який власний опис)</span><textarea id="lnote" rows="3"></textarea></label>
+        <div class="row">
+          <button class="btn" id="lbtn" type="button">Згенерувати картку</button>
+          <button class="btn ghost sm" id="lcopy" type="button">Копіювати JSON</button>
+          <span class="note" id="lnotes"></span>
+        </div>
+        <div id="pane-ebay-preview" style="display:grid;gap:10px"></div>
+        <pre class="code" id="pane-ebay-json" hidden></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 06 HANDWRITING VISION OCR ==================== -->
+  <section class="case" id="hand" data-cat="docs">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">06</span><span>live vision llm / verbatim ocr</span></div>
+      <h2>Живе Vision-розпізнавання рукописів і сканів із завантаженням власного фото</h2>
+      <p>Завантажте будь-яку фотографію рукописної нотатки, акту чи чеку — або перевірте вбудовані зразки кнопкою «Розпізнати через Vision AI». У дослівному режимі зберігаються авторські помилки, закреслення <code>~~слово~~</code>, а нерозбірливі плями позначаються <code>[illegible]</code> без додумування.</p>
+      <div class="stack"><span>Multimodal Vision API</span><span>Дослівна передача</span><span>Завантаження JPG / PNG</span><span>Контроль якості</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span>Vision OCR · завантаження фото</span>
+        <div class="row">
+          <div class="chips" id="scan-samples">
+            <button class="chip" type="button" data-sample="ua" aria-pressed="true">Зразок 1 (UA)</button>
+            <button class="chip" type="button" data-sample="en" aria-pressed="false">Зразок 2 (EN)</button>
+          </div>
+          <label class="btn ghost sm" style="cursor:pointer">
+            Завантажити своє фото
+            <input type="file" id="hand-upload" accept="image/*" hidden>
+          </label>
+        </div>
+      </div>
+      <div class="benchbody">
+        <div class="scan-wrap">
+          <canvas class="scan" id="scan" width="760" height="295" role="img" aria-label="Зразок рукописного тексту"></canvas>
+          <img class="scan-img" id="scan-uploaded" alt="Завантажене зображення" hidden>
+        </div>
+        <div class="between">
+          <div class="row">
+            <button class="btn sm" id="hand-run-ai" type="button">Розпізнати через Vision AI</button>
+            <div class="seg" id="hand-mode">
+              <button type="button" data-hmode="verbatim" aria-pressed="true">Дослівно (verbatim)</button>
+              <button type="button" data-hmode="norm" aria-pressed="false">Нормалізовано</button>
+            </div>
+          </div>
+          <span class="note mono" id="hand-status"></span>
+        </div>
+        <div class="verbatim" id="hout" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 07 CLAUDE CODE / SOFTWARE FACTORY ==================== -->
+  <section class="case" id="cc" data-cat="eng">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">07</span><span>claude code / autonomous software factory / hooks</span></div>
+      <h2>Автономний конвеєр ШІ-розробки: хуки контролю файлів та обов'язковий гейт тестів</h2>
+      <p>На великій кодовій базі текстові правила в промпті швидко забуваються: агент починає змінювати сусідні модулі й закриває задачу з червоними тестами. Мій кіт <code>.claude/</code> на чистому Node.js жорстко блокує правки поза затвердженим <code>scope.txt</code> (<code>exit 2</code>), захищає <code>.env</code>/<code>.git/</code> і не дає завершити задачу до проходження тестів + diff-рев'ю.</p>
+      <div class="stack"><span>PreToolUse &amp; Stop Hooks</span><span>Git Worktrees</span><span>node:test (8/8 green)</span><span>Sub-agent Reviewer</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span><span>claude-code-guardrails</span></span>
+        <div class="row">
+          <div class="tabs" role="tablist" id="cc-tabs">
+            <button class="tab" data-cctab="sim" aria-selected="true">Симулятор хука</button>
+            <button class="tab" data-cctab="guard" aria-selected="false">scope-guard.mjs</button>
+            <button class="tab" data-cctab="gate" aria-selected="false">test-gate.mjs</button>
+          </div>
+          <a class="btn ghost sm" href="https://github.com/Beelsik/portfolio/tree/main/claude-code-kit" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </div>
+
+      <div class="benchbody" id="cc-pane-sim">
+        <div class="two">
+          <div>
+            <span class="lbl">.claude/scope.txt (погоджені файли)</span>
+            <textarea id="cc-scope" rows="4">app/renderer/**/*.tsx
+server/routes/</textarea>
+          </div>
+          <div>
+            <span class="lbl">Шлях, який намагається змінити агент</span>
+            <input type="text" id="cc-target" value="app/renderer/components/BookingModal.tsx">
+            <div class="chips" style="margin-top:7px" id="cc-presets">
+              <button class="chip" type="button" data-path="app/renderer/components/BookingModal.tsx">BookingModal.tsx</button>
+              <button class="chip" type="button" data-path="app/main/registry.ts">app/main/registry.ts</button>
+              <button class="chip" type="button" data-path=".ENV.production">.ENV.production</button>
+              <button class="chip" type="button" data-path=".claude/scope.txt">.claude/scope.txt</button>
+              <button class="chip" type="button" data-path="../secrets.json">../secrets.json</button>
+            </div>
+          </div>
+        </div>
+        <div id="cc-result" class="term-out pass"></div>
+      </div>
+
+      <div class="benchbody" id="cc-pane-code" hidden>
+        <pre class="code" id="cc-code-box"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 08 SPECS / ISO / INFRA ==================== -->
+  <section class="case" id="spec" data-cat="eng">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">08</span><span>iso/iec 29148 / тз, пмі / архітектурний аудит</span></div>
+      <h2>Технічна документація (ТЗ, матриця трасування, ПМІ) та порівняння інфраструктури</h2>
+      <p>Готую інженерні специфікації без зайвої «води»: кожне зауваження стейкхолдера прив'язане до пункту ТЗ і конкретного сценарію приймальних випробувань (UAT / ПМІ). Введіть власну вимогу в полі нижче — LLM одразу згенерує готовий тест-кейс у таблицю.</p>
+      <div class="stack"><span>ISO/IEC 29148</span><span>Матриця трасування</span><span>ПМІ / UAT</span><span>Хмарна інфраструктура</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span>Системний аналіз та ПМІ</span>
+        <div class="tabs" role="tablist">
+          <button class="tab" id="tab-spec-trace" aria-selected="true">Трасування ТЗ ↔ ПМІ</button>
+          <button class="tab" id="tab-spec-infra" aria-selected="false">Порівняння інфраструктури</button>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-spec-trace">
+        <span class="lbl">1. Матриця зауважень замовника → Розділи ТЗ (натисніть рядок для підсвітки зв'язку)</span>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Код</th><th>Зауваження</th><th>Прийняте рішення</th><th>Посилання в ТЗ</th></tr></thead>
+            <tbody>
+              <tr data-trace="rbac" class="hl-row"><td><code>З-07</code></td><td>Не визначено ролі з правом закриття заявки</td><td>Закриття дозволено лише ролям «Виконавець» та «Адміністратор»</td><td>ТЗ п. 4.2.3; Матриця RBAC</td></tr>
+              <tr data-trace="audit"><td><code>З-12</code></td><td>Відсутній термін зберігання журналу подій</td><td>Журнал аудиту зберігається 3 роки (append-only, без видалення з UI)</td><td>ТЗ п. 4.3.5; Політика ІБ</td></tr>
+              <tr data-trace="sla"><td><code>З-15</code></td><td>SLA не прив'язаний до критичності інциденту</td><td>4 рівні пріоритету (15 хв / 1 год / 4 год / 8 роб. год) з ескалацією</td><td>ТЗ п. 4.2.6; Регламент SLA</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <span class="lbl">2. Програма та методика випробувань (ПМІ / UAT)</span>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Тест</th><th>Пункт ТЗ</th><th>Сценарій перевірки</th><th>Критерій приймання</th></tr></thead>
+            <tbody id="spec-pmi-body">
+              <tr data-trace="rbac" class="hl-row"><td><code>ПМІ-21</code></td><td>п. 4.2.3</td><td>Увійти як «Ініціатор», відкрити виконану заявку, спробувати закрити через UI та API.</td><td>Кнопка прихована; API повертає <code>403 Forbidden</code>.</td></tr>
+              <tr data-trace="audit"><td><code>ПМІ-23</code></td><td>п. 4.3.5</td><td>Під роллю «Адміністратор» спробувати видалити запис із журналу аудиту.</td><td>Операція блокується політикою БД; спроба фіксується в лозі безпеки.</td></tr>
+              <tr data-trace="sla"><td><code>ПМІ-22</code></td><td>п. 4.2.6</td><td>Створити інцидент P1 і не призначати виконавця 16 хвилин.</td><td>Виставлено прапорець порушення SLA, черговому надійшло сповіщення.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <form class="row" id="spec-gen-form">
+          <input type="text" id="spec-req-in" style="flex:1" placeholder="Введіть будь-яку вимогу ТЗ (напр.: блокування акаунту після 5 невдалих входів)…" autocomplete="off">
+          <button class="btn sm" id="spec-gen-btn" type="submit">+ Згенерувати тест ПМІ</button>
+        </form>
+      </div>
+
+      <div class="benchbody" id="pane-spec-infra" hidden>
+        <p class="note">Фрагмент архітектурного порівняння інфраструктури перед фіналізацією ТЗ:</p>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Критерій</th><th>Proxmox VE (Hetzner / Colocation)</th><th>Керована хмара (AWS EU / GCP)</th><th>Рекомендація</th></tr></thead>
+            <tbody>
+              <tr><td>Експлуатація</td><td>Фіксована ціна заліза, потрібен адмін вузлів</td><td>Нульове обслуговування ОС, авто-скейлінг, керований RDS</td><td>Для MVP і до 20 сервісів — керована хмара; під стабільний GPU/RAG — bare-metal Proxmox.</td></tr>
+              <tr><td>Резервування (DR)</td><td>ZFS-снепшоти + Proxmox Backup Server</td><td>Multi-AZ, автоматичний PITR, SOC 2 / ISO 27001</td><td>Зафіксувати в ТЗ RPO &le; 15 хв та щоквартальний тест відновлення бекапу.</td></tr>
+              <tr><td>Відповідність GDPR</td><td>100% дата-центри в ЄС (Німеччина / Фінляндія)</td><td>Регіон Frankfurt / Warsaw, шифрування KMS</td><td>Тримати БД і локальні ембединги в регіоні ЄС із шифруванням на диску.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 09 AUDIT ==================== -->
+  <section class="case" id="audit" data-cat="eng">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">09</span><span>lovable / bolt / cursor → production react + supabase</span></div>
+      <h2>Аудит, захист та доведення до продакшену проєктів після Lovable / Bolt / Cursor</h2>
+      <p>ШІ-конструктори швидко збирають візуальний MVP, але часто залишають таблиці Supabase без RLS, ключі у фронтенді та розрахунок цін у браузері. Відкрийте вкладку «Перевірити свій код» і вставте будь-який фрагмент React чи SQL — отримаєте живий аналіз вразливостей.</p>
+      <div class="stack"><span>Supabase RLS &amp; Edge Functions</span><span>React / TypeScript</span><span>SQL Міграції</span><span>PWA &amp; CI/CD</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span>Аудит безпеки та архітектури SaaS</span>
+        <div class="tabs" role="tablist">
+          <button class="tab" id="tab-aud-table" aria-selected="true">Звіт (6)</button>
+          <button class="tab" id="tab-aud-fix" aria-selected="false">Патч SQL (RLS + RPC)</button>
+          <button class="tab" id="tab-aud-live" aria-selected="false">Перевірити свій код</button>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-aud-table">
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Рівень</th><th>Виявлена проблема</th><th>Виправлення</th></tr></thead>
+            <tbody>
+              <tr><td><span class="sev c">CRITICAL</span></td><td>Вимкнено RLS на таблиці <code>public.bookings</code> — будь-хто з публічним anon-ключем може зчитати номери всіх клієнтів.</td><td>Увімкнути RLS + політики ізоляції за <code>auth.uid()</code> та тенантом.</td></tr>
+              <tr><td><span class="sev c">CRITICAL</span></td><td><code>VITE_SUPABASE_SERVICE_ROLE_KEY</code> потрапив у клієнтський JS-бандл для адмін-операцій.</td><td>Негайно відкликати ключ; винести привілейовані виклики в Edge Function.</td></tr>
+              <tr><td><span class="sev h">HIGH</span></td><td>Сума замовлення та знижки рахуються у React і записуються напряму в БД.</td><td>Перенести розрахунок у Postgres <code>SECURITY DEFINER</code> RPC.</td></tr>
+              <tr><td><span class="sev m">MEDIUM</span></td><td>Схема змінювалася вручну в Studio; у Git немає жодної SQL-міграції.</td><td>Зняти baseline через <code>supabase db pull</code> і перевіряти міграції в CI.</td></tr>
+              <tr><td><span class="sev m">MEDIUM</span></td><td>Запити <code>supabase.from()</code> продубльовані у 16 компонентах без типізації БД.</td><td>Генерація типів (<code>supabase gen types</code>) + єдиний шар TanStack Query.</td></tr>
+              <tr><td><span class="sev l">LOW</span></td><td>Можливий подвійний запис на один слот при паралельних запитах.</td><td>Додати Postgres-обмеження <code>EXCLUDE USING gist</code> на інтервал часу.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-aud-fix" hidden>
+<pre class="code">-- 1. Ізоляція рядків за користувачем та тенантом
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "tenant_read_own_bookings"
+  ON public.bookings FOR SELECT
+  USING (customer_id = auth.uid() OR tenant_admin(tenant_id, auth.uid()));
+
+-- 2. Захист від подвійного бронювання на рівні СУБД
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+ALTER TABLE public.bookings
+  ADD CONSTRAINT prevent_double_booking
+  EXCLUDE USING gist (staff_id WITH =, slot_range WITH &amp;&amp;)
+  WHERE (status &lt;&gt; 'cancelled');
+
+-- 3. Серверний розрахунок вартості (браузер передає лише ID послуги й слот)
+CREATE OR REPLACE FUNCTION public.create_booking(p_service uuid, p_slot tstzrange)
+RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_price integer; v_id uuid;
+BEGIN
+  SELECT price_cents INTO STRICT v_price FROM services WHERE id = p_service AND active;
+  INSERT INTO bookings (customer_id, service_id, slot_range, total_cents)
+  VALUES (auth.uid(), p_service, p_slot, v_price) RETURNING id INTO v_id;
+  RETURN v_id;
+END; $$;</pre>
+      </div>
+
+      <div class="benchbody" id="pane-aud-live" hidden>
+        <label>
+          <span class="lbl">Вставте фрагмент React / TypeScript / Supabase SQL для перевірки</span>
+          <textarea id="aud-code-in" rows="6">const supabase = createClient(import.meta.env.VITE_URL, import.meta.env.VITE_SERVICE_ROLE_KEY);
+async function checkout(cart, discountPercent) {
+  const total = cart.reduce((s, i) => s + i.price, 0) * (1 - discountPercent / 100);
+  await supabase.from('orders').insert({ user_id: user.id, total, status: 'paid' });
+}</textarea>
+        </label>
+        <div class="row">
+          <button class="btn sm" id="aud-run-btn" type="button">Перевірити на вразливості</button>
+          <span class="note" id="aud-live-note"></span>
+        </div>
+        <div class="tbl" id="aud-live-wrap" hidden>
+          <table><thead><tr><th>Рівень</th><th>Проблема</th><th>Рекомендація</th></tr></thead><tbody id="aud-live-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      <strong style="color:var(--ink)">Обговорити задачу або запустити швидкий пілот на ваших даних</strong>
+      <p style="margin:5px 0 0;max-width:62ch">Надішліть короткий опис задачі чи кілька знеособлених файлів у чат проєкту — оціню етапи, терміни та запропоную найпростішу робочу архітектуру без зайвого ускладнення.</p>
+    </div>
+    <div class="foot-links">
+      <a href="https://github.com/Beelsik" target="_blank" rel="noopener">github.com/Beelsik</a>
+    </div>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const LANG = 'uk';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+  /* Theme */
+  let theme = 'light';
+  try {
+    const st = localStorage.getItem('pf-theme');
+    if (st === 'dark' || st === 'light') theme = st;
+    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+  } catch {}
+  const applyTheme = (t) => { theme = t; document.documentElement.dataset.theme = t; $('#theme-ico').textContent = t === 'dark' ? '☀' : '☾'; try { localStorage.setItem('pf-theme', t); } catch {} };
+  applyTheme(theme);
+  $('#theme-btn').onclick = () => applyTheme(theme === 'dark' ? 'light' : 'dark');
+
+  let backendInfo = { llmEnabled: false, visionEnabled: false, model: 'local', visionModel: 'none' };
+
+  function fileToJpegDataUrl(file, maxDim = 1400) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Read error'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Invalid image'));
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            const ratio = Math.min(maxDim / width, maxDim / height);
+            width = Math.round(width * ratio); height = Math.round(height * ratio);
+          }
+          const c = document.createElement('canvas'); c.width = width; c.height = height;
+          const ctx = c.getContext('2d'); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(c.toDataURL('image/jpeg', 0.86));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* Filter */
+  $$('.fbtn').forEach((btn) => {
+    btn.onclick = () => {
+      const cat = btn.dataset.cat;
+      $$('.fbtn').forEach((b) => b.setAttribute('aria-pressed', b === btn));
+      $$('.case').forEach((sec) => { sec.hidden = cat !== 'all' && sec.dataset.cat !== cat; });
+    };
+  });
+
+  /* ==================== 01 SALES BOT ==================== */
+  const DEFAULT_KB = {
+    clinic: 'Стоматологія «Квітень», Київ, вул. Січових Стрільців, 24',
+    hours: 'Пн–Пт 09:00–20:00, Сб 10:00–17:00',
+    services: [
+      { id: 'hygiene', name: 'Професійна гігієна (УЗ + Air Flow + полірування)', price: '2 400 ₴', dur: '60 хв', doc: 'Коваленко М.О.' },
+      { id: 'caries', name: 'Лікування карієсу + фотополімерна пломба', price: 'від 2 800 ₴', dur: '60 хв', doc: 'Мельник О.І.' },
+      { id: 'consult', name: 'Первинний огляд + прицільний знімок', price: '650 ₴', dur: '30 хв', doc: 'Мельник О.І.' },
+      { id: 'implant', name: 'Імплантація Osstem під ключ (з коронкою)', price: '26 500 ₴', dur: '2 візити', doc: 'Бондар А.В.' },
+      { id: 'ortho', name: 'Консультація ортодонта (діти від 7 років та дорослі)', price: 'безкоштовно', dur: '40 хв', doc: 'Савченко О.С.' },
+    ],
+    open_slots: ['Чт 18:30 (Мельник)', 'Пт 12:00 (Коваленко)', 'Пт 17:30 (Коваленко)', 'Сб 10:30 (Коваленко)', 'Сб 15:00 (Бондар)'],
+    handoff_rules: ['медичне страхування', 'лікування уві сні / седація', 'оплата частинами / розстрочка'],
+  };
+  let activeKB = structuredClone(DEFAULT_KB);
+  let operatorsBusy = true, chatHistory = [], chatState = { bookedSlots: new Set(), events: 0 };
+  $('#kb-editor').value = JSON.stringify(activeKB, null, 2);
+
+  $('#kb-apply').onclick = () => {
+    try { activeKB = JSON.parse($('#kb-editor').value); $('#kb-msg').textContent = 'Базу оновлено — перевірте в діалозі!'; }
+    catch { $('#kb-msg').textContent = 'Помилка синтаксису JSON'; }
+  };
+  $('#kb-reset').onclick = () => { activeKB = structuredClone(DEFAULT_KB); $('#kb-editor').value = JSON.stringify(activeKB, null, 2); $('#kb-msg').textContent = 'Скинуто'; };
+  $('#tab-chat-ui').onclick = () => { $('#tab-chat-ui').setAttribute('aria-selected', 'true'); $('#tab-chat-kb').setAttribute('aria-selected', 'false'); $('#pane-chat-ui').hidden = false; $('#pane-chat-kb').hidden = true; };
+  $('#tab-chat-kb').onclick = () => { $('#tab-chat-kb').setAttribute('aria-selected', 'true'); $('#tab-chat-ui').setAttribute('aria-selected', 'false'); $('#pane-chat-kb').hidden = false; $('#pane-chat-ui').hidden = true; };
+
+  $('#op-mode').onclick = (e) => {
+    const b = e.target.closest('[data-op]'); if (!b) return;
+    operatorsBusy = b.dataset.op === 'busy';
+    $$('#op-mode [data-op]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    addChatBubble('a', operatorsBusy
+      ? 'Усі оператори зайняті — ШІ-асистент перехопив чергування.'
+      : 'Оператор на лінії: бот у режимі очікування, повідомлення йдуть напряму менеджеру.');
+  };
+
+  ['Скільки коштує чистка зубів?', 'Запишіть на суботу 10:30, Ігор +380 67 555 19 40', 'Чи працюєте зі страхуванням або оплатою частинами?', 'Де ви знаходитесь і скільки коштує імплант?'].forEach((q) => {
+    const b = el('button', 'chip', q); b.type = 'button'; b.onclick = () => handleUserChat(q); $('#chat-presets').append(b);
+  });
+
+  function addChatBubble(role, text) { const m = el('div', 'msg ' + role, text); const box = $('#chat'); box.append(m); box.scrollTop = box.scrollHeight; return m; }
+  function pushCrmEvent(ev) {
+    chatState.events += 1; $('#crm-count').textContent = `${chatState.events} под.`;
+    const card = el('div', 'lead');
+    if (ev.type === 'lead') card.append(el('span', 'pill ok', 'POST /crm/leads · 201'), el('strong', '', `${ev.name} (${ev.phone})`), el('span', '', ev.service), el('span', 'mono', `Слот: ${ev.slot}`));
+    else card.append(el('span', 'pill warn', 'POST /crm/handoff · 200'), el('span', '', ev.reason));
+    $('#crm').prepend(card);
+  }
+
+  function localChatFallback(clean) {
+    const q = clean.toLowerCase();
+    if (/(страх|оплат.*частин|розстроч|кредит|седац|уві сні)/i.test(q)) {
+      pushCrmEvent({ type: 'handoff', reason: `Поза базою бота: «${clean.slice(0, 48)}»` });
+      return 'Умови страхування, оплати частинами та седації уточнює адміністратор — передав ваш запит, відповідь надійде за 10–15 хв.';
+    }
+    const ph = clean.match(/(\+?\d[\d\s\-()]{7,}\d)/);
+    if (ph) {
+      const slot = activeKB.open_slots[3] || activeKB.open_slots[0] || 'Сб 10:30';
+      chatState.bookedSlots.add(slot);
+      pushCrmEvent({ type: 'lead', name: 'Клієнт', phone: ph[1], service: activeKB.services[0]?.name || 'Прийом', slot });
+      return `Готово! Записав вас на ${slot}. Напередодні надішлемо нагадування.`;
+    }
+    const s0 = activeKB.services[0];
+    return `${s0.name} — ${s0.price} (${s0.dur}). Вільні вікна: ${activeKB.open_slots.slice(0, 3).join(', ')}.`;
+  }
+
+  async function handleUserChat(text) {
+    const clean = text.trim(); if (!clean) return;
+    $('#chatin').value = ''; addChatBubble('c', clean);
+    chatHistory.push({ role: 'user', content: clean });
+    if (!operatorsBusy) {
+      pushCrmEvent({ type: 'handoff', reason: `Вільному оператору: «${clean.slice(0, 48)}»` });
+      const msg = 'Повідомлення передано вільному оператору в CRM (бот на паузі). Перемкніть режим вище на «Оператори зайняті → ШІ», щоб перевірити автовідповідь.';
+      chatHistory.push({ role: 'assistant', content: msg }); setTimeout(() => addChatBubble('a', msg), 100); return;
+    }
+    if (backendInfo.llmEnabled) {
+      const wait = addChatBubble('a', '…'); $('#chatsend').disabled = true;
+      try {
+        const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory, kb: activeKB, bookedSlots: Array.from(chatState.bookedSlots), lang: LANG }) });
+        if (!res.ok) throw new Error('API');
+        const data = await res.json(); const reply = String(data.reply || '…');
+        wait.textContent = reply; chatHistory.push({ role: 'assistant', content: reply });
+        if (data.action?.type === 'lead') { if (data.action.slot) chatState.bookedSlots.add(data.action.slot); pushCrmEvent({ type: 'lead', name: data.action.name || 'Клієнт', phone: data.action.phone || '—', service: data.action.service || 'Прийом', slot: data.action.slot || '—' }); }
+        else if (data.action?.type === 'handoff') pushCrmEvent({ type: 'handoff', reason: data.action.reason || 'Передано оператору' });
+        return;
+      } catch { wait.remove(); } finally { $('#chatsend').disabled = false; }
+    }
+    const fb = localChatFallback(clean); chatHistory.push({ role: 'assistant', content: fb }); setTimeout(() => addChatBubble('a', fb), 120);
+  }
+
+  function resetChat() {
+    $('#chat').replaceChildren(); $('#crm').replaceChildren();
+    chatState = { bookedSlots: new Set(), events: 0 }; chatHistory = []; $('#crm-count').textContent = '0 подій';
+    const g = 'Вітаю! Я ШІ-адміністратор клініки «Квітень». Підкажу актуальні ціни, вільні вікна лікарів і запишу на прийом.';
+    addChatBubble('a', g); chatHistory.push({ role: 'assistant', content: g });
+  }
+  $('#chatform').onsubmit = (e) => { e.preventDefault(); handleUserChat($('#chatin').value); };
+  $('#chatreset').onclick = resetChat;
+
+  /* ==================== 02 RAG ==================== */
+  const ragDocs = [
+    { id: 'D1', src: 'ERP · Тарифи хабу', acc: 'all', text: 'Склад Варшава: безкоштовне зберігання — 5 календарних днів від вивантаження, з 6-го дня — 1,20 € за палету на добу. Вантажі ADR не приймаються.' },
+    { id: 'D2', src: 'E-mail · Magazyn Łódź (PL)', acc: 'all', text: 'Od 1 grudnia magazyn w Łodzi pracuje również w soboty w godzinach 08:00–14:00. Rozładunki wyłącznie po awizacji.' },
+    { id: 'D3', src: 'Telegram · Диспетчерська Львів', acc: 'all', text: 'Термінал Познань: електронні перепустки оформлювати за 24 години через диспетчера Ольгу (номер тягача та паспорт водія).' },
+    { id: 'D4', src: 'Regulamin reklamacji (PL)', acc: 'all', text: 'Reklamacje dotyczące uszkodzeń ładunku przyjmujemy do 7 dni od dostawy (zdjęcia + protokół kierowcy).' },
+    { id: 'D5', src: 'Поліс страхування вантажів', acc: 'all', text: 'Покриття вантажу до 50 000 € на рейс, франшиза 500 €. Електроніка страхується лише за наявності номерної пломби.' },
+    { id: 'D6', src: 'SQL View · v_monthly_orders', acc: 'all', text: 'Відвантажені рейси за жовтень 2026 по філіях: Київ — 384, Львів — 295, Варшава — 412. Разом: 1 091 рейс.' },
+    { id: 'D7', src: 'SOP · Baltic Foods (EN)', acc: 'all', text: 'Baltic Foods requires continuous PDF temperature logs attached to every reefer delivery note within 4 hours.' },
+    { id: 'D8', src: 'Дирекція · Обмежений доступ', acc: 'mgmt', text: 'Преміальний фонд директорів філій за Q4: 8% від приросту чистої маржі, виплата у лютому.' },
+    { id: 'D9', src: 'M&A · Обмежений доступ', acc: 'mgmt', text: 'Переговори про купівлю крос-док складу у Кракові: бюджет до 2,1 млн PLN, рішення комітету до 15 грудня.' },
+  ];
+  let ragRole = 'staff';
+
+  const tokenize = (s) => (s.toLowerCase().match(/[\p{L}\d-]+/gu) || []).filter((w) => w.length > 2).map((w) => w.slice(0, 5));
+  $('#rag-add-toggle').onclick = () => { $('#rag-add-box').hidden = !$('#rag-add-box').hidden; };
+  $('#rag-add-cancel').onclick = () => { $('#rag-add-box').hidden = true; };
+  $('#rag-add-save').onclick = () => {
+    const src = $('#rag-new-src').value.trim() || 'Користувацький документ';
+    const text = $('#rag-new-text').value.trim(); if (!text) return;
+    ragDocs.push({ id: 'D' + (ragDocs.length + 1), src, acc: $('#rag-new-acc').value, text });
+    $('#rag-doc-count').textContent = ragDocs.length;
+    $('#rag-new-src').value = ''; $('#rag-new-text').value = ''; $('#rag-add-box').hidden = true;
+    runRagSearch(text.split(/\s+/).filter((w) => w.length > 4).slice(0, 3).join(' ') || src, true);
+  };
+
+  function retrieveChunks(query) {
+    const pool = ragDocs.filter((d) => d.acc === 'all' || ragRole === 'mgmt');
+    const qs = tokenize(query);
+    const restrictedHit = ragRole === 'staff' && ragDocs.filter((d) => d.acc === 'mgmt').some((d) => qs.some((qt) => tokenize(d.text + ' ' + d.src).includes(qt)));
+    const df = {}; pool.forEach((d) => new Set(tokenize(d.text + ' ' + d.src)).forEach((t) => { df[t] = (df[t] || 0) + 1; }));
+    const scored = pool.map((d) => {
+      const dt = tokenize(d.text + ' ' + d.src); const matched = []; let score = 0;
+      new Set(qs).forEach((qt) => { if (dt.includes(qt)) { score += Math.log(1.4 + pool.length / (df[qt] || 1)); matched.push(qt); } });
+      return { d, score, matched };
+    }).sort((a, b) => b.score - a.score);
+    return { hits: scored.filter((x) => x.score > 0.3).slice(0, 3), hiddenCount: ragDocs.length - pool.length, restrictedHit, allowedCount: pool.length };
+  }
+
+  async function runRagSearch(q, useLive = true) {
+    $('#ragin').value = q;
+    const res = retrieveChunks(q);
+    let empty = !res.hits.length;
+    let ansText = empty
+      ? (res.restrictedHit
+          ? `У джерелах, відкритих для ролі «Логіст» (${res.allowedCount}/${ragDocs.length}), відповіді немає. Перемкніть роль на «Директор» угорі — закритий документ відсічено політикою RBAC ще до пошуку.`
+          : 'У підключених джерелах відповіді немає — агент чесно повідомляє про це замість вигадок.')
+      : `${res.hits[0].d.text} [${res.hits[0].d.id}]`;
+
+    const paintAns = (txt) => {
+      const box = $('#raganswer'); box.className = 'answer' + (empty ? ' empty' : ''); box.replaceChildren();
+      txt.split(/(\[D\d+\])/).forEach((p) => box.append(/^\[D\d+\]$/.test(p) ? el('span', 'cite', p.slice(1, -1)) : document.createTextNode(p)));
+    };
+    paintAns(ansText);
+
+    const frags = $('#ragfrags'); frags.replaceChildren();
+    if (!res.hits.length) frags.append(el('p', 'note', 'Збігів вище порогу релевантності не знайдено.'));
+    res.hits.forEach(({ d, score, matched }) => {
+      const c = el('div', 'frag'), h = el('div', 'frag-h');
+      h.append(el('span', '', `[${d.id}] ${d.src}${d.acc === 'mgmt' ? ' [mgmt-only]' : ''}`), el('span', '', `score ${score.toFixed(2)}`));
+      const body = el('div', '');
+      d.text.split(/([\p{L}\d-]+)/gu).forEach((tok) => body.append(tok.length > 2 && matched.includes(tok.toLowerCase().slice(0, 5)) ? el('mark', '', tok) : document.createTextNode(tok)));
+      c.append(h, body); frags.append(c);
+    });
+    $('#raglocked').textContent = res.hiddenCount ? `Приховано RBAC: ${res.hiddenCount} док.` : `Повний доступ (${ragDocs.length}/${ragDocs.length})`;
+
+    if (useLive && backendInfo.llmEnabled && res.hits.length) {
+      try {
+        const r = await fetch('/api/rag', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q, role: ragRole, lang: LANG, chunks: res.hits.map((h) => ({ id: h.d.id, src: h.d.src, text: h.d.text })) }) });
+        if (r.ok) { const d = await r.json(); if (d.answer) paintAns(d.answer); }
+      } catch {}
+    }
+  }
+
+  ['Скільки днів безкоштовне зберігання у Варшаві?', 'Який бюджет на купівлю складу у Кракові?', 'Скільки рейсів виконали у жовтні по філіях?', 'What does Baltic Foods require for reefer loads?'].forEach((q) => {
+    const b = el('button', 'chip', q); b.type = 'button'; b.onclick = () => runRagSearch(q, true); $('#ragq').append(b);
+  });
+  $('#ragform').onsubmit = (e) => { e.preventDefault(); const q = $('#ragin').value.trim(); if (q) runRagSearch(q, true); };
+  $('#roles').onclick = (e) => {
+    const b = e.target.closest('[data-role]'); if (!b) return;
+    ragRole = b.dataset.role; $$('#roles [data-role]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    const q = $('#ragin').value.trim(); if (q) runRagSearch(q, true);
+  };
+
+  /* ==================== 03 DOCS ==================== */
+  const DOC_PRESETS = {
+    bad: {
+      a: 'ТОВ «ПівнічПостач»\nЄДРПОУ 41829304, ІПН 418293026551\nЮр. адреса: 04070, м. Київ, вул. Сагайдачного, буд. 15, оф. 204\nIBAN UA213052990000026004016209184 в АТ КБ «ПриватБанк»\nДиректор: Карпенко Ілля Сергійович (на підставі Статуту)',
+      b: 'Рахунок-фактура № 318 від 18.11.2026\nПостачальник: ТОВ "Північ Постач", ЄДРПОУ 41829399\n1. Стелаж архівний СТ-200 — 12 шт × 4 200 = 50 400\n2. Монтаж і кріплення стелажів — 1 посл × 7 500 = 7 500\nРазом до сплати: 59 900 грн (у т.ч. ПДВ 20%)\nТермін поставки: 10 робочих днів',
+    },
+    clean: {
+      a: 'ТОВ «ПівнічПостач»\nЄДРПОУ 41829304, ІПН 418293026551\nЮр. адреса: 04070, м. Київ, вул. Сагайдачного, буд. 15, оф. 204\nIBAN UA213052990000026004016209184 в АТ КБ «ПриватБанк»\nДиректор: Карпенко Ілля Сергійович (на підставі Статуту)',
+      b: 'Рахунок-фактура № 318/1 від 18.11.2026\nПостачальник: ТОВ «ПівнічПостач», ЄДРПОУ 41829304\n1. Стелаж архівний СТ-200 — 12 шт × 4 200 = 50 400\n2. Монтаж і кріплення стелажів — 1 посл × 7 500 = 7 500\nРазом до сплати: 57 900 грн (у т.ч. ПДВ 20%)\nТермін поставки: 10 робочих днів',
+    },
+  };
+  let parsedFields = [];
+  const parseNum = (s) => Number(String(s || '').replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+  const fmtMoney = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  function localExtractDocs() {
+    const a = $('#srcA').value, b = $('#srcB').value;
+    const nameA = (a.split(/\r?\n/)[0] || '').trim();
+    const idA = (a.match(/ЄДРПОУ\s*(\d{8})/i) || [])[1] || '';
+    const idB = (b.match(/ЄДРПОУ\s*(\d{8})/i) || [])[1] || '';
+    let sum = 0; const items = [];
+    b.split(/\r?\n/).forEach((ln) => {
+      const m = ln.match(/^\s*\d+\.\s*(.+?)\s*[—\-–]\s*(\d+)\s*[^\d×x*]*[×x*]\s*([\d\s]+)\s*=\s*([\d\s]+)/i);
+      if (m) { sum += parseNum(m[2]) * parseNum(m[3]); items.push(`${m[1].trim()} (${m[2]})`); }
+    });
+    const totRaw = (b.match(/Разом[^:\n]*:\s*([^\n]+)/i) || [])[1]?.trim() || '—';
+    const stated = parseNum((totRaw.match(/[\d\s]+/) || [])[0]);
+    const idBad = idA && idB && idA !== idB;
+    const mathBad = sum > 0 && stated > 0 && Math.abs(sum - stated) > 1;
+    parsedFields = [
+      { key: 'name', label: 'Постачальник', val: nameA || '—', note: 'З картки контрагента (А)', level: 'ok' },
+      { key: 'inn', label: 'ЄДРПОУ', val: idA || idB || '—', note: idBad ? `Розбіжність: у картці ${idA}, у рахунку ${idB}` : 'Збігається в А та Б', level: idBad ? 'bad' : 'ok' },
+      { key: 'subj', label: 'Позиції', val: items.join('; ') || '—', note: `Розібрано: ${items.length}`, level: items.length ? 'ok' : 'warn' },
+      { key: 'total', label: 'Сума до сплати', val: totRaw, note: mathBad ? `Сума рядків дає ${fmtMoney(sum)} грн, а в рахунку ${fmtMoney(stated)} грн!` : `Арифметика сходиться (${fmtMoney(sum)} грн)`, level: mathBad ? 'bad' : 'ok' },
+    ];
+    renderFieldsTable();
+  }
+
+  async function extractAndVerifyDocs(useLive = true) {
+    localExtractDocs();
+    if (useLive && backendInfo.llmEnabled) {
+      $('#docbtn').disabled = true; $('#docnote').textContent = 'Звіряю через LLM…';
+      try {
+        const res = await fetch('/api/docs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ srcA: $('#srcA').value, srcB: $('#srcB').value, lang: LANG }) });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.fields) && data.fields.length) {
+            parsedFields = data.fields.map((f) => ({ key: String(f.key || ''), label: String(f.label || f.key || ''), val: String(f.val || f.value || '—'), note: String(f.note || f.check || ''), level: ['ok', 'warn', 'bad'].includes(f.level) ? f.level : 'ok' }));
+            renderFieldsTable();
+          }
+        }
+      } catch {} finally { $('#docbtn').disabled = false; }
+    }
+  }
+
+  function buildContractBody(fields) {
+    const g = (k) => (fields.find((x) => x.key === k) || {}).val || '________';
+    return `ДОГОВІР ПОСТАВКИ № 318-П\nм. Київ                                          «18» листопада 2026 р.\n\n${g('name')} (ЄДРПОУ ${g('inn')}), далі «Постачальник», та ТОВ «Замовник», далі «Покупець», уклали цей Договір:\n1. Предмет поставки: ${g('subj')}.\n2. Загальна вартість: ${g('total')}.\n3. Термін поставки: ${g('term')}.\n4. Реквізити Постачальника: ${g('addr')} / ${g('bank')}`;
+  }
+
+  function renderFieldsTable() {
+    const tb = $('#fields'); tb.replaceChildren();
+    parsedFields.forEach((f) => {
+      const tr = el('tr');
+      const icon = f.level === 'bad' ? '✖ ' : f.level === 'warn' ? '△ ' : '✓ ';
+      const cls = f.level === 'bad' ? 'st-bad' : f.level === 'warn' ? 'st-warn' : 'st-ok';
+      tr.append(el('td', '', f.label), el('td', 'mono', f.val), el('td', cls, icon + f.note)); tb.append(tr);
+    });
+    const bads = parsedFields.filter((f) => f.level === 'bad').length;
+    $('#docnote').textContent = bads ? `Знайдено розбіжностей: ${bads}` : 'Усі реквізити й суми зійшлися';
+    const box = $('#contract'); box.replaceChildren();
+    const text = buildContractBody(parsedFields);
+    const flagged = parsedFields.filter((f) => f.level !== 'ok' && f.val && f.val !== '—').map((f) => f.val);
+    let segs = [text];
+    flagged.forEach((val) => {
+      const next = [];
+      segs.forEach((s) => { if (typeof s !== 'string') { next.push(s); return; } s.split(val).forEach((p, i, arr) => { if (p) next.push(p); if (i < arr.length - 1) next.push({ m: val }); }); });
+      segs = next;
+    });
+    segs.forEach((s) => box.append(typeof s === 'string' ? document.createTextNode(s) : el('mark', '', s.m)));
+  }
+
+  $('#doc-ocr-file').onchange = async (e) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    if (!backendInfo.visionEnabled) { $('#docnote').textContent = 'Vision OCR працює за наявності підключеного API.'; return; }
+    $('#docnote').textContent = 'Читаю фото рахунку через Vision AI…';
+    try {
+      const dataUrl = await fileToJpegDataUrl(f);
+      const r = await fetch('/api/ocr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageDataUrl: dataUrl, mode: 'invoice', lang: LANG }) });
+      if (!r.ok) throw new Error('OCR');
+      const d = await r.json(); $('#srcB').value = d.text || ''; await extractAndVerifyDocs(true);
+    } catch { $('#docnote').textContent = 'Не вдалося розпізнати зображення.'; }
+    e.target.value = '';
+  };
+
+  /* Pure-JS ZIP for .docx */
+  const CRC = (() => { const t = new Uint32Array(256); for (let i = 0; i < 256; i++) { let c = i; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[i] = c >>> 0; } return t; })();
+  const crc32 = (b) => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function makeZipStore(entries) {
+    const enc = new TextEncoder(), lp = [], cp = []; let off = 0;
+    entries.forEach(({ name, content }) => {
+      const nb = enc.encode(name), db = enc.encode(content), crc = crc32(db);
+      const lh = new Uint8Array(30 + nb.length), lv = new DataView(lh.buffer);
+      lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint32(14, crc, true); lv.setUint32(18, db.length, true); lv.setUint32(22, db.length, true); lv.setUint16(26, nb.length, true); lh.set(nb, 30);
+      const ch = new Uint8Array(46 + nb.length), cv = new DataView(ch.buffer);
+      cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint32(16, crc, true); cv.setUint32(20, db.length, true); cv.setUint32(24, db.length, true); cv.setUint16(28, nb.length, true); cv.setUint32(42, off, true); ch.set(nb, 46);
+      lp.push(lh, db); cp.push(ch); off += lh.length + db.length;
+    });
+    const cs = cp.reduce((s, b) => s + b.length, 0), eocd = new Uint8Array(22), ev = new DataView(eocd.buffer);
+    ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, entries.length, true); ev.setUint16(10, entries.length, true); ev.setUint32(12, cs, true); ev.setUint32(16, off, true);
+    return new Blob([...lp, ...cp, eocd], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  }
+  const xmlEsc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  $('#docdl').onclick = () => {
+    const paras = buildContractBody(parsedFields).split('\n').map((ln, i) => `<w:p><w:r><w:rPr>${i === 0 ? '<w:b/>' : ''}<w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">${xmlEsc(ln)}</w:t></w:r></w:p>`).join('');
+    const blob = makeZipStore([
+      { name: '[Content_Types].xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>' },
+      { name: '_rels/.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+      { name: 'word/document.xml', content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paras}</w:body></w:document>` },
+    ]);
+    const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = 'dogovir-postavky-318.docx'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+  };
+  $('#srcA').value = DOC_PRESETS.bad.a; $('#srcB').value = DOC_PRESETS.bad.b;
+  $('#docbtn').onclick = () => extractAndVerifyDocs(true);
+  $('#doc-preset-bad').onclick = () => { $('#srcA').value = DOC_PRESETS.bad.a; $('#srcB').value = DOC_PRESETS.bad.b; extractAndVerifyDocs(false); };
+  $('#doc-preset-clean').onclick = () => { $('#srcA').value = DOC_PRESETS.clean.a; $('#srcB').value = DOC_PRESETS.clean.b; extractAndVerifyDocs(false); };
+
+  /* ==================== 04 PARSER ==================== */
+  let activeCatalog = [
+    { sku: 'UA-98142', name: 'Кабель силовий ВВГнг-LS 3х2.5 (мідь)', unit: 'м', price: 48 },
+    { sku: 'UA-21048', name: 'Автоматичний вимикач ABB SH201L C16 1P', unit: 'шт', price: 215 },
+    { sku: 'UA-77510', name: 'Дифавтомат Schneider Easy9 1P+N C16 30мА', unit: 'шт', price: 980 },
+    { sku: 'UA-63901', name: 'Світильник LED панель 36Вт 4000K 595х595 IP20', unit: 'шт', price: 640 },
+    { sku: 'UA-50923', name: 'Гофротруба ПВХ d20 мм з протяжкою', unit: 'м', price: 11 },
+  ];
+  $('#cat-editor').value = JSON.stringify(activeCatalog, null, 2);
+  $('#raw-spec').value = 'Кабель ВВГ-Пнг-LS 3*2,5мм2 — 450 м\nАвтомат ABB SH201L С16 1п - 24 шт.\nLED панель Армстронг 36W 4000K — 18 шт\nГофра ПВХ 20мм із протяжкою — 300 м';
+  let matchedRows = [];
+
+  $('#tab-spec-run').onclick = () => { $('#tab-spec-run').setAttribute('aria-selected', 'true'); $('#tab-spec-cat').setAttribute('aria-selected', 'false'); $('#pane-spec-run').hidden = false; $('#pane-spec-cat').hidden = true; };
+  $('#tab-spec-cat').onclick = () => { $('#tab-spec-cat').setAttribute('aria-selected', 'true'); $('#tab-spec-run').setAttribute('aria-selected', 'false'); $('#pane-spec-cat').hidden = false; $('#pane-spec-run').hidden = true; };
+  $('#cat-save').onclick = () => { try { activeCatalog = JSON.parse($('#cat-editor').value); $('#cat-msg').textContent = 'Каталог збережено'; } catch { $('#cat-msg').textContent = 'Помилка JSON'; } };
+
+  function localMatchSpecs() {
+    const lines = $('#raw-spec').value.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    matchedRows = lines.map((raw) => {
+      const qm = raw.match(/[—\-–:]\s*(\d+(?:[.,]\d+)?)/); const qty = qm ? parseNum(qm[1]) : 1;
+      const rw = tokenize(raw.replace(/,/g, '.').replace(/[×*x]/g, 'x'));
+      let best = null, score = 0;
+      activeCatalog.forEach((item) => {
+        const iw = tokenize(item.name.replace(/,/g, '.').replace(/[×*x]/g, 'x'));
+        const h = rw.filter((w) => iw.some((x) => x.includes(w) || w.includes(x))).length;
+        if (h > score) { score = h; best = item; }
+      });
+      if (best && score >= 2) return { raw, sku: best.sku, name: best.name, qty, unit: best.unit, price: best.price, conf: score >= 3 ? 'ok' : 'warn' };
+      return { raw, sku: 'MANUAL-CHECK', name: 'Немає в каталозі — ручна перевірка', qty, unit: '—', price: 0, conf: 'bad' };
+    });
+    renderMatchedRows();
+  }
+  function renderMatchedRows() {
+    const tb = $('#spec-tbody'); tb.replaceChildren(); let total = 0;
+    matchedRows.forEach((r) => {
+      const sub = (Number(r.qty) || 0) * (Number(r.price) || 0); total += sub;
+      const tr = el('tr'), sc = el('td', '');
+      sc.append(el('span', 'pill ' + (r.conf === 'ok' ? 'ok' : r.conf === 'warn' ? 'warn' : 'bad'), r.sku), el('div', '', r.name));
+      tr.append(el('td', '', r.raw), sc, el('td', 'mono', r.price ? `${r.qty} ${r.unit} × ${r.price} ₴` : `${r.qty}`), el('td', 'mono', sub ? `${fmtMoney(sub)} ₴` : '—'));
+      tb.append(tr);
+    });
+    $('#spec-summary').textContent = `Зіставлено: ${matchedRows.filter((x) => x.conf !== 'bad').length}/${matchedRows.length} · Разом: ${fmtMoney(total)} ₴`;
+  }
+  async function runSpecMatcher(useLive = true) {
+    localMatchSpecs();
+    if (useLive && backendInfo.llmEnabled) {
+      $('#match-btn').disabled = true; $('#spec-summary').textContent = 'Матчинг через LLM…';
+      try {
+        const lines = $('#raw-spec').value.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const r = await fetch('/api/parse', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lines, catalog: activeCatalog, lang: LANG }) });
+        if (r.ok) { const d = await r.json(); if (Array.isArray(d.rows) && d.rows.length) { matchedRows = d.rows; renderMatchedRows(); } }
+      } catch {} finally { $('#match-btn').disabled = false; }
+    }
+  }
+  $('#match-btn').onclick = () => runSpecMatcher(true);
+  $('#csv-dl').onclick = () => {
+    const csv = '\uFEFFInput;SKU;Catalog_Name;Qty;Unit;Price_UAH;Subtotal_UAH\n' + matchedRows.map((r) => `"${String(r.raw).replace(/"/g, '""')}";"${r.sku}";"${String(r.name).replace(/"/g, '""')}";${r.qty};"${r.unit}";${r.price};${(r.qty * r.price).toFixed(2)}`).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })), a = document.createElement('a'); a.href = url; a.download = 'koshtorys-matched.csv'; document.body.appendChild(a); a.click(); a.remove();
+  };
+
+  /* ==================== 05 LISTING ==================== */
+  const SAMPLES_MP = [
+    { label: 'Термос 1л (Rozetka/Prom)', mp: 'prom', note: 'Термос із нержавіючої сталі 304, обʼєм 1 літр, тримає окріп до 24 год, клапан із кнопкою, матовий чорний корпус, кришка-чашка в комплекті, подарункова коробка.' },
+    { label: 'ThinkPad T14 (eBay)', mp: 'ebay', note: 'Lenovo ThinkPad T14 Gen 2 laptop, 2021, Intel i7-1165G7, 16GB RAM, 512GB NVMe SSD, 14" FHD IPS, backlit keyboard, Win 11 Pro, battery 86%, 65W USB-C charger included.' },
+    { label: 'Зарядна станція 1кВт (Prom)', mp: 'prom', note: 'Портативна зарядна станція LiFePO4 1024 Вт·год, інвертор 1800 Вт чистий синус, швидка зарядка від мережі за 1.2 год, 3 розетки 220В, 2x USB-C 100W, гарантія 24 міс.' },
+  ];
+  SAMPLES_MP.forEach((s, i) => {
+    const b = el('button', 'chip', s.label); b.type = 'button'; if (i === 0) b.setAttribute('aria-pressed', 'true');
+    b.onclick = () => { $$('#ebay-presets .chip').forEach((x) => x.setAttribute('aria-pressed', x === b)); $('#lnote').value = s.note; $('#ebay-mp').value = s.mp; generateListing(true); };
+    $('#ebay-presets').append(b);
+  });
+  $('#lnote').value = SAMPLES_MP[0].note;
+  let currentListingPayload = {};
+
+  async function generateListing(useLive = false) {
+    const raw = $('#lnote').value.trim(); if (!raw) return;
+    const clauses = raw.split(/[,;.]+/).map((c) => c.trim()).filter(Boolean);
+    let data = { title: clauses.slice(0, 3).join(' ').slice(0, 68), category: $('#ebay-mp').selectedOptions[0].textContent, conditionEnum: 'NEW', specifics: { Товар: clauses[0] || '—', Особливості: clauses.slice(1, 3).join('; ') || '—' }, paragraphs: [raw] };
+    if (useLive && backendInfo.llmEnabled) {
+      $('#lbtn').disabled = true; $('#lnotes').textContent = 'Генерація через LLM…';
+      try {
+        const res = await fetch('/api/listing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note: raw, marketplace: $('#ebay-mp').value }) });
+        if (res.ok) { const o = await res.json(); if (o?.title) data = o; }
+      } catch {} finally { $('#lbtn').disabled = false; $('#lnotes').textContent = ''; }
+    }
+    const pane = $('#pane-ebay-preview'); pane.replaceChildren();
+    const limit = $('#ebay-mp').value === 'ebay' ? 80 : 70;
+    const head = el('div', 'between'); head.append(el('span', 'lbl', `Заголовок (<= ${limit} символів)`));
+    const gauge = el('span', 'counter' + (data.title.length > limit ? ' over' : ''), `${data.title.length} / ${limit}`); head.append(gauge);
+    const inp = el('input', ''); inp.type = 'text'; inp.value = data.title;
+    inp.oninput = () => { gauge.textContent = `${inp.value.length} / ${limit}`; gauge.className = 'counter' + (inp.value.length > limit ? ' over' : ''); currentListingPayload.product.title = inp.value; $('#pane-ebay-json').textContent = JSON.stringify(currentListingPayload, null, 2); };
+    const w = el('div', ''); w.append(head, inp); pane.append(w, el('p', 'note', data.category || ''));
+    const tw = el('div', 'tbl'), tbl = el('table'), tb = el('tbody');
+    Object.entries(data.specifics || {}).forEach(([k, v]) => { const tr = el('tr'); tr.append(el('th', '', k), el('td', '', String(v))); tb.append(tr); });
+    tbl.append(tb); tw.append(tbl); pane.append(tw);
+    const desc = el('div', 'contract'); desc.style.fontFamily = 'var(--f-sans)'; desc.textContent = (data.paragraphs || []).join('\n\n'); pane.append(desc);
+    currentListingPayload = { marketplace: $('#ebay-mp').value, condition: data.conditionEnum || 'NEW', product: { title: data.title, aspects: data.specifics, description: (data.paragraphs || []).map((p) => `<p>${p}</p>`).join('') } };
+    $('#pane-ebay-json').textContent = JSON.stringify(currentListingPayload, null, 2);
+  }
+  $('#lbtn').onclick = () => generateListing(true);
+  $('#lcopy').onclick = async () => { try { await navigator.clipboard.writeText(JSON.stringify(currentListingPayload, null, 2)); $('#lnotes').textContent = 'Скопійовано'; setTimeout(() => { $('#lnotes').textContent = ''; }, 1600); } catch {} };
+  $('#tab-ebay-preview').onclick = () => { $('#tab-ebay-preview').setAttribute('aria-selected', 'true'); $('#tab-ebay-json').setAttribute('aria-selected', 'false'); $('#pane-ebay-preview').hidden = false; $('#pane-ebay-json').hidden = true; };
+  $('#tab-ebay-json').onclick = () => { $('#tab-ebay-json').setAttribute('aria-selected', 'true'); $('#tab-ebay-preview').setAttribute('aria-selected', 'false'); $('#pane-ebay-json').hidden = false; $('#pane-ebay-preview').hidden = true; };
+
+  /* ==================== 06 VISION OCR ==================== */
+  const SCANS = {
+    ua: {
+      paper: '#F4F1E6', ink: '#22283A',
+      lines: [{ x: 38, y: 52, text: 'Акт огляду діл. № 4 від 12 жовт.' }, { x: 38, y: 106, text: 'Опора № 17 — ізолятор тріснув замінено, крен 3 град.' }, { x: 38, y: 160, text: 'Ввід кабелю вологий, перевірити муфту до пʼятниці!!' }, { x: 38, y: 214, text: 'Підпис майстра: Соловйов П.К.' }],
+      strike: { prefix: 'Опора № 17 — ізолятор ', word: 'тріснув', y: 96 },
+      smudge: { prefix: 'Підпис майстра: ', word: 'Соловйов', y: 204 },
+      footer: '— арк. 4 зв. —',
+      verbatim: 'Акт огляду діл. № 4 від 12 жовт.\nОпора № 17 — ізолятор ~~тріснув~~ замінено, крен 3 град.\nВвід кабелю вологий, перевірити муфту до пʼятниці!!\nПідпис майстра: [illegible] П.К.',
+      norm: 'Акт огляду ділянки № 4 від 12 жовтня.\nОпора № 17: ізолятор замінено, крен 3°.\nВвід кабелю вологий — перевірити муфту до пʼятниці.\nПідпис майстра: [нрзб.] П. К.',
+    },
+    en: {
+      paper: '#FAF6EB', ink: '#1C2D5A',
+      lines: [{ x: 38, y: 52, text: 'Tuesday 14th march' }, { x: 38, y: 106, text: 'Went to the market erly, bought apples pears & bread.' }, { x: 38, y: 160, text: 'Mrs Hale says the bridge is closed till friday??' }, { x: 38, y: 214, text: 'Remember: call Tom re. the Harrisons invoice' }],
+      strike: { prefix: 'Went to the market erly, bought ', word: 'apples', y: 96 },
+      smudge: { prefix: 'Remember: call Tom re. the ', word: 'Harrisons', y: 204 },
+      footer: '— p. 14 —',
+      verbatim: 'Tuesday 14th march\nWent to the market erly, bought ~~apples~~ pears & bread.\nMrs Hale says the bridge is closed till friday??\nRemember: call Tom re. the [illegible] invoice',
+      norm: 'Tuesday, 14 March\nWent to the market early, bought pears and bread.\nMrs Hale says the bridge is closed until Friday.\nRemember: call Tom regarding the [illegible] invoice.',
+    },
+  };
+  let curScanKey = 'ua', curHandMode = 'verbatim', uploadedImageDataUrl = null;
+
+  function drawHandCanvas() {
+    if (uploadedImageDataUrl) return;
+    const cfg = SCANS[curScanKey], c = $('#scan'), g = c.getContext('2d');
+    g.fillStyle = cfg.paper; g.fillRect(0, 0, c.width, c.height);
+    g.strokeStyle = 'rgba(55, 95, 160, 0.16)'; g.lineWidth = 1;
+    for (let y = 62; y < c.height; y += 54) { g.beginPath(); g.moveTo(22, y); g.lineTo(c.width - 22, y); g.stroke(); }
+    g.fillStyle = cfg.ink; g.font = '32px Caveat, cursive';
+    cfg.lines.forEach((ln, idx) => { g.save(); g.translate(ln.x, ln.y); g.rotate((idx % 2 ? -1 : 1) * 0.004); g.fillText(ln.text, 0, 0); g.restore(); });
+    const pw = g.measureText(cfg.strike.prefix).width, ww = g.measureText(cfg.strike.word).width;
+    g.strokeStyle = cfg.ink; g.lineWidth = 2.5; g.beginPath(); g.moveTo(38 + pw - 2, cfg.strike.y); g.lineTo(38 + pw + ww + 3, cfg.strike.y - 2); g.stroke();
+    const spw = g.measureText(cfg.smudge.prefix).width, sww = g.measureText(cfg.smudge.word).width;
+    g.fillStyle = 'rgba(24, 38, 82, 0.88)';
+    for (let i = 0; i < 48; i++) {
+      const rx = ((Math.sin(i * 12.9898) * 43758.5453) % 1 + 1) % 1, ry = ((Math.sin(i * 78.233) * 19341.123) % 1 + 1) % 1;
+      g.beginPath(); g.arc(38 + spw + rx * sww, cfg.smudge.y + (ry - 0.5) * 20, 5 + (i % 6), 0, Math.PI * 2); g.fill();
+    }
+    g.fillStyle = 'rgba(30, 40, 70, 0.55)'; g.font = '21px Caveat, cursive'; g.fillText(cfg.footer, c.width / 2 - 36, 272);
+  }
+  function renderVerbatimText(raw) {
+    const out = $('#hout'); out.replaceChildren();
+    String(raw || '').split(/(~~[^~]+~~|\[(?:illegible|нрзб\.)[^\]]*\])/).forEach((tok) => {
+      if (/^~~.+~~$/.test(tok)) out.append(el('s', '', tok.slice(2, -2)));
+      else if (/^\[(?:illegible|нрзб\.)/i.test(tok)) out.append(el('span', 'ill', tok));
+      else out.append(document.createTextNode(tok));
+    });
+  }
+  async function runVisionOcr() {
+    if (!backendInfo.visionEnabled) {
+      $('#hand-status').textContent = 'Локальний попередній перегляд';
+      if (!uploadedImageDataUrl) renderVerbatimText(curHandMode === 'verbatim' ? SCANS[curScanKey].verbatim : SCANS[curScanKey].norm);
+      return;
+    }
+    const imgDataUrl = uploadedImageDataUrl || $('#scan').toDataURL('image/jpeg', 0.9);
+    $('#hand-run-ai').disabled = true; $('#hand-status').textContent = 'Надсилаю зображення до Vision AI…'; $('#hout').textContent = '…';
+    try {
+      const res = await fetch('/api/ocr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageDataUrl: imgDataUrl, mode: curHandMode, lang: LANG }) });
+      if (!res.ok) throw new Error('OCR');
+      const data = await res.json(); renderVerbatimText(data.text || ''); $('#hand-status').textContent = `Vision AI: ${data.model || 'ok'}`;
+    } catch {
+      $('#hand-status').textContent = 'Помилка Vision API — спробуйте ще раз';
+      if (!uploadedImageDataUrl) renderVerbatimText(curHandMode === 'verbatim' ? SCANS[curScanKey].verbatim : SCANS[curScanKey].norm);
+    } finally { $('#hand-run-ai').disabled = false; }
+  }
+  $('#hand-upload').onchange = async (e) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    try {
+      uploadedImageDataUrl = await fileToJpegDataUrl(f);
+      $('#scan').hidden = true; $('#scan-uploaded').src = uploadedImageDataUrl; $('#scan-uploaded').hidden = false;
+      $$('#scan-samples [data-sample]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      await runVisionOcr();
+    } catch { $('#hand-status').textContent = 'Не вдалося прочитати файл'; }
+    e.target.value = '';
+  };
+  $('#scan-samples').onclick = (e) => {
+    const b = e.target.closest('[data-sample]'); if (!b) return;
+    curScanKey = b.dataset.sample; uploadedImageDataUrl = null; $('#scan-uploaded').hidden = true; $('#scan').hidden = false;
+    $$('#scan-samples [data-sample]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    drawHandCanvas(); renderVerbatimText(curHandMode === 'verbatim' ? SCANS[curScanKey].verbatim : SCANS[curScanKey].norm); $('#hand-status').textContent = '';
+  };
+  $('#hand-mode').onclick = (e) => {
+    const b = e.target.closest('[data-hmode]'); if (!b) return;
+    curHandMode = b.dataset.hmode; $$('#hand-mode [data-hmode]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    if (uploadedImageDataUrl && backendInfo.visionEnabled) runVisionOcr();
+    else renderVerbatimText(curHandMode === 'verbatim' ? SCANS[curScanKey].verbatim : SCANS[curScanKey].norm);
+  };
+  $('#hand-run-ai').onclick = runVisionOcr;
+
+  /* ==================== 07 CLAUDE CODE ==================== */
+  const CC_SNIPPETS = {
+    guard: `// .claude/hooks/scope-guard.mjs (PreToolUse: Edit | Write | MultiEdit)\nconst ALWAYS_PROTECTED = [\n  /^\\.git(\\/|$)/i, /(^|\\/)\\.env($|\\.)/i, /(^|\\/)secrets?(\\/|$)/i,\n  /\\.(pem|key|p12|pfx|keystore)$/i, /^\\.claude\\/hooks(\\/|$)/i,\n];\nif (relRaw.startsWith('..') || path.isAbsolute(relRaw)) deny('Outside workspace root');\nif (ALWAYS_PROTECTED.some((re) => re.test(rel))) deny('Protected file');\nif (rel.toLowerCase() === '.claude/scope.txt' && scope.length) deny('Scope locked');\nif (scope.length && !scope.some((p) => compileGlob(p).test(rel))) deny('Out-of-scope');`,
+    gate: `// .claude/hooks/test-gate.mjs (Stop hook)\nif (!gitStatusPorcelain.trim()) process.exit(0); // read-only Q&A\nconst run = spawnSync(testCmd, { cwd: root, shell: true, encoding: 'utf8' });\nif (run.status === 0) { clearScope(); process.exit(0); }\nif (attempt > 3) process.exit(0); // avoid infinite loop\nprocess.stderr.write(tail); process.exit(2);`,
+  };
+  function compileGlobBrowser(p) {
+    let n = p.replace(/\\/g, '/').replace(/^\.\//, ''); if (n.endsWith('/')) n += '**';
+    return new RegExp('^' + n.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*\*\/?/g, '\0').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]').replace(/\0/g, '.*') + '$', 'i');
+  }
+  function runScopeSim() {
+    const scope = $('#cc-scope').value.split(/\r?\n/).map((s) => s.trim()).filter((s) => s && !s.startsWith('#'));
+    const t = $('#cc-target').value.trim().replace(/\\/g, '/').replace(/^\.\//, '');
+    const out = $('#cc-result');
+    if (!t) { out.className = 'term-out pass'; out.textContent = 'exit 0'; return; }
+    if (t.startsWith('..') || /^[a-z]:\//i.test(t) || t.startsWith('/')) { out.className = 'term-out block'; out.textContent = `exit 2 (BLOCKED)\nstderr: "${t}" resolves outside workspace root.`; return; }
+    if ([/^\.git(\/|$)/i, /(^|\/)\.env($|\.)/i, /(^|\/)secrets?(\/|$)/i, /\.(pem|key|p12|pfx)$/i, /^\.claude\/hooks(\/|$)/i].some((r) => r.test(t))) { out.className = 'term-out block'; out.textContent = `exit 2 (BLOCKED)\nstderr: "${t}" is on the protected list.`; return; }
+    if (t.toLowerCase() === '.claude/scope.txt' && scope.length) { out.className = 'term-out block'; out.textContent = 'exit 2 (BLOCKED)\nstderr: scope.txt is locked for the active task.'; return; }
+    if (!scope.length || scope.some((g) => compileGlobBrowser(g).test(t))) { out.className = 'term-out pass'; out.textContent = `exit 0 (ALLOWED)\n"${t}" matches approved scope.`; return; }
+    out.className = 'term-out block'; out.textContent = `exit 2 (BLOCKED)\nstderr: Out-of-scope edit blocked: "${t}"`;
+  }
+  $('#cc-scope').oninput = runScopeSim; $('#cc-target').oninput = runScopeSim;
+  $('#cc-presets').onclick = (e) => { const b = e.target.closest('[data-path]'); if (!b) return; $('#cc-target').value = b.dataset.path; runScopeSim(); };
+  $('#cc-tabs').onclick = (e) => {
+    const tab = e.target.closest('[data-cctab]'); if (!tab) return;
+    const k = tab.dataset.cctab; $$('#cc-tabs [data-cctab]').forEach((t) => t.setAttribute('aria-selected', t === tab));
+    $('#cc-pane-sim').hidden = k !== 'sim'; $('#cc-pane-code').hidden = k === 'sim';
+    if (k !== 'sim') $('#cc-code-box').textContent = CC_SNIPPETS[k];
+  };
+
+  /* ==================== 08 SPEC & PMI ==================== */
+  $$('[data-trace]').forEach((row) => {
+    row.onclick = () => { const k = row.dataset.trace; $$('[data-trace]').forEach((r) => r.classList.toggle('hl-row', r.dataset.trace === k)); };
+  });
+  $('#tab-spec-trace').onclick = () => { $('#tab-spec-trace').setAttribute('aria-selected', 'true'); $('#tab-spec-infra').setAttribute('aria-selected', 'false'); $('#pane-spec-trace').hidden = false; $('#pane-spec-infra').hidden = true; };
+  $('#tab-spec-infra').onclick = () => { $('#tab-spec-infra').setAttribute('aria-selected', 'true'); $('#tab-spec-trace').setAttribute('aria-selected', 'false'); $('#pane-spec-infra').hidden = false; $('#pane-spec-trace').hidden = true; };
+
+  $('#spec-gen-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const req = $('#spec-req-in').value.trim(); if (!req) return;
+    $('#spec-gen-btn').disabled = true;
+    try {
+      let row = { code: 'ПМІ-24', clause: 'ТЗ п. 4.x', steps: `1. Відтворити сценарій: ${req}. 2. Перевірити граничні значення.`, criteria: 'Система дотримується вимоги та фіксує подію в журналі.' };
+      if (backendInfo.llmEnabled) {
+        const r = await fetch('/api/gost', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requirement: req, lang: LANG }) });
+        if (r.ok) { const d = await r.json(); if (d?.steps) row = d; }
+      }
+      const tr = el('tr', 'hl-row'), td0 = el('td'); td0.append(el('code', '', row.code || 'ПМІ-24'));
+      tr.append(td0, el('td', '', row.clause || 'ТЗ'), el('td', '', row.steps), el('td', '', row.criteria));
+      $('#spec-pmi-body').append(tr); $('#spec-req-in').value = '';
+    } catch {} finally { $('#spec-gen-btn').disabled = false; }
+  };
+
+  /* ==================== 09 AUDIT ==================== */
+  const audTabs = [['#tab-aud-table', '#pane-aud-table'], ['#tab-aud-fix', '#pane-aud-fix'], ['#tab-aud-live', '#pane-aud-live']];
+  audTabs.forEach(([ts, ps]) => { $(ts).onclick = () => { audTabs.forEach(([a, b]) => { $(a).setAttribute('aria-selected', a === ts); $(b).hidden = b !== ps; }); }; });
+
+  $('#aud-run-btn').onclick = async () => {
+    const code = $('#aud-code-in').value.trim(); if (!code) return;
+    $('#aud-run-btn').disabled = true; $('#aud-live-note').textContent = 'Аналізую код…';
+    let findings = [];
+    try {
+      if (backendInfo.llmEnabled) {
+        const r = await fetch('/api/audit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, lang: LANG }) });
+        if (r.ok) { const d = await r.json(); findings = d.findings || []; }
+      }
+    } catch {} finally { $('#aud-run-btn').disabled = false; }
+    if (!findings.length) {
+      if (/SERVICE_ROLE_KEY/i.test(code)) findings.push({ sev: 'CRITICAL', issue: 'Ключ service_role потрапив у клієнтський код браузера.', fix: 'Відкликати ключ та винести привілейовану логіку в Edge Function.' });
+      if (/total|price/i.test(code) && /insert/i.test(code)) findings.push({ sev: 'HIGH', issue: 'Сума замовлення та статус "paid" передаються напряму з клієнта.', fix: 'Рахувати ціну на сервері в Postgres RPC і перевіряти webhook оплати.' });
+    }
+    const tb = $('#aud-live-tbody'); tb.replaceChildren();
+    findings.forEach((f) => {
+      const tr = el('tr'), sc = f.sev === 'CRITICAL' ? 'c' : f.sev === 'HIGH' ? 'h' : f.sev === 'MEDIUM' ? 'm' : 'l';
+      const td0 = el('td'); td0.append(el('span', 'sev ' + sc, f.sev));
+      tr.append(td0, el('td', '', f.issue), el('td', '', f.fix)); tb.append(tr);
+    });
+    $('#aud-live-wrap').hidden = false; $('#aud-live-note').textContent = `Знайдено проблем: ${findings.length}`;
+  };
+
+  /* Boot */
+  resetChat();
+  runRagSearch('Скільки днів безкоштовне зберігання у Варшаві?', false);
+  extractAndVerifyDocs(false);
+  runSpecMatcher(false);
+  generateListing(false);
+  drawHandCanvas();
+  renderVerbatimText(SCANS.ua.verbatim);
+  runScopeSim();
+  if (document.fonts && document.fonts.load) document.fonts.load('32px Caveat').then(drawHandCanvas, drawHandCanvas);
+
+  if (location.protocol === 'http:' || location.protocol === 'https:') {
+    fetch('/api/health').then((r) => (r.ok ? r.json() : null)).then((info) => {
+      if (!info) return;
+      backendInfo = info;
+      const b = $('#global-api-badge');
+      if (info.llmEnabled) {
+        b.className = 'pill ok'; b.textContent = 'Live LLM + Vision API';
+        $('#chat-status-note').textContent = `API: ${info.model}`;
+      } else { b.className = 'pill warn'; b.textContent = 'local mode'; }
+    }).catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
