@@ -220,16 +220,34 @@ async function callVertexAI({ system, messages, maxTokens = 900, jsonMode = fals
     },
   });
 
+  const candidateLocs = vertexCreds?.client_email && VERTEX_PROJECT_ID && !process.env.VERTEX_ENDPOINT
+    ? [...new Set([VERTEX_LOCATION, 'global', 'eu', 'us'])]
+    : [VERTEX_LOCATION];
+
   let res = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    res = await fetch(url, {
+  for (let attempt = 0; attempt < Math.min(candidateLocs.length, 3); attempt++) {
+    const loc = candidateLocs[attempt];
+    const reqUrl =
+      vertexCreds?.client_email && VERTEX_PROJECT_ID
+        ? (() => {
+            const h =
+              (process.env.VERTEX_ENDPOINT || '').trim() ||
+              (loc === 'global'
+                ? 'aiplatform.googleapis.com'
+                : loc === 'us' || loc === 'eu'
+                  ? `aiplatform.${loc}.rep.googleapis.com`
+                  : `${loc}-aiplatform.googleapis.com`);
+            return `https://${h}/v1beta1/projects/${encodeURIComponent(VERTEX_PROJECT_ID)}/locations/${encodeURIComponent(loc)}/publishers/google/models/${encodeURIComponent(VERTEX_MODEL)}:generateContent`;
+          })()
+        : url;
+
+    res = await fetch(reqUrl, {
       method: 'POST',
       signal: AbortSignal.timeout(timeoutMs),
       headers,
       body: reqBody,
     });
-    if (res.ok || ![429, 500, 502, 503, 504].includes(res.status) || attempt === 2) break;
-    await new Promise((r) => setTimeout(r, 450 * (attempt + 1)));
+    if (res.ok || ![429, 500, 502, 503, 504].includes(res.status)) break;
   }
   if (!res.ok) {
     const errTxt = await res.text().catch(() => '');
