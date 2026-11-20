@@ -12,7 +12,7 @@ services:
       - key: LLM_BASE_URL
         value: https://integrate.api.nvidia.com/v1
       - key: LLM_MODEL
-        value: meta/llama-3.3-70b-instruct
+        value: google/gemma-4-31b-it
       - key: LLM_API_KEY
         sync: false
       - key: RATE_LIMIT_MAX

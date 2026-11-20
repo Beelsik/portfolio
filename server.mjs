@@ -155,7 +155,7 @@ async function callLLM({ system, messages, maxTokens = 550, jsonMode = false }) 
       model: LLM_MODEL,
       temperature: 0.2,
       max_tokens: maxTokens,
-      ...(jsonMode && LLM_PROVIDER === 'openai' ? { response_format: { type: 'json_object' } } : {}),
+      ...(jsonMode && LLM_BASE_URL.includes('api.openai.com') ? { response_format: { type: 'json_object' } } : {}),
       messages: [{ role: 'system', content: system }, ...messages],
     }),
   });
