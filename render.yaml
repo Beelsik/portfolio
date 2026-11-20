@@ -18,10 +18,12 @@ services:
       - key: LLM_API_KEY
         sync: false
       - key: VERTEX_MODEL
-        value: gemini-2.5-pro
+        value: gemini-4-neon
       - key: VERTEX_LOCATION
-        value: us-central1
+        value: us
       - key: VERTEX_API_KEY
+        sync: false
+      - key: VERTEX_CREDENTIALS_B64
         sync: false
       - key: VERTEX_CREDENTIALS_JSON
         sync: false

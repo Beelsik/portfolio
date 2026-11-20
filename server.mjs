@@ -39,21 +39,28 @@ const LLM_ENABLED = LLM_PROVIDER === 'ollama' || Boolean(LLM_API_KEY);
 const VISION_ENABLED = LLM_ENABLED;
 
 /* ====== TIER 2: HEAVY REASONING TIER — GOOGLE CLOUD VERTEX AI ====== */
-// Supports EITHER:
-//   A) VERTEX_CREDENTIALS_JSON (full Service Account JSON string from GCP IAM)
-//   B) VERTEX_API_KEY (Vertex AI Express Mode API key)
+// Supports:
+//   A) VERTEX_CREDENTIALS_B64 (Base64-encoded Service Account JSON — safest for .env & cloud dashboards)
+//   B) VERTEX_CREDENTIALS_JSON (raw Service Account JSON string) or VERTEX_KEY_FILE (local path)
+//   C) VERTEX_API_KEY (Vertex AI Express Mode API key)
 const VERTEX_API_KEY = (process.env.VERTEX_API_KEY || '').trim();
+const VERTEX_CREDENTIALS_B64 = (process.env.VERTEX_CREDENTIALS_B64 || '').trim();
 const VERTEX_CREDENTIALS_RAW = (process.env.VERTEX_CREDENTIALS_JSON || '').trim();
-const VERTEX_LOCATION = (process.env.VERTEX_LOCATION || 'us-central1').trim();
-const VERTEX_MODEL = (process.env.VERTEX_MODEL || 'gemini-2.5-pro').trim();
+const VERTEX_KEY_FILE = (process.env.VERTEX_KEY_FILE || '').trim();
+const VERTEX_LOCATION = (process.env.VERTEX_LOCATION || 'us').trim();
+const VERTEX_MODEL = (process.env.VERTEX_MODEL || 'gemini-4-neon').trim();
 
 let vertexCreds = null;
-if (VERTEX_CREDENTIALS_RAW) {
-  try {
+try {
+  if (VERTEX_CREDENTIALS_B64) {
+    vertexCreds = JSON.parse(Buffer.from(VERTEX_CREDENTIALS_B64, 'base64').toString('utf8'));
+  } else if (VERTEX_CREDENTIALS_RAW) {
     vertexCreds = JSON.parse(VERTEX_CREDENTIALS_RAW);
-  } catch (e) {
-    console.error('Failed to parse VERTEX_CREDENTIALS_JSON:', e.message);
+  } else if (VERTEX_KEY_FILE && fs.existsSync(VERTEX_KEY_FILE)) {
+    vertexCreds = JSON.parse(fs.readFileSync(VERTEX_KEY_FILE, 'utf8'));
   }
+} catch (e) {
+  console.error('Failed to parse Vertex credentials:', e.message);
 }
 const VERTEX_PROJECT_ID = (process.env.VERTEX_PROJECT_ID || vertexCreds?.project_id || '').trim();
 const VERTEX_ENABLED = Boolean((vertexCreds?.client_email && vertexCreds?.private_key && VERTEX_PROJECT_ID) || VERTEX_API_KEY);
@@ -188,13 +195,20 @@ async function callVertexAI({ system, messages, maxTokens = 900, jsonMode = fals
   if (vertexCreds?.client_email && VERTEX_PROJECT_ID) {
     const token = await getVertexAccessToken();
     headers.Authorization = `Bearer ${token}`;
-    const host = VERTEX_LOCATION === 'global' ? 'aiplatform.googleapis.com' : `${VERTEX_LOCATION}-aiplatform.googleapis.com`;
-    url = `https://${host}/v1/projects/${encodeURIComponent(VERTEX_PROJECT_ID)}/locations/${encodeURIComponent(VERTEX_LOCATION)}/publishers/google/models/${encodeURIComponent(VERTEX_MODEL)}:generateContent`;
+    const host =
+      (process.env.VERTEX_ENDPOINT || '').trim() ||
+      (VERTEX_LOCATION === 'global'
+        ? 'aiplatform.googleapis.com'
+        : VERTEX_LOCATION === 'us' || VERTEX_LOCATION === 'eu'
+          ? `aiplatform.${VERTEX_LOCATION}.rep.googleapis.com`
+          : `${VERTEX_LOCATION}-aiplatform.googleapis.com`);
+    url = `https://${host}/v1beta1/projects/${encodeURIComponent(VERTEX_PROJECT_ID)}/locations/${encodeURIComponent(VERTEX_LOCATION)}/publishers/google/models/${encodeURIComponent(VERTEX_MODEL)}:generateContent`;
   } else {
     // Vertex AI Express Mode with API key
-    url = `https://aiplatform.googleapis.com/v1/publishers/google/models/${encodeURIComponent(VERTEX_MODEL)}:generateContent?key=${encodeURIComponent(VERTEX_API_KEY)}`;
+    url = `https://aiplatform.googleapis.com/v1beta1/publishers/google/models/${encodeURIComponent(VERTEX_MODEL)}:generateContent?key=${encodeURIComponent(VERTEX_API_KEY)}`;
   }
 
+  const isGemini3Or4 = /^gemini-(3|4)/i.test(VERTEX_MODEL);
   const res = await fetch(url, {
     method: 'POST',
     signal: AbortSignal.timeout(timeoutMs),
@@ -204,7 +218,8 @@ async function callVertexAI({ system, messages, maxTokens = 900, jsonMode = fals
       contents,
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: maxTokens,
+        maxOutputTokens: isGemini3Or4 ? Math.max(maxTokens, 2048) : maxTokens,
+        ...(isGemini3Or4 ? { thinkingConfig: { thinkingLevel: process.env.VERTEX_THINKING_LEVEL || 'LOW' } } : {}),
         ...(jsonMode ? { responseMimeType: 'application/json' } : {}),
       },
     }),
