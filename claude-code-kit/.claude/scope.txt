@@ -1,0 +1,2 @@
+# Approved files for the current task, one glob per line.
+# Empty = no task in progress. Cleared automatically when tests pass at the end of a task.

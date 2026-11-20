@@ -1,0 +1,13 @@
+{
+  "name": "claude-code-guardrails",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PreToolUse scope lock and Stop test-gate hooks for Claude Code",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/hooks.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

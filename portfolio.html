@@ -1,0 +1,2600 @@
+<!DOCTYPE html>
+<html lang="ru" data-l="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beelsik — Боты, RAG, парсеры и автоматизация процессов</title>
+<meta name="description" content="Интерактивные рабочие стенды: чат-агенты с CRM, корпоративный поиск (RAG), сверка первички в DOCX, парсинг и матчинг прайсов, карточки eBay, расшифровка сканов и хуки Claude Code.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2316181D'/%3E%3Cpath d='M9 11l5 5-5 5M16 21h7' stroke='%235DD39E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #F6F6F3;
+  --surface: #FFFFFF;
+  --sunk: #EDEEE9;
+  --sunk-2: #E2E4DD;
+  --line: #D4D7CE;
+  --line-strong: #B4B9AE;
+  --ink: #16181C;
+  --ink-soft: #2F353E;
+  --muted: #5B6370;
+  --accent: #1856C4;
+  --accent-soft: #E7EFFD;
+  --accent-ink: #FFFFFF;
+  --ok: #126E43;
+  --ok-bg: #DEF2E7;
+  --warn: #945700;
+  --warn-bg: #FCEFD4;
+  --bad: #B42318;
+  --bad-bg: #FCE6E4;
+  --code-bg: #14171D;
+  --code-ink: #E5E9F0;
+  --f-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  --radius: 9px;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0E1116;
+  --surface: #151A22;
+  --sunk: #10141B;
+  --sunk-2: #1C232F;
+  --line: #262F3D;
+  --line-strong: #39465B;
+  --ink: #E6EAF0;
+  --ink-soft: #C4CCD8;
+  --muted: #8A95A7;
+  --accent: #6CA0FF;
+  --accent-soft: #192847;
+  --accent-ink: #09101D;
+  --ok: #5DD39E;
+  --ok-bg: #112B20;
+  --warn: #F3B75E;
+  --warn-bg: #2E2210;
+  --bad: #FF857D;
+  --bad-bg: #351615;
+  --code-bg: #0A0D12;
+  --code-ink: #E5E9F0;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15.5px/1.58 var(--f-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Trilingual visibility rules */
+html[data-l="ru"] .en, html[data-l="ru"] .fr { display: none !important; }
+html[data-l="en"] .ru, html[data-l="en"] .fr { display: none !important; }
+html[data-l="fr"] .ru, html[data-l="fr"] .en { display: none !important; }
+
+.wrap {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 max(18px, env(safe-area-inset-left, 0px));
+}
+
+a { color: var(--accent); text-underline-offset: 3px; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3, h4 { margin: 0; color: var(--ink); }
+code, pre, .mono { font-family: var(--f-mono); font-size: 0.87em; }
+
+/* Header */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-in {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  flex-wrap: wrap;
+}
+.ident {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.ident-mark {
+  width: 27px;
+  height: 27px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--f-mono);
+  font-weight: 600;
+  font-size: 12.5px;
+  display: grid;
+  place-items: center;
+}
+.ident-text {
+  font-family: var(--f-mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+.ident-sub { color: var(--muted); font-weight: 400; }
+.controls { display: flex; align-items: center; gap: 8px; }
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 2px;
+}
+.seg button {
+  border: 0;
+  background: none;
+  padding: 4px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.seg button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--bg);
+}
+.icon-btn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.icon-btn:hover { border-color: var(--line-strong); }
+
+/* Hero */
+.hero {
+  padding: 36px 0 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 28px;
+  align-items: end;
+}
+@media (max-width: 860px) {
+  .hero { grid-template-columns: 1fr; gap: 18px; padding: 24px 0 16px; }
+}
+.hero h1 {
+  font-size: clamp(25px, 3.4vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  margin-bottom: 13px;
+}
+.hero-lead {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 16px;
+  max-width: 65ch;
+}
+.hero-aside {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 13.5px;
+  display: grid;
+  gap: 8px;
+}
+.hero-aside .kicker {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.hero-aside ul {
+  margin: 0;
+  padding-left: 17px;
+  color: var(--ink-soft);
+  display: grid;
+  gap: 5px;
+}
+
+/* Navigation & Filters */
+.nav-strip {
+  padding: 10px 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.fbtn {
+  border: 1px solid var(--line);
+  background: transparent;
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.fbtn[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--ink);
+  font-weight: 600;
+}
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a {
+  text-decoration: none;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.toc a:hover { border-color: var(--accent); color: var(--ink); }
+.toc a .num { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+
+/* Case grid */
+.case {
+  display: grid;
+  grid-template-columns: minmax(0, 4.4fr) minmax(0, 7.6fr);
+  gap: 28px;
+  padding: 34px 0;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 64px;
+}
+.case[hidden] { display: none !important; }
+@media (max-width: 920px) {
+  .case { grid-template-columns: 1fr; gap: 18px; padding: 26px 0; }
+}
+.brief { display: flex; flex-direction: column; gap: 12px; }
+.case-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.case-idx {
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.brief h2 {
+  font-size: clamp(19.5px, 2.1vw, 24px);
+  line-height: 1.24;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+.brief p { margin: 0; color: var(--ink-soft); font-size: 14.8px; }
+.callout-note {
+  border-left: 2px solid var(--line-strong);
+  padding-left: 12px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.callout-note strong { color: var(--ink); font-weight: 600; }
+.kv-list {
+  display: grid;
+  gap: 8px;
+  font-size: 13.5px;
+  background: var(--sunk);
+  border-radius: 7px;
+  padding: 10px 12px;
+}
+.kv-list div strong {
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 2px;
+}
+.stack { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.stack span {
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Workbench */
+.bench {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.benchbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 13px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sunk);
+  flex-wrap: wrap;
+}
+.bench-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.dot-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  display: inline-block;
+}
+.tabs { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+.tab {
+  border: 1px solid transparent;
+  background: none;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: var(--f-mono);
+  cursor: pointer;
+  color: var(--muted);
+}
+.tab[aria-selected="true"] {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+  font-weight: 600;
+}
+.benchbody { padding: 14px; display: grid; gap: 11px; min-width: 0; }
+
+.btn {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 6px;
+  padding: 7px 13px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.btn:hover { filter: brightness(1.06); }
+.btn.ghost {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.between { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; }
+.note { font-size: 12.5px; color: var(--muted); margin: 0; }
+.lbl {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  display: block;
+}
+textarea, input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+  min-width: 0;
+  font-size: 13.5px;
+}
+textarea {
+  resize: vertical;
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 5px;
+  padding: 4px 9px;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink-soft);
+}
+.chip:hover { border-color: var(--accent); color: var(--ink); }
+.chip[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Chat */
+.chatgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 235px;
+  gap: 12px;
+}
+@media (max-width: 660px) { .chatgrid { grid-template-columns: 1fr; } }
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 300px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+.msg {
+  max-width: 86%;
+  padding: 7px 11px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.msg.c {
+  align-self: flex-end;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-bottom-right-radius: 2px;
+}
+.msg.a {
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 2px;
+}
+.crm {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 7px;
+  padding: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  max-height: 390px;
+  overflow-y: auto;
+}
+.crm-head {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.lead {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 7px 8px;
+  display: grid;
+  gap: 3px;
+}
+.pill {
+  display: inline-block;
+  width: fit-content;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+
+/* RAG */
+.answer {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+.answer.empty { border-left-color: var(--warn); }
+.cite {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 0 5px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+.frags { display: grid; gap: 6px; }
+.frag {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  background: var(--bg);
+  display: grid;
+  gap: 3px;
+}
+.frag-h {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.frag mark {
+  background: var(--warn-bg);
+  color: var(--ink);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Tables & Previews */
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 7px; }
+table { border-collapse: collapse; width: 100%; font-size: 12.8px; }
+th, td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: var(--sunk);
+  font-weight: 600;
+  font-size: 11px;
+  font-family: var(--f-mono);
+  color: var(--muted);
+}
+tr:last-child td { border-bottom: 0; }
+tr.hl-row td { background: var(--accent-soft); }
+tr[data-trace] { cursor: pointer; }
+tr[data-trace]:hover td { background: var(--sunk); }
+tr.hl-row:hover td { background: var(--accent-soft); }
+td.st-bad { color: var(--bad); font-weight: 500; }
+td.st-warn { color: var(--warn); }
+td.st-ok { color: var(--ok); }
+
+.two {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+@media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+
+.contract {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 11px 13px;
+  font-size: 12.5px;
+  font-family: var(--f-mono);
+  white-space: pre-wrap;
+  max-height: 230px;
+  overflow-y: auto;
+  line-height: 1.55;
+}
+.contract mark {
+  background: var(--warn-bg);
+  color: var(--ink);
+  border-bottom: 1px dashed var(--warn);
+  padding: 0 2px;
+}
+
+.counter {
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.counter.over { background: var(--bad-bg); color: var(--bad); }
+
+canvas.scan {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  display: block;
+}
+.verbatim {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 11px 13px;
+  white-space: pre-wrap;
+  line-height: 1.65;
+}
+.verbatim s { color: var(--muted); text-decoration-thickness: 1.5px; }
+.verbatim .ill {
+  background: var(--warn-bg);
+  color: var(--warn);
+  border: 1px solid var(--warn);
+  padding: 0 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+pre.code {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 11px 13px;
+  overflow-x: auto;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.term-out {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  white-space: pre-wrap;
+}
+.term-out.pass { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.term-out.block { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+
+.sev {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.sev.c { background: var(--bad); color: #fff; }
+.sev.h { background: var(--bad-bg); color: var(--bad); }
+.sev.m { background: var(--warn-bg); color: var(--warn); }
+.sev.l { background: var(--sunk-2); color: var(--muted); }
+
+footer {
+  margin-top: 20px;
+  padding: 30px 0 54px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--muted);
+}
+.foot-links {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-family: var(--f-mono);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a href="#" class="ident">
+      <span class="ident-mark">&gt;_</span>
+      <span class="ident-text">
+        <span id="brand-name">beelsik</span>
+        <span class="ident-sub">
+          <span class="ru">/ автоматизация и бэкенд</span>
+          <span class="en">/ automation &amp; llm</span>
+          <span class="fr">/ automatisation &amp; ia</span>
+        </span>
+      </span>
+    </a>
+    <div class="controls">
+      <button class="icon-btn" id="theme-btn" type="button">
+        <span id="theme-ico">☾</span>
+        <span class="ru">Тема</span><span class="en">Theme</span><span class="fr">Thème</span>
+      </button>
+      <div class="seg" role="group" aria-label="Language">
+        <button id="l-ru" type="button" aria-pressed="true">RU</button>
+        <button id="l-en" type="button" aria-pressed="false">EN</button>
+        <button id="l-fr" type="button" aria-pressed="false">FR</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>
+        <span class="ru">Прикладная разработка с ИИ: агенты продаж, поиск по ERP, парсеры и документооборот</span>
+        <span class="en">Applied LLM &amp; Python engineering: CRM bots, RBAC search, scrapers &amp; document pipelines</span>
+        <span class="fr">Automatisation &amp; IA appliquée : agents CRM, recherche RAG, extraction documentaire et refonte SaaS</span>
+      </h1>
+      <p class="hero-lead">
+        <span class="ru">Ниже собраны 9 интерактивных стендов по задачам, которые я делаю на практике: от чат- и голосовых ботов с записью в amoCRM/Битрикс24 и корпоративного RAG с правами доступа до сверки первички в Word, сопоставления прайсов поставщиков, карточек маркетплейсов и обвязки Claude Code. Каждый блок работает прямо в браузере — можно менять входные данные и проверять крайние случаи.</span>
+        <span class="en">Nine interactive sandboxes modelled on real client workflows: CRM-connected booking agents, multilingual RAG with pre-retrieval permissions, invoice-to-DOCX validation, supplier SKU matching, eBay API listings, verbatim manuscript OCR, and Claude Code guardrails. Everything runs live in your browser — edit inputs and test edge cases.</span>
+        <span class="fr">Neuf bacs à sable interactifs tirés de cas concrets : agents de prise de RDV reliés au CRM, recherche documentaire (RAG) avec gestion des droits, contrôle de pièces vers Word/ERP, rapprochement de catalogues fournisseurs, annonces API, et garde-fous Claude Code. Tout fonctionne directement dans le navigateur.</span>
+      </p>
+    </div>
+    <aside class="hero-aside">
+      <span class="kicker"><span class="ru">Подход к работе</span><span class="en">Engineering principles</span><span class="fr">Méthode de travail</span></span>
+      <ul>
+        <li>
+          <span class="ru">Жёсткие JSON-схемы и проверка фактов кодом: модель не придумывает скидки, суммы и свободные слоты.</span>
+          <span class="en">Deterministic state &amp; JSON schemas: the model never invents prices, totals, or calendar slots.</span>
+          <span class="fr">Schémas JSON stricts et validation par le code : aucun montant ni créneau inventé par le modèle.</span>
+        </li>
+        <li>
+          <span class="ru">Быстрый пилот до большого договора: за 1–2 дня собираю прототип на 10–15 ваших обезличенных примерах.</span>
+          <span class="en">Fast low-risk pilot: happy to wire a prototype on 10–15 of your anonymized files or FAQs in 1–2 days.</span>
+          <span class="fr">Pilote rapide sur 5 à 15 documents ou cas anonymisés avant de figer le périmètre complet.</span>
+        </li>
+        <li>
+          <span class="ru">Код в вашем Git, запуск в Docker, при необходимости — локальные модели (Ollama / Qwen) без передачи данных наружу.</span>
+          <span class="en">Clean handoff: Dockerized services, your Git repo, and local Ollama/Qwen option when data must stay on-prem.</span>
+          <span class="fr">Livraison propre sous Docker et Git, compatible modèles locaux (Ollama / Qwen) pour garder les données chez vous.</span>
+        </li>
+      </ul>
+    </aside>
+  </section>
+
+  <div class="nav-strip">
+    <div class="filters" role="group" aria-label="Filter">
+      <button class="fbtn" data-cat="all" aria-pressed="true"><span class="ru">Все стенды (9)</span><span class="en">All sandboxes (9)</span><span class="fr">Tous les cas (9)</span></button>
+      <button class="fbtn" data-cat="agents" aria-pressed="false"><span class="ru">Боты, CRM и RAG</span><span class="en">Agents, CRM &amp; RAG</span><span class="fr">Agents, CRM &amp; RAG</span></button>
+      <button class="fbtn" data-cat="docs" aria-pressed="false"><span class="ru">Документы, парсеры и e-com</span><span class="en">Docs, Scrapers &amp; Commerce</span><span class="fr">Documents, Parsing &amp; E-com</span></button>
+      <button class="fbtn" data-cat="eng" aria-pressed="false"><span class="ru">Код, SaaS-аудит и ТЗ</span><span class="en">Code, SaaS Audit &amp; Specs</span><span class="fr">Claude Code, Audit Lovable &amp; Specs</span></button>
+    </div>
+    <nav class="toc" aria-label="Cases">
+      <a href="#sales"><span class="num">01</span><span class="ru">Агент продаж + CRM</span><span class="en">Sales &amp; CRM agent</span><span class="fr">Agent commercial CRM</span></a>
+      <a href="#rag"><span class="num">02</span><span class="ru">RAG по базе и ERP</span><span class="en">ERP &amp; docs RAG</span><span class="fr">RAG &amp; droits d'accès</span></a>
+      <a href="#docs"><span class="num">03</span><span class="ru">Документы → .docx</span><span class="en">Docs → .docx</span><span class="fr">Pièces → Contrat / ERP</span></a>
+      <a href="#parser"><span class="num">04</span><span class="ru">Парсинг и прайсы</span><span class="en">SKU parser &amp; matcher</span><span class="fr">Parsing &amp; catalogues</span></a>
+      <a href="#listing"><span class="num">05</span><span class="ru">Карточки eBay / E-com</span><span class="en">eBay / Marketplace API</span><span class="fr">Annonces eBay / Vinted</span></a>
+      <a href="#hand"><span class="num">06</span><span class="ru">Рукописи (OCR)</span><span class="en">Verbatim OCR</span><span class="fr">Transcription manuscrite</span></a>
+      <a href="#cc"><span class="num">07</span>Claude Code Kit</a>
+      <a href="#gost"><span class="num">08</span><span class="ru">ГОСТ 34 и обследование</span><span class="en">GOST 34 &amp; infra study</span><span class="fr">Cahier des charges &amp; tests</span></a>
+      <a href="#audit"><span class="num">09</span><span class="ru">Доводка после Lovable</span><span class="en">Post-Lovable SaaS audit</span><span class="fr">Migration Lovable / SaaS</span></a>
+    </nav>
+  </div>
+
+  <!-- ==================== 01 SALES ==================== -->
+  <section class="case" id="sales" data-cat="agents">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">01</span><span>telegram / sip voice / amocrm &amp; bitrix24</span></div>
+      <h2>
+        <span class="ru">Агент отдела продаж: консультация строго по прайсу, запись в слот и передача менеджеру</span>
+        <span class="en">Sales &amp; booking agent: grounded pricing, slot locking &amp; CRM handoff</span>
+        <span class="fr">Agent d'accueil et de qualification : réponses cadrées, prise de RDV et relais humain</span>
+      </h2>
+      <p>
+        <span class="ru">Стенд на примере клиники «Апрель». Агент ведёт диалог по верифицированной базе цен и окон врачей, проверяет занятость слота и отправляет карточку сделки в CRM. На вопросы вне регламента (ДМС, наркоз, индивидуальная рассрочка) не фантазирует, а ставит задачу живому менеджеру.</span>
+        <span class="en">Answers strictly from the verified price &amp; doctor schedule, prevents double-booking in code, and posts structured leads via webhook. Out-of-policy questions (insurance, sedation, custom payment plans) trigger an immediate human handoff.</span>
+        <span class="fr">Répond uniquement à partir de la grille tarifaire et des créneaux ouverts, bloque les doublons et crée la fiche dans le CRM. Si une question sort du cadre (mutuelle, paiement en plusieurs fois), la conversation est transmise à un conseiller sans inventer.</span>
+      </p>
+      <div class="kv-list">
+        <div>
+          <strong><span class="ru">В боевом контуре (текст + телефония + 152-ФЗ)</span><span class="en">Production stack (chat + voice SIP)</span><span class="fr">En production (chat, SMS &amp; voix SIP)</span></strong>
+          <span class="ru">Telegram + виджет сайта + голосовой контур через SIP / Voximplant (потоковые STT/TTS с задержкой &lt; 800 мс и перебиванием). Маскирование ПДн перед внешним LLM-адаптером и веб-админка с перехватом диалога.</span>
+          <span class="en">Telegram, web widget, and streaming SIP voice (&lt;800ms turn latency with barge-in), PII masking before LLM calls, follow-up timers, and an operator takeover dashboard.</span>
+          <span class="fr">Telegram, widget web, relances SMS/vocales via SIP (&lt;800 ms de latence), anonymisation RGPD avant appel API et interface d'administration avec reprise en main.</span>
+        </div>
+      </div>
+      <div class="stack"><span>FastAPI</span><span>Tool Calling</span><span>amoCRM / Bitrix24 / HubSpot</span><span>SIP Streaming</span><span>152-ФЗ / RGPD</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span><span class="ru">Стенд: Стоматология «Апрель»</span><span class="en">Sandbox: April Clinic</span><span class="fr">Bac à sable : Clinique Avril</span><span class="pill ok" id="api-badge" style="margin-left:4px">local</span></span>
+        <div class="row">
+          <div class="seg" id="op-mode" role="group" aria-label="Operator status">
+            <button type="button" data-op="busy" aria-pressed="true"><span class="ru">Операторы заняты → ИИ</span><span class="en">Operators busy → AI</span><span class="fr">Conseillers occupés → IA</span></button>
+            <button type="button" data-op="free" aria-pressed="false"><span class="ru">Оператор свободен</span><span class="en">Operator online</span><span class="fr">Conseiller libre</span></button>
+          </div>
+          <div class="tabs" role="tablist">
+            <button class="tab" id="tab-chat-ui" aria-selected="true"><span class="ru">Диалог</span><span class="en">Live chat</span><span class="fr">Discussion</span></button>
+            <button class="tab" id="tab-chat-kb" aria-selected="false"><span class="ru">База знаний (JSON)</span><span class="en">Agent KB (JSON)</span><span class="fr">Base JSON</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-chat-ui">
+        <div class="chips" id="chat-presets"></div>
+        <div class="chatgrid">
+          <div style="display:grid;gap:8px;min-width:0">
+            <div class="chat" id="chat" aria-live="polite"></div>
+            <form class="row" id="chatform">
+              <input type="text" id="chatin" style="flex:1" autocomplete="off">
+              <button class="btn" id="chatsend" type="submit"><span class="ru">Отправить</span><span class="en">Send</span><span class="fr">Envoyer</span></button>
+            </form>
+            <div class="between">
+              <button class="btn ghost sm" id="chatreset" type="button"><span class="ru">Очистить чат</span><span class="en">Reset</span><span class="fr">Réinitialiser</span></button>
+              <span class="note"><span class="ru">Пишите в свободной форме или нажмите быстрый вопрос выше</span><span class="en">Type freely or click a test scenario above</span><span class="fr">Écrivez librement ou cliquez sur un scénario ci-dessus</span></span>
+            </div>
+          </div>
+          <aside class="crm" aria-label="CRM Webhook Log">
+            <div class="crm-head"><span>CRM Webhook</span><span id="crm-count">0 events</span></div>
+            <div id="crm" style="display:grid;gap:7px"></div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-chat-kb" hidden>
+        <p class="note">
+          <span class="ru">Верифицированные данные агента. Любой вопрос за пределами этого JSON уходит в <code>handoff</code>:</span>
+          <span class="en">Verified ground truth. Any topic outside this JSON routes to <code>handoff</code>:</span>
+          <span class="fr">Source unique de vérité. Toute question hors de ce schéma déclenche un <code>handoff</code> :</span>
+        </p>
+        <pre class="code" id="kb-dump"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 02 RAG ==================== -->
+  <section class="case" id="rag" data-cat="agents">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">02</span><span>postgresql / pgvector / hybrid rbac</span></div>
+      <h2>
+        <span class="ru">Корпоративная база знаний (RAG) по ERP, почте и чатам с ролевым доступом</span>
+        <span class="en">Multilingual company RAG across ERP, email &amp; chat with pre-retrieval RBAC</span>
+        <span class="fr">Base de connaissances RAG multilingue reliée à l'ERP avec filtrage par rôle</span>
+      </h2>
+      <p>
+        <span class="ru">Модель сети филиалов логистического оператора (документы на русском, польском и английском). Права доступа применяются внутри поискового запроса до передачи фрагментов в модель — закрытые документы совета директоров физически не попадают в контекст линейного сотрудника.</span>
+        <span class="en">Indexes Russian, Polish, and English operational sources alongside board-only memos. Access rules filter chunks inside the database query before ranking, so restricted data never enters the prompt context.</span>
+        <span class="fr">Indexe des sources en russe, polonais et anglais (tarifs ERP, e-mails d'entrepôt, notes de direction). Le filtrage des droits s'applique dès la requête SQL avant l'appel au LLM : un employé ne peut jamais faire fuiter un document restreint.</span>
+      </p>
+      <div class="callout-note">
+        <span class="ru"><strong>Точные цифры без галлюцинаций:</strong> для вопросов типа «сколько заказов было в октябре по филиалам» агент не угадывает по тексту, а обращается к белому списку read-only SQL-представлений реплики ERP.</span>
+        <span class="en"><strong>Exact numbers via SQL:</strong> aggregate questions ("how many orders per branch in October?") hit whitelisted read-only SQL views on an ERP replica rather than relying on vector similarity.</span>
+        <span class="fr"><strong>Chiffres exacts via SQL :</strong> pour les comptages (« combien de commandes en octobre ? »), l'agent interroge des vues SQL en lecture seule sur le réplica ERP au lieu de deviner.</span>
+      </div>
+      <div class="stack"><span>PostgreSQL + pgvector</span><span>BM25 + Reranker</span><span>RBAC Isolation</span><span>Read-only ERP Views</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span><span class="ru">Индекс «БалтТранс» (10 источников)</span><span class="en">BaltTrans Index (10 sources)</span><span class="fr">Index BaltTrans (10 sources)</span></span>
+        <div class="row">
+          <span class="note"><span class="ru">Роль:</span><span class="en">Role:</span><span class="fr">Rôle :</span></span>
+          <div class="seg" id="roles">
+            <button type="button" data-role="staff" aria-pressed="true"><span class="ru">Логист</span><span class="en">Dispatcher</span><span class="fr">Exploitant</span></button>
+            <button type="button" data-role="mgmt" aria-pressed="false"><span class="ru">Директор</span><span class="en">Director</span><span class="fr">Direction</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="benchbody">
+        <div class="chips" id="ragq"></div>
+        <form class="row" id="ragform">
+          <input type="text" id="ragin" style="flex:1" autocomplete="off">
+          <button class="btn" id="ragbtn" type="submit"><span class="ru">Найти</span><span class="en">Search</span><span class="fr">Rechercher</span></button>
+        </form>
+        <div class="answer" id="raganswer" aria-live="polite"></div>
+        <div>
+          <div class="between" style="margin-bottom:5px">
+            <span class="lbl" style="margin:0"><span class="ru">Найденные фрагменты индекса</span><span class="en">Retrieved chunks</span><span class="fr">Extraits trouvés</span></span>
+            <span class="note mono" id="raglocked"></span>
+          </div>
+          <div class="frags" id="ragfrags"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 03 DOCS ==================== -->
+  <section class="case" id="docs" data-cat="docs">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">03</span><span>vision ocr / schema check / docx &amp; erp</span></div>
+      <h2>
+        <span class="ru">Извлечение реквизитов из документов, сверка расхождений и выгрузка договора .docx</span>
+        <span class="en">Multi-document extraction, math/tax cross-checks &amp; .docx generation</span>
+        <span class="fr">Extraction de pièces, contrôle des incohérences et génération .docx / ERP</span>
+      </h2>
+      <p>
+        <span class="ru">Стенд разбирает два документа, проверяет контрольную сумму ИНН, сравнивает КПП и пересчитывает `кол-во × цена` по каждой позиции против строки «Итого». Любое расхождение отправляется в очередь проверки и подсвечивается в шаблоне договора перед скачиванием в <code>.docx</code>.</span>
+        <span class="en">Extracts company details and invoice line items, checks tax ID checksums, recalculates `qty × unit price` against the stated total, flags conflicts for human review instead of overwriting them, and builds a native `.docx` file in the browser.</span>
+        <span class="fr">Extrait les champs clés de plusieurs pièces (fiche société, devis/facture, dossier client), recalcule les lignes par rapport au total annoncé, signale toute anomalie dans une file « à vérifier » sans jamais corriger à l'aveugle, et génère le fichier <code>.docx</code>.</span>
+      </p>
+      <div class="callout-note">
+        <span class="ru"><strong>Проверьте сами:</strong> поменяйте в правом окне КПП на <code>781301001</code> и итоговую сумму на <code>115 800</code>, затем нажмите «Извлечь и сверить» — ошибки исчезнут.</span>
+        <span class="en"><strong>Try editing:</strong> fix KPP in Source B to <code>781301001</code> and total to <code>115 800</code>, then click Verify — watch the warnings turn green.</span>
+        <span class="fr"><strong>Testez en direct :</strong> corrigez le KPP dans la source B en <code>781301001</code> et le total en <code>115 800</code>, puis relancez la vérification.</span>
+      </div>
+      <div class="stack"><span>Vision + PDF/XLSX</span><span>Pydantic / JSON Schema</span><span>Cross-Document Check</span><span>OOXML (.docx)</span><span>Axelor / 1C REST</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span><span class="ru">Сверка комплекта → .docx</span><span class="en">Document cross-check → .docx</span><span class="fr">Contrôle documentaire → .docx</span></span>
+        <div class="chips">
+          <button class="chip" type="button" id="doc-preset-bad"><span class="ru">С ошибками в КПП и сумме</span><span class="en">With mismatches</span><span class="fr">Avec écarts</span></button>
+          <button class="chip" type="button" id="doc-preset-clean"><span class="ru">Чистый комплект</span><span class="en">Clean set</span><span class="fr">Dossier conforme</span></button>
+        </div>
+      </div>
+      <div class="benchbody">
+        <div class="two">
+          <label><span class="lbl"><span class="ru">Источник А — карточка компании</span><span class="en">Source A — Company record</span><span class="fr">Source A — Fiche société</span></span><textarea id="srcA" rows="7"></textarea></label>
+          <label><span class="lbl"><span class="ru">Источник Б — счёт / спецификация</span><span class="en">Source B — Invoice</span><span class="fr">Source B — Facture / Devis</span></span><textarea id="srcB" rows="7"></textarea></label>
+        </div>
+        <div class="row">
+          <button class="btn" id="docbtn" type="button"><span class="ru">Извлечь и сверить</span><span class="en">Extract &amp; verify</span><span class="fr">Extraire et contrôler</span></button>
+          <button class="btn ghost" id="docdl" type="button"><span class="ru">Скачать договор .docx</span><span class="en">Download .docx</span><span class="fr">Télécharger .docx</span></button>
+          <span class="note" id="docnote"></span>
+        </div>
+        <div class="tbl">
+          <table>
+            <thead><tr>
+              <th><span class="ru">Поле</span><span class="en">Field</span><span class="fr">Champ</span></th>
+              <th><span class="ru">Значение</span><span class="en">Value</span><span class="fr">Valeur retenue</span></th>
+              <th><span class="ru">Статус сверки</span><span class="en">Validation</span><span class="fr">Contrôle</span></th>
+            </tr></thead>
+            <tbody id="fields"></tbody>
+          </table>
+        </div>
+        <div>
+          <span class="lbl"><span class="ru">Сформированный договор (спорные поля выделены)</span><span class="en">Contract preview (discrepancies highlighted)</span><span class="fr">Aperçu du contrat (écarts surlignés)</span></span>
+          <div class="contract" id="contract"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 04 PARSER & SKU MATCHER ==================== -->
+  <section class="case" id="parser" data-cat="docs">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">04</span><span>python / playwright / sku matching</span></div>
+      <h2>
+        <span class="ru">Парсинг поставщиков и ИИ-сопоставление «грязных» спецификаций с прайсом</span>
+        <span class="en">Supplier scraping &amp; fuzzy SKU matching from messy BOM specs to CSV</span>
+        <span class="fr">Parsing fournisseurs et rapprochement automatique de nomenclatures vers Excel</span>
+      </h2>
+      <p>
+        <span class="ru">В проектных сметах и прайсах поставщиков один и тот же товар пишут десятком способов: <code>Кабель ВВГнг(А)-LS 3х2,5</code>, <code>ВВГ-Пнг 3*2.5мм2</code>, без артикулов и в разных единицах. Пайплайн нормализует характеристики, подбирает точный артикул по базе дистрибьютора (ЭТМ / внутренний каталог), считает смету и помечает аналоги с низкой уверенностью.</span>
+        <span class="en">Contractors and supplier feeds write the same item ten different ways (`3x2.5mm²`, `3*2,5`, missing brand codes). This pipeline normalizes attributes, matches each line against a master distributor catalog, computes extended totals, and exports UTF-8 CSV for Excel.</span>
+        <span class="fr">Les devis et flux fournisseurs écrivent la même référence de dix façons différentes. Ce pipeline normalise les caractéristiques, associe chaque ligne au catalogue de référence avec un score de confiance, calcule le chiffrage et exporte un CSV propre pour Excel.</span>
+      </p>
+      <div class="stack"><span>Python + Playwright</span><span>Attribute Normalization</span><span>Catalog Matching</span><span>CSV / XLSX Export</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span><span class="ru">Матчинг спецификации с каталогом</span><span class="en">Specification → Catalog Matcher</span><span class="fr">Rapprochement nomenclature → Catalogue</span></span>
+        <button class="btn ghost sm" id="csv-dl" type="button"><span class="ru">Выгрузить расчёт .csv</span><span class="en">Export .csv</span><span class="fr">Exporter .csv</span></button>
+      </div>
+      <div class="benchbody">
+        <label>
+          <span class="lbl"><span class="ru">Сырые строки из сметы / прайса (по одной на строку, можно редактировать)</span><span class="en">Raw BOM / supplier lines (one per line, editable)</span><span class="fr">Lignes brutes du devis / fournisseur (modifiables)</span></span>
+          <textarea id="raw-spec" rows="5"></textarea>
+        </label>
+        <div class="between">
+          <button class="btn" id="match-btn" type="button"><span class="ru">Нормализовать и рассчитать</span><span class="en">Match &amp; calculate</span><span class="fr">Rapprocher et chiffrer</span></button>
+          <span class="note mono" id="spec-summary"></span>
+        </div>
+        <div class="tbl">
+          <table>
+            <thead><tr>
+              <th><span class="ru">Исходная строка</span><span class="en">Input line</span><span class="fr">Ligne source</span></th>
+              <th><span class="ru">Позиция каталога (SKU)</span><span class="en">Matched SKU</span><span class="fr">Référence trouvée</span></th>
+              <th><span class="ru">Кол-во × Цена</span><span class="en">Qty × Unit</span><span class="fr">Qté × P.U.</span></th>
+              <th><span class="ru">Сумма</span><span class="en">Subtotal</span><span class="fr">Total</span></th>
+            </tr></thead>
+            <tbody id="spec-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 05 LISTING ==================== -->
+  <section class="case" id="listing" data-cat="docs">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">05</span><span>n8n / claude api / ebay, vinted &amp; marketplaces</span></div>
+      <h2>
+        <span class="ru">Потоковая генерация карточек eBay и маркетплейсов с выгрузкой черновика по API</span>
+        <span class="en">Automated eBay &amp; marketplace listings from short warehouse notes</span>
+        <span class="fr">Génération d'annonces eBay / Vinted depuis une note d'entrepôt via API</span>
+      </h2>
+      <p>
+        <span class="ru">Сотрудник склада заносит в Google Таблицу короткую заметку о состоянии товара и фото. Сценарий собирает SEO-заголовок строго до 80 знаков, атрибуты категории, спокойное описание с честным указанием дефектов и отправляет черновик напрямую через API площадки под финальный клик менеджера.</span>
+        <span class="en">Replaces manual copy-pasting: a short row in Google Sheets turns into a keyword-first title (&le;80 chars), structured Item Specifics, condition-accurate copy, and a draft listing pushed via the eBay Sell Inventory API.</span>
+        <span class="fr">Supprime le copier-coller : une simple note dans Google Sheets génère un titre optimisé (&le;80 caractères), les caractéristiques structurées, une description fidèle de l'état et le JSON prêt à créer le brouillon via API.</span>
+      </p>
+      <div class="stack"><span>n8n / Make</span><span>Claude API</span><span>eBay Sell API</span><span>WB / Ozon / Vinted</span><span>Google Sheets</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span><span class="ru">Генератор карточки товара</span><span class="en">Listing pipeline</span><span class="fr">Générateur d'annonce</span></span>
+        <div class="tabs" role="tablist">
+          <button class="tab" id="tab-ebay-preview" aria-selected="true"><span class="ru">Карточка</span><span class="en">Listing</span><span class="fr">Aperçu</span></button>
+          <button class="tab" id="tab-ebay-json" aria-selected="false">API JSON</button>
+        </div>
+      </div>
+      <div class="benchbody">
+        <div class="chips" id="ebay-presets"></div>
+        <label><span class="lbl"><span class="ru">Заметка со склада</span><span class="en">Warehouse / seller note</span><span class="fr">Note brute du vendeur</span></span><textarea id="lnote" rows="3"></textarea></label>
+        <div class="row">
+          <button class="btn" id="lbtn" type="button"><span class="ru">Собрать карточку</span><span class="en">Build listing</span><span class="fr">Générer l'annonce</span></button>
+          <button class="btn ghost sm" id="lcopy" type="button"><span class="ru">Скопировать JSON</span><span class="en">Copy JSON</span><span class="fr">Copier JSON</span></button>
+          <span class="note" id="lnotes"></span>
+        </div>
+        <div id="pane-ebay-preview" style="display:grid;gap:10px"></div>
+        <pre class="code" id="pane-ebay-json" hidden></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 06 HANDWRITING ==================== -->
+  <section class="case" id="hand" data-cat="docs">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">06</span><span>multimodal ocr / verbatim &amp; human qa</span></div>
+      <h2>
+        <span class="ru">Дословная расшифровка рукописных PDF с сохранением зачёркиваний и вычиткой</span>
+        <span class="en">Verbatim handwriting transcription preserving errors &amp; strike-throughs</span>
+        <span class="fr">Transcription diplomatique de manuscrits PDF sans correction silencieuse</span>
+      </h2>
+      <p>
+        <span class="ru">Для архивных тетрадей, юридических заметок и полевых журналов важно не «причесать» текст, а передать его один в один со сканом: с авторской орфографией, вычеркнутыми словами и разрывами страниц. Залитые чернилами участки помечаются как <code>[illegible]</code> / <code>[нрзб.]</code> и проверяются глазами построчно.</span>
+        <span class="en">Keeps original spelling errors, quirky punctuation, and crossed-out words (`~~word~~`) intact. Genuinely unreadable ink blots are tagged `[illegible]` rather than guessed, followed by a page-by-page manual proofread matching PDF page breaks.</span>
+        <span class="fr">Conserve l'orthographe d'origine, la ponctuation et les ratures (`~~mot~~`). Les taches d'encre illisibles sont marquées `[illegible]` au lieu d'être devinées, avant relecture humaine ligne à ligne.</span>
+      </p>
+      <div class="stack"><span>Vision First Pass</span><span>Verbatim Conventions</span><span>Line-by-Line Proofread</span><span>1:1 Page Breaks</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span><span class="ru">Скан → дипломатическая расшифровка</span><span class="en">Scan → Verbatim output</span><span class="fr">Scan → Transcription</span></span>
+        <div class="chips" id="scan-samples">
+          <button class="chip" type="button" data-sample="en" aria-pressed="true"><span class="ru">Лист 1 (EN)</span><span class="en">Page 1 (EN)</span><span class="fr">Page 1 (EN)</span></button>
+          <button class="chip" type="button" data-sample="ru" aria-pressed="false"><span class="ru">Лист 2 (RU)</span><span class="en">Page 2 (RU)</span><span class="fr">Page 2 (RU)</span></button>
+        </div>
+      </div>
+      <div class="benchbody">
+        <canvas class="scan" id="scan" width="760" height="295" role="img" aria-label="Handwritten sample"></canvas>
+        <div class="between">
+          <div class="seg" id="hand-mode">
+            <button type="button" data-hmode="verbatim" aria-pressed="true"><span class="ru">Дословно (verbatim)</span><span class="en">Verbatim</span><span class="fr">Verbatim exact</span></button>
+            <button type="button" data-hmode="norm" aria-pressed="false"><span class="ru">С нормализацией</span><span class="en">Normalized</span><span class="fr">Normalisé</span></button>
+          </div>
+          <label class="row" style="font-size:13px;cursor:pointer">
+            <input type="checkbox" id="scan-boxes" checked>
+            <span><span class="ru">Разметка зон внимания на скане</span><span class="en">Show review zones on scan</span><span class="fr">Afficher les zones de contrôle</span></span>
+          </label>
+        </div>
+        <div class="verbatim" id="hout" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 07 CLAUDE CODE ==================== -->
+  <section class="case" id="cc" data-cat="eng">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">07</span><span>claude code / hooks / ai dev workflow</span></div>
+      <h2>
+        <span class="ru">Дисциплина для Claude Code на больших проектах: замок на файлы и гейт по тестам</span>
+        <span class="en">Claude Code guardrails for large repos: locked scope &amp; test-gated Stop hook</span>
+        <span class="fr">Garde-fous Claude Code sur gros dépôt : périmètre verrouillé et tests obligatoires</span>
+      </h2>
+      <p>
+        <span class="ru">На кодовой базе в 50–100 тыс. строк обычные правила в промпте быстро забываются: агент лезет рефакторить чужие модули и закрывает задачу с упавшими тестами. Мой кит <code>.claude/</code> на чистом Node.js жёстко блокирует запись вне согласованного <code>scope.txt</code> (`exit 2`), запрещает доступ к `.env`/SSH/проду и не даёт завершить сессию, пока не пройдёт тестовый прогон.</span>
+        <span class="en">On 60k+ LOC codebases, prompt instructions drift. My zero-dependency Node.js `.claude/` kit enforces a plan-first workflow: `PreToolUse` blocks any edit outside approved globs (`exit 2`), protects `.env`/keys/hooks, and `Stop` re-feeds failing Vitest/Playwright logs back to the agent.</span>
+        <span class="fr">Sur un dépôt de 60 000+ lignes (Electron, React, Node, Supabase), les consignes texte finissent par dériver. Mon kit <code>.claude/</code> sans dépendances impose : validation du plan, verrouillage des fichiers autorisés par hook <code>PreToolUse</code> (<code>exit 2</code>), blocage des secrets/SSH, et interdiction de terminer tant que les tests échouent.</span>
+      </p>
+      <div class="stack"><span>PreToolUse &amp; Stop Hooks</span><span>Git Worktrees</span><span>node:test (8/8 green)</span><span>Sub-agent Diff Reviewer</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="dot-live"></span><span>claude-code-guardrails</span></span>
+        <div class="tabs" role="tablist" id="cc-tabs">
+          <button class="tab" data-cctab="sim" aria-selected="true"><span class="ru">Симулятор scope-guard</span><span class="en">Hook simulator</span><span class="fr">Simulateur de hook</span></button>
+          <button class="tab" data-cctab="guard" aria-selected="false">scope-guard.mjs</button>
+          <button class="tab" data-cctab="gate" aria-selected="false">test-gate.mjs</button>
+        </div>
+      </div>
+
+      <div class="benchbody" id="cc-pane-sim">
+        <div class="two">
+          <div>
+            <span class="lbl">.claude/scope.txt (<span class="ru">одобренные пути</span><span class="en">approved globs</span><span class="fr">fichiers validés</span>)</span>
+            <textarea id="cc-scope" rows="4">app/renderer/**/*.tsx
+server/routes/</textarea>
+          </div>
+          <div>
+            <span class="lbl"><span class="ru">Целевой файл для проверки</span><span class="en">File Claude attempts to edit</span><span class="fr">Fichier ciblé par l'agent</span></span>
+            <input type="text" id="cc-target" value="app/renderer/components/BookingModal.tsx">
+            <div class="chips" style="margin-top:7px" id="cc-presets">
+              <button class="chip" type="button" data-path="app/renderer/components/BookingModal.tsx">BookingModal.tsx</button>
+              <button class="chip" type="button" data-path="app/main/registry.ts">app/main/registry.ts</button>
+              <button class="chip" type="button" data-path=".ENV.production">.ENV.production</button>
+              <button class="chip" type="button" data-path=".claude/scope.txt">.claude/scope.txt</button>
+              <button class="chip" type="button" data-path="../secrets.json">../secrets.json</button>
+            </div>
+          </div>
+        </div>
+        <div id="cc-result" class="term-out pass"></div>
+      </div>
+
+      <div class="benchbody" id="cc-pane-code" hidden>
+        <pre class="code" id="cc-code-box"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 08 GOST & INFRA SURVEY ==================== -->
+  <section class="case" id="gost" data-cat="eng">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">08</span><span>гост 34.602 / тз, пми / предпроектное обследование</span></div>
+      <h2>
+        <span class="ru">Предпроектное обследование, ТЗ и ПМИ по ГОСТ 34 со сквозной трассировкой</span>
+        <span class="en">Pre-project infrastructure survey &amp; GOST 34 specs with requirement tracing</span>
+        <span class="fr">Étude préalable d'infrastructure, cahier des charges et cahier de recette</span>
+      </h2>
+      <p>
+        <span class="ru">Собираю инженерную документацию без «нейросетевой воды»: аналитические записки со сравнением платформ перед написанием ТЗ, доработку ТЗ/ТП по замечаниям заказчика, ПМИ и пакеты эксплуатационных регламентов с единой ролевой моделью.</span>
+        <span class="en">Structured systems analysis: platform comparison matrices for pre-project surveys, formal technical specifications, and acceptance test plans where every requirement links 1-to-1 to a verifiable test case.</span>
+        <span class="fr">Documentation d'ingénierie structurée : étude comparative de plateformes en amont, traçabilité complète entre les remarques client, les clauses du cahier des charges et les fiches de tests de recette.</span>
+      </p>
+      <div class="stack"><span>ГОСТ 34.602-2020</span><span>ГОСТ Р 59795-2021</span><span>ПМИ (ГОСТ Р 59792)</span><span>Обследование ИТ-платформ</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title"><span class="ru">Образцы артефактов системного анализа</span><span class="en">Systems analysis excerpts</span><span class="fr">Extraits livrables</span></span>
+        <div class="tabs" role="tablist">
+          <button class="tab" id="tab-gost-trace" aria-selected="true"><span class="ru">Трассировка ТЗ ↔ ПМИ</span><span class="en">Traceability</span><span class="fr">Traçabilité</span></button>
+          <button class="tab" id="tab-gost-virt" aria-selected="false"><span class="ru">Обследование платформ</span><span class="en">Platform survey</span><span class="fr">Comparatif infra</span></button>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-gost-trace">
+        <span class="lbl">1. Матрица отработки замечаний → Разделы ТЗ (кликните по строке для подсветки связи)</span>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Код</th><th>Замечание заказчика</th><th>Принятое проектное решение</th><th>Где закреплено</th></tr></thead>
+            <tbody>
+              <tr data-trace="rbac" class="hl-row"><td><code>З-07</code></td><td>Не разграничены права на закрытие обращений</td><td>Закрытие разрешено только ролям «Исполнитель» и «Администратор ОИТ»</td><td>ТЗ п. 4.2.3; ТП табл. 5.2</td></tr>
+              <tr data-trace="audit"><td><code>З-12</code></td><td>Не задан регламент хранения истории операций</td><td>Журнал аудита хранится 3 года в режиме append-only без удаления из UI</td><td>ТЗ п. 4.3.5; ТП разд. 7.4</td></tr>
+              <tr data-trace="sla"><td><code>З-15</code></td><td>Нормативы SLA не связаны с критичностью</td><td>Сетка из 4 приоритетов (15 мин / 1 ч / 4 ч / 8 раб. ч) с автоэскалацией</td><td>ТЗ п. 4.2.6; Регламент SLA</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <span class="lbl">2. Программа и методика испытаний (ПМИ) → Проверка требований ТЗ</span>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Испытание</th><th>Пункт ТЗ</th><th>Методика проверки</th><th>Критерий приёмки</th></tr></thead>
+            <tbody>
+              <tr data-trace="rbac" class="hl-row"><td><code>ПМИ-21</code></td><td>п. 4.2.3</td><td>Войти под учётной записью «Инициатор», открыть заявку в статусе «Решена», вызвать закрытие в UI и через API.</td><td>Кнопка отсутствует; запрос к API возвращает <code>403 Forbidden</code>.</td></tr>
+              <tr data-trace="audit"><td><code>ПМИ-23</code></td><td>п. 4.3.5</td><td>Под ролью «Администратор ОИТ» выполнить попытку удаления записи из журнала аудита.</td><td>Операция блокируется политикой СУБД; факт попытки пишется в лог ИБ.</td></tr>
+              <tr data-trace="sla"><td><code>ПМИ-22</code></td><td>п. 4.2.6</td><td>Создать инцидент приоритета P1 и не назначать исполнителя в течение 16 минут.</td><td>Выставлен признак нарушения SLA, отправлено оповещение дежурному смены.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-gost-virt" hidden>
+        <p class="note">Фрагмент сводной таблицы предпроектного обследования сред виртуализации для формирования раздела 4 ТЗ (требования к общесистемному ПО и импортонезависимости):</p>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Критерий для ТЗ</th><th>Proxmox VE 8.x</th><th>zVirt / oVirt 4.5</th><th>Рекомендация в ТЗ</th></tr></thead>
+            <tbody>
+              <tr><td>Гипервизор и кластеризация</td><td>KVM + LXC, Corosync/Pacemaker из коробки без отдельной ВМ управления</td><td>KVM, выделенный Hosted Engine, централизованный портал</td><td>Для инсталляций до 12 узлов — стек без выделенного контроллера; свыше 15 узлов — централизованный менеджер.</td></tr>
+              <tr><td>Хранилище и бэкап</td><td>Ceph, ZFS, LVM-thin + штатный дедуплицирующий Proxmox Backup Server</td><td>FC / iSCSI SAN, NFS, Gluster; бэкап через внешние СРК (Кибер Бэкап / RuBackup)</td><td>Зафиксировать в ТЗ требование к CBT-инкрементальному копированию и проверке восстановления (RTO &le; 2 ч).</td></tr>
+              <tr><td>Реестр ПО / ФСТЭК</td><td>Open-source (без сертификата ФСТЭК)</td><td>Реестр Минцифры РФ, комплектации с сертификацией ФСТЭК</td><td>При классе защищённости ГИС / ЗКИ — закладывать реестровую сборку; для коммерческого контура — открытый стек.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 09 LOVABLE / AI SAAS AUDIT ==================== -->
+  <section class="case" id="audit" data-cat="eng">
+    <div class="brief">
+      <div class="case-head"><span class="case-idx">09</span><span>lovable / bolt / cursor → production react + supabase</span></div>
+      <h2>
+        <span class="ru">Доработка, защита и вывод в прод проектов после Lovable / Bolt / v0</span>
+        <span class="en">Securing, finishing &amp; migrating Lovable / AI-built SaaS apps to production</span>
+        <span class="fr">Audit, sécurisation et mise en production d'applications Lovable / IA</span>
+      </h2>
+      <p>
+        <span class="ru">Когда проект на 90% собран в Lovable или Cursor, снаружи интерфейс уже работает, но внутри часто открыты таблицы Supabase без RLS, ключи лежат во фронтенде, а цены считаются прямо в браузере. Провожу быстрый аудит, закрываю дыры безопасности, настраиваю миграции, PWA и довожу приложение до стабильного релиза.</span>
+        <span class="en">Apps generated in Lovable or Bolt look finished on the surface, yet routinely ship with disabled Supabase RLS, exposed service keys, and client-side pricing. I audit the repo, lock down database policies, add SQL migrations &amp; tests, and take 90%-done prototypes across the finish line.</span>
+        <span class="fr">Les applications créées avec Lovable ou l'IA fonctionnent visuellement, mais souffrent souvent de failles critiques : RLS Supabase désactivé, clés exposées côté navigateur, calcul des prix dans le front et absence de migrations Git. J'interviens en 2 étapes : audit rapide chiffré, puis sécurisation, PWA, marque blanche et mise en production.</span>
+      </p>
+      <div class="stack"><span>Supabase RLS &amp; Edge Functions</span><span>React / TypeScript</span><span>SQL Migrations</span><span>PWA &amp; White-label</span><span>GitHub Actions</span></div>
+    </div>
+
+    <div class="bench">
+      <div class="benchbar">
+        <span class="bench-title">BookIt SaaS — Pre-production Security Audit</span>
+        <div class="tabs" role="tablist">
+          <button class="tab" id="tab-aud-table" aria-selected="true"><span class="ru">Находки аудита (6)</span><span class="en">Findings (6)</span><span class="fr">Constat d'audit (6)</span></button>
+          <button class="tab" id="tab-aud-fix" aria-selected="false"><span class="ru">Патч БД (RLS + RPC)</span><span class="en">SQL Fix (RLS + RPC)</span><span class="fr">Correctif SQL (RLS + RPC)</span></button>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-aud-table">
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Severity</th><th>Finding</th><th>Fix</th></tr></thead>
+            <tbody>
+              <tr><td><span class="sev c">CRITICAL</span></td><td>RLS off on <code>public.bookings</code> — anyone with the public anon key can read all customer phone numbers.</td><td>Enable RLS + tenant &amp; <code>auth.uid()</code> policies.</td></tr>
+              <tr><td><span class="sev c">CRITICAL</span></td><td><code>VITE_SUPABASE_SERVICE_ROLE_KEY</code> bundled into client JS for admin actions.</td><td>Rotate key immediately; move privileged actions to an Edge Function.</td></tr>
+              <tr><td><span class="sev h">HIGH</span></td><td>Checkout prices &amp; coupon discounts calculated in browser state and written straight to DB.</td><td>Compute totals inside a Postgres <code>SECURITY DEFINER</code> RPC.</td></tr>
+              <tr><td><span class="sev m">MEDIUM</span></td><td>Schema edited manually in Supabase Studio; zero SQL migrations in Git.</td><td>Baseline via <code>supabase db pull</code>; run migration check in CI.</td></tr>
+              <tr><td><span class="sev m">MEDIUM</span></td><td>Duplicated <code>supabase.from()</code> queries across 16 components without generated types.</td><td><code>supabase gen types typescript</code> + unified TanStack Query hooks.</td></tr>
+              <tr><td><span class="sev l">LOW</span></td><td>Concurrent booking race condition + missing PWA manifest/service worker for mobile install.</td><td>Add Postgres <code>EXCLUDE USING gist</code> slot constraint + Vite PWA setup.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="benchbody" id="pane-aud-fix" hidden>
+<pre class="code">-- 1. Enforce row-level isolation per tenant &amp; authenticated user
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "tenant_read_own_bookings"
+  ON public.bookings FOR SELECT
+  USING (customer_id = auth.uid() OR tenant_admin(tenant_id, auth.uid()));
+
+-- 2. Block overlapping appointments at Postgres constraint level
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+ALTER TABLE public.bookings
+  ADD CONSTRAINT prevent_double_booking
+  EXCLUDE USING gist (staff_id WITH =, slot_range WITH &amp;&amp;)
+  WHERE (status &lt;&gt; 'cancelled');
+
+-- 3. Server-side price calculation (client passes only service ID &amp; slot)
+CREATE OR REPLACE FUNCTION public.create_booking(p_service uuid, p_slot tstzrange)
+RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_price integer;
+  v_id uuid;
+BEGIN
+  SELECT price_cents INTO STRICT v_price FROM services WHERE id = p_service AND active;
+  INSERT INTO bookings (customer_id, service_id, slot_range, total_cents)
+  VALUES (auth.uid(), p_service, p_slot, v_price)
+  RETURNING id INTO v_id;
+  RETURN v_id;
+END;
+$$;</pre>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      <strong style="color:var(--ink)">
+        <span class="ru">Обсудить задачу или собрать быстрый пилот на ваших данных</span>
+        <span class="en">Discuss your task or run a quick pilot on sample data</span>
+        <span class="fr">Discuter de votre projet ou lancer un pilote rapide</span>
+      </strong>
+      <p style="margin:5px 0 0;max-width:62ch">
+        <span class="ru">Напишите в переписке на площадке, где мы общаемся, и приложите пару примеров файлов или вопросов — оценю сроки по этапам и предложу рабочую схему без лишнего усложнения.</span>
+        <span class="en">Reply in our project thread with a couple of sample files or requirements — I'll break down realistic milestones, costs, and the simplest architecture that solves the problem.</span>
+        <span class="fr">Répondez directement dans la messagerie du projet avec quelques exemples anonymisés — je vous proposerai un découpage clair par étapes et un chiffrage réaliste.</span>
+      </p>
+    </div>
+    <div class="foot-links" id="foot-links"></div>
+  </footer>
+</main>
+
+<script>
+(() => {
+  /* ====== Профиль автора (можно вписать своё имя / Telegram при желании) ====== */
+  const PROFILE = {
+    brand: 'beelsik',
+    githubUrl: 'https://github.com/Beelsik',
+    githubLabel: 'github.com/Beelsik',
+    extraLinkUrl: '',
+    extraLinkLabel: '',
+  };
+
+  const $ = (s, root = document) => root.querySelector(s);
+  const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+
+  $('#brand-name').textContent = PROFILE.brand;
+  const fl = $('#foot-links');
+  if (PROFILE.githubUrl) {
+    const a = el('a', '', PROFILE.githubLabel || PROFILE.githubUrl);
+    a.href = PROFILE.githubUrl; a.target = '_blank'; a.rel = 'noopener';
+    fl.append(a);
+  }
+  if (PROFILE.extraLinkUrl) {
+    const a = el('a', '', PROFILE.extraLinkLabel || PROFILE.extraLinkUrl);
+    a.href = PROFILE.extraLinkUrl; a.target = '_blank'; a.rel = 'noopener';
+    fl.append(a);
+  }
+
+  /* ====== Theme ====== */
+  let theme = 'light';
+  try {
+    const savedT = localStorage.getItem('pf-theme');
+    if (savedT === 'dark' || savedT === 'light') theme = savedT;
+    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+  } catch {}
+  function applyTheme(t) {
+    theme = t;
+    document.documentElement.dataset.theme = t;
+    $('#theme-ico').textContent = t === 'dark' ? '☀' : '☾';
+    try { localStorage.setItem('pf-theme', t); } catch {}
+  }
+  applyTheme(theme);
+  $('#theme-btn').onclick = () => applyTheme(theme === 'dark' ? 'light' : 'dark');
+
+  /* ====== Trilingual Engine (RU / EN / FR + ?lang= URL param + browser locale) ====== */
+  let L = 'ru';
+  try {
+    const urlLang = new URLSearchParams(window.location.search).get('lang');
+    const savedL = localStorage.getItem('pf-lang');
+    const navL = (navigator.language || '').slice(0, 2).toLowerCase();
+    if (['ru', 'en', 'fr'].includes(urlLang)) L = urlLang;
+    else if (['ru', 'en', 'fr'].includes(savedL)) L = savedL;
+    else if (navL === 'fr') L = 'fr';
+    else if (navL !== 'ru' && navL !== 'uk' && navL !== 'be') L = 'en';
+  } catch {}
+
+  const T = (ru, en, fr) => (L === 'fr' ? (fr ?? en) : L === 'en' ? en : ru);
+
+  function setLang(l) {
+    L = l;
+    document.documentElement.dataset.l = l;
+    document.documentElement.lang = l;
+    ['ru', 'en', 'fr'].forEach((code) => {
+      $(`#l-${code}`).setAttribute('aria-pressed', l === code);
+    });
+    try { localStorage.setItem('pf-lang', l); } catch {}
+
+    document.title = T(
+      'Beelsik — Боты, RAG, парсеры и автоматизация процессов',
+      'Beelsik — Applied LLM Agents, RAG, Scrapers & Automation',
+      'Beelsik — Agents IA, RAG, Extraction Documentaire & Automatisation'
+    );
+    $('#chatin').placeholder = T(
+      'Напишите как клиент: Сколько стоит чистка? / Запишите на субботу…',
+      'Ask as a patient: How much is cleaning? / Book Saturday 10:30…',
+      'Écrivez comme un client : Quel est le tarif du détartrage ? / RDV samedi…'
+    );
+    $('#ragin').placeholder = T(
+      'Ваш вопрос по базе компании (RU / PL / EN)…',
+      'Ask a question across RU / PL / EN docs…',
+      'Posez une question à la base documentaire (RU / PL / EN)…'
+    );
+
+    renderChatPresets();
+    renderRagChips();
+    const curQ = $('#ragin').value.trim();
+    if (curQ) runRagSearch(curQ);
+    renderFieldsTable();
+    runSpecMatcher();
+    renderHandwriting();
+    runScopeSim();
+  }
+  $('#l-ru').onclick = () => setLang('ru');
+  $('#l-en').onclick = () => setLang('en');
+  $('#l-fr').onclick = () => setLang('fr');
+
+  /* ====== Category Filter ====== */
+  $$('.fbtn').forEach((btn) => {
+    btn.onclick = () => {
+      const cat = btn.dataset.cat;
+      $$('.fbtn').forEach((b) => b.setAttribute('aria-pressed', b === btn));
+      $$('.case').forEach((sec) => {
+        sec.hidden = cat !== 'all' && sec.dataset.cat !== cat;
+      });
+    };
+  });
+
+  /* ==================== 01 SALES BOT ==================== */
+  const CLINIC_KB = {
+    clinic: 'April Dental / Стоматология «Апрель» (SPb, Medikov Ave 14)',
+    hours: 'Mon–Fri 09:00–21:00, Sat 10:00–17:00',
+    services: [
+      { id: 'hygiene', name: 'Профгигиена (УЗ + Air Flow + фторирование) / Full hygiene', price: '5 800 ₽ (60€)', dur: '60 min', doc: 'Sokolova M.' },
+      { id: 'caries', name: 'Лечение кариеса + пломба / Composite filling', price: 'от 6 400 ₽ (65€)', dur: '60 min', doc: 'Vetrov O.' },
+      { id: 'consult', name: 'Осмотр + прицельный снимок / Checkup + X-ray', price: '1 400 ₽ (15€)', dur: '30 min', doc: 'Vetrov O.' },
+      { id: 'zoom', name: 'Отбеливание ZOOM 4 / ZOOM 4 whitening', price: '23 500 ₽ (240€)', dur: '90 min', doc: 'Sokolova M.' },
+      { id: 'implant', name: 'Имплант Osstem под ключ / Turnkey Osstem implant', price: '56 000 ₽ (570€)', dur: '2 visits', doc: 'Lis A.' },
+      { id: 'ortho', name: 'Консультация ортодонта / Ortho consult (kids 7+ & adults)', price: '0 ₽ (free)', dur: '40 min', doc: 'Kim E.' },
+    ],
+    open_slots: ['Thu 18:30 (Vetrov)', 'Fri 12:00 (Sokolova)', 'Fri 17:30 (Sokolova)', 'Sat 10:30 (Sokolova)', 'Sat 13:00 (Kim)', 'Sat 15:00 (Lis)'],
+    handoff_rules: ['ДМС / mutuelle / insurance', 'наркоз / седация / sedation', 'рассрочка / кредит / installments'],
+  };
+  $('#kb-dump').textContent = JSON.stringify(CLINIC_KB, null, 2);
+
+  $('#tab-chat-ui').onclick = () => {
+    $('#tab-chat-ui').setAttribute('aria-selected', 'true');
+    $('#tab-chat-kb').setAttribute('aria-selected', 'false');
+    $('#pane-chat-ui').hidden = false;
+    $('#pane-chat-kb').hidden = true;
+  };
+  $('#tab-chat-kb').onclick = () => {
+    $('#tab-chat-kb').setAttribute('aria-selected', 'true');
+    $('#tab-chat-ui').setAttribute('aria-selected', 'false');
+    $('#pane-chat-kb').hidden = false;
+    $('#pane-chat-ui').hidden = true;
+  };
+
+  let backendInfo = { llmEnabled: false, provider: 'local', model: 'deterministic' };
+  let operatorsBusy = true;
+  let chatHistory = [];
+  let chatState = { service: null, slot: null, bookedSlots: new Set(), events: 0 };
+
+  $('#op-mode').onclick = (e) => {
+    const b = e.target.closest('[data-op]');
+    if (!b) return;
+    operatorsBusy = b.dataset.op === 'busy';
+    $$('#op-mode [data-op]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    addChatBubble('a', operatorsBusy
+      ? T('Все операторы снова заняты — ИИ-ассистент перехватил дежурство и готов отвечать.', 'All operators are busy again — AI assistant resumed handling incoming messages.', 'Tous les conseillers sont occupés — l’assistant IA reprend la main.')
+      : T('Режим «Оператор свободен»: бот переведён в режим ожидания, новые сообщения направляются напрямую менеджеру.', 'Operator online mode: AI bot paused, incoming messages route straight to the human queue.', 'Mode conseiller disponible : le bot est en veille, les messages partent vers l’équipe.')
+    );
+  };
+
+  const CHAT_PRESETS = [
+    ['Сколько стоит чистка зубов?', 'How much is teeth cleaning?', 'Quel est le tarif du détartrage complet ?'],
+    ['Запишите на субботу 10:30, Игорь +7 921 555-19-40', 'Book Sat 10:30, Igor +44 7700 900412', 'RDV samedi 10h30, Marc +33 6 12 34 56 78'],
+    ['Лечите по ДМС или в рассрочку?', 'Do you take insurance or installments?', 'Prenez-vous la mutuelle ou le paiement en 3x ?'],
+    ['Сколько стоит имплант и где вы находитесь?', 'How much is an implant and where are you?', 'Prix d’un implant et adresse du cabinet ?'],
+  ];
+
+  function renderChatPresets() {
+    const box = $('#chat-presets');
+    box.replaceChildren();
+    CHAT_PRESETS.forEach(([ru, en, fr]) => {
+      const label = T(ru, en, fr);
+      const b = el('button', 'chip', label);
+      b.type = 'button';
+      b.onclick = () => handleUserChat(label);
+      box.append(b);
+    });
+  }
+
+  function addChatBubble(role, text) {
+    const m = el('div', 'msg ' + role, text);
+    const box = $('#chat');
+    box.append(m);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function pushCrmEvent(ev) {
+    chatState.events += 1;
+    $('#crm-count').textContent = `${chatState.events} ${chatState.events === 1 ? 'event' : 'events'}`;
+    const card = el('div', 'lead');
+    if (ev.type === 'lead') {
+      card.append(
+        el('span', 'pill ok', 'POST /crm/leads · 201'),
+        el('strong', '', `${ev.name} (${ev.phone})`),
+        el('span', '', ev.service),
+        el('span', 'mono', `Slot: ${ev.slot}`)
+      );
+    } else {
+      card.append(
+        el('span', 'pill warn', 'POST /crm/handoff · 200'),
+        el('span', '', ev.reason)
+      );
+    }
+    $('#crm').prepend(card);
+  }
+
+  function botReply(rawText) {
+    const q = rawText.toLowerCase();
+
+    if (/(дмс|страхов|согаз|insur|mutuelle|рассроч|кредит|installment|3x|plusieurs fois|наркоз|седац|во сне|sedat|anesth|скидк\s*\d|remise)/i.test(q)) {
+      pushCrmEvent({
+        type: 'handoff',
+        reason: T(
+          `Вне базы бота («${rawText.slice(0, 55)}») → передано администратору`,
+          `Out-of-KB query ("${rawText.slice(0, 55)}") → routed to human`,
+          `Hors périmètre (« ${rawText.slice(0, 55)} ») → transmis au conseiller`
+        ),
+      });
+      return T(
+        'Условия по ДМС, рассрочке и седации зависят от плана лечения — в моей базе этих правил нет, чтобы не назвать неверную сумму. Передал вопрос администратору, она ответит вам в этом чате за 10–15 минут.',
+        "Insurance, installment plans, and sedation aren't in my automated rules so I never misquote terms. I've routed your message to our coordinator — they'll reply here within 10–15 minutes.",
+        "La prise en charge mutuelle, le paiement échelonné et la sédation ne figurent pas dans ma base vérifiée afin d'éviter toute erreur. J'ai transmis votre demande à un conseiller qui vous répondra sous 15 minutes."
+      );
+    }
+
+    const phoneMatch = rawText.match(/(\+?\d[\d\s\-()]{8,}\d)/);
+    let pickedSlot = null;
+    if (/10[:.h]30|суббот.*утро|sat.*10|samedi.*10/i.test(q)) pickedSlot = 'Sat 10:30 (Sokolova)';
+    else if (/13[:.h]00|ким|kim/i.test(q)) pickedSlot = 'Sat 13:00 (Kim)';
+    else if (/15[:.h]00|лис|lis/i.test(q)) pickedSlot = 'Sat 15:00 (Lis)';
+    else if (/18[:.h]30|четверг|thu|jeudi/i.test(q)) pickedSlot = 'Thu 18:30 (Vetrov)';
+    else if (/12[:.h]00|пятниц|fri|vendredi/i.test(q)) pickedSlot = 'Fri 12:00 (Sokolova)';
+    else if (/17[:.h]30/i.test(q)) pickedSlot = 'Fri 17:30 (Sokolova)';
+    if (pickedSlot) chatState.slot = pickedSlot;
+
+    if (/чистк|гигиен|clean|hygien|détartr/i.test(q)) chatState.service = T('Профгигиена (5 800 ₽)', 'Dental hygiene (5,800 RUB)', 'Détartrage complet (60 €)');
+    else if (/кариес|пломб|filling|carie/i.test(q)) chatState.service = T('Лечение кариеса (от 6 400 ₽)', 'Composite filling (6,400 RUB)', 'Soin carie (dès 65 €)');
+    else if (/имплант|implant/i.test(q)) chatState.service = T('Имплант Osstem (56 000 ₽)', 'Osstem implant (56,000 RUB)', 'Implant Osstem (570 €)');
+
+    if (phoneMatch) {
+      const slot = chatState.slot || 'Sat 10:30 (Sokolova)';
+      if (chatState.bookedSlots.has(slot)) {
+        return T(
+          `Окно ${slot} уже занято. Свободны: Fri 12:00, Fri 17:30 и Sat 13:00 — какое время забронировать?`,
+          `Slot ${slot} is already booked. Still open: Fri 12:00, Fri 17:30, Sat 13:00 — which suits you?`,
+          `Le créneau ${slot} vient d'être réservé. Créneaux disponibles : Ven 12h00, Ven 17h30, Sam 13h00.`
+        );
+      }
+      const beforePhone = rawText.slice(0, phoneMatch.index).replace(/[,.:;]/g, ' ').trim();
+      const words = beforePhone.split(/\s+/).filter((w) => /^[А-ЯЁA-ZÀ-Ÿ][а-яёa-zà-ÿ]{1,18}$/.test(w) && !/^(Запишите|Давайте|Суббота|Book|Sat|RDV)$/i.test(w));
+      const clientName = words[words.length - 1] || T('Клиент', 'Patient', 'Client');
+      const svc = chatState.service || T('Первичный приём / гигиена', 'Dental appointment', 'Consultation / soin');
+      chatState.bookedSlots.add(slot);
+      pushCrmEvent({ type: 'lead', name: clientName, phone: phoneMatch[1].trim(), service: svc, slot });
+      return T(
+        `Готово, ${clientName}! Записал вас на ${slot} (${svc}), пр. Медиков, 14. За сутки бот пришлёт напоминание.`,
+        `Confirmed, ${clientName}! Booked ${slot} (${svc}) at Medikov Ave 14. You'll receive a reminder 24h prior.`,
+        `C'est noté, ${clientName} ! Créneau réservé : ${slot} (${svc}). Un rappel automatique sera envoyé la veille.`
+      );
+    }
+
+    if (/чистк|гигиен|clean|hygien|détartr/i.test(q)) {
+      return T(
+        'Профессиональная гигиена (ультразвук + Air Flow + фторирование) стоит 5 800 ₽, длится 60 минут. У гигиениста Соколовой М.А. свободны Пт 12:00, Пт 17:30 и Сб 10:30. Записать вас?',
+        'Full dental hygiene (ultrasonic + Air Flow + fluoride) is 5,800 RUB (60 min). Open slots with Marina Sokolova: Fri 12:00, Fri 17:30, Sat 10:30. Would you like to book?',
+        'Le détartrage complet (ultrasons + Air Flow + fluor) est à 60 € (60 min). Créneaux libres avec M. Sokolova : Ven 12h00, Ven 17h30 et Sam 10h30. Souhaitez-vous réserver ?'
+      );
+    }
+    if (/имплант|адрес|где|where|locat|implant|adresse/i.test(q)) {
+      return T(
+        'Мы находимся на пр. Медиков, 14 (Пн–Пт 09:00–21:00, Сб 10:00–17:00). Имплантация Osstem под ключ с коронкой — 56 000 ₽, ближайшее окно к хирургу Артёму Лису — суббота 15:00. Для записи напишите имя и телефон.',
+        'We are at Medikov Ave 14 (Mon–Fri 09:00–21:00, Sat 10:00–17:00). Turnkey Osstem implant with crown is 56,000 RUB; surgeon Artem Lis has Sat 15:00 open. Reply with your name and phone to book.',
+        'Cabinet situé au 14 av. Medikov (Lun–Ven 09h–21h, Sam 10h–17h). Implant Osstem clé en main avec couronne : 570 €, créneau libre samedi à 15h00. Indiquez votre nom et téléphone pour réserver.'
+      );
+    }
+    if (/цен|прайс|кариес|пломб|price|cost|tarif|prix/i.test(q)) {
+      return T(
+        'По прайсу: осмотр со снимком — 1 400 ₽, лечение кариеса — от 6 400 ₽, профгигиена — 5 800 ₽, консультация ортодонта — бесплатно. Какая услуга нужна?',
+        'Verified price list: checkup + X-ray 1,400 RUB, composite filling from 6,400 RUB, hygiene 5,800 RUB, ortho consult is free. Which service do you need?',
+        'Tarifs vérifiés : bilan + radio 15 €, soin carie dès 65 €, détartrage 60 €, consultation orthodontie gratuite. Quel soin souhaitez-vous ?'
+      );
+    }
+
+    pushCrmEvent({
+      type: 'handoff',
+      reason: T(`Нетиповой вопрос («${rawText.slice(0, 55)}»)`, `Unmatched query ("${rawText.slice(0, 55)}")`, `Question hors FAQ (« ${rawText.slice(0, 55)} »)`),
+    });
+    return T(
+      'Чтобы ничего не додумывать от себя, передал ваше сообщение администратору клиники — вам ответят здесь в ближайшее время.',
+      "Rather than guessing outside my verified price sheet, I've flagged our front-desk coordinator to reply in this thread.",
+      "Pour ne rien inventer hors de ma base tarifaire, j'ai transmis votre message à l'accueil qui vous répondra directement ici."
+    );
+  }
+
+  async function handleUserChat(text) {
+    const clean = text.trim();
+    if (!clean) return;
+    $('#chatin').value = '';
+    addChatBubble('c', clean);
+    chatHistory.push({ role: 'user', content: clean });
+
+    if (!operatorsBusy) {
+      pushCrmEvent({
+        type: 'handoff',
+        reason: T(`Прямое сообщение свободному оператору: «${clean.slice(0, 50)}»`, `Routed to online operator: "${clean.slice(0, 50)}"`, `Transmis au conseiller en ligne : « ${clean.slice(0, 50)} »`),
+      });
+      const opMsg = T(
+        'Сообщение передано свободному оператору в CRM (ИИ-бот не вмешивается, пока на линии есть сотрудник). Переключите режим выше на «Операторы заняты → ИИ», чтобы проверить автоответ бота.',
+        'Message routed to the online human operator in CRM (AI bot stays silent while staff is available). Switch back to "Operators busy → AI" above to test the AI fallback.',
+        'Message transmis au conseiller connecté dans le CRM (l’IA reste en veille). Repassez sur « Conseillers occupés → IA » pour tester le relais automatique.'
+      );
+      chatHistory.push({ role: 'assistant', content: opMsg });
+      setTimeout(() => addChatBubble('a', opMsg), 120);
+      return;
+    }
+
+    if (backendInfo.llmEnabled) {
+      const waitBubble = el('div', 'msg a', '…');
+      $('#chat').append(waitBubble);
+      $('#chat').scrollTop = $('#chat').scrollHeight;
+      $('#chatsend').disabled = true;
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: chatHistory,
+            kb: CLINIC_KB,
+            bookedSlots: Array.from(chatState.bookedSlots),
+            operatorsBusy,
+            lang: L,
+          }),
+        });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        const reply = String(data.reply || '…');
+        waitBubble.textContent = reply;
+        chatHistory.push({ role: 'assistant', content: reply });
+        if (data.action && data.action.type === 'lead') {
+          if (data.action.slot) chatState.bookedSlots.add(data.action.slot);
+          pushCrmEvent({
+            type: 'lead',
+            name: data.action.name || T('Клиент', 'Client', 'Client'),
+            phone: data.action.phone || '—',
+            service: data.action.service || T('Консультация', 'Consultation', 'Consultation'),
+            slot: data.action.slot || '—',
+          });
+        } else if (data.action && data.action.type === 'handoff') {
+          pushCrmEvent({
+            type: 'handoff',
+            reason: data.action.reason || T('Передано оператору по правилам ИИ-агента', 'Escalated to operator by AI agent', 'Transmis au conseiller par l’agent IA'),
+          });
+        }
+        return;
+      } catch {
+        waitBubble.remove();
+      } finally {
+        $('#chatsend').disabled = false;
+      }
+    }
+
+    const reply = botReply(clean);
+    chatHistory.push({ role: 'assistant', content: reply });
+    setTimeout(() => addChatBubble('a', reply), 140);
+  }
+
+  function resetChat(seed = true) {
+    $('#chat').replaceChildren();
+    $('#crm').replaceChildren();
+    chatState = { service: null, slot: null, bookedSlots: new Set(), events: 0 };
+    chatHistory = [];
+    $('#crm-count').textContent = '0 events';
+    const greet = T(
+      'Здравствуйте! Я ассистент клиники «Апрель». Отвечаю строго по прайсу и расписанию врачей, записываю в свободные слоты.',
+      "Hello! I'm the April Clinic assistant. Ask about exact prices, open slots, or booking.",
+      "Bonjour ! Je suis l'assistant de la clinique Avril. Tarifs vérifiés, disponibilités et prise de RDV directe."
+    );
+    addChatBubble('a', greet);
+    chatHistory.push({ role: 'assistant', content: greet });
+    if (seed) {
+      const u1 = T('Сколько стоит чистка зубов?', 'How much is teeth cleaning?', 'Quel est le tarif du détartrage ?');
+      const a1 = T(
+        'Профессиональная гигиена (УЗ + Air Flow + фторирование) — 5 800 ₽, 60 минут. Свободные окна: Пт 12:00, Пт 17:30 и Сб 10:30. Записать вас?',
+        'Full dental hygiene (ultrasonic + Air Flow + fluoride) is 5,800 RUB (60 min). Open slots: Fri 12:00, Fri 17:30, Sat 10:30. Shall I book one?',
+        'Le détartrage complet (ultrasons + Air Flow) est à 60 € (60 min). Créneaux libres : Ven 12h00, Ven 17h30, Sam 10h30. Voulez-vous réserver ?'
+      );
+      addChatBubble('c', u1);
+      addChatBubble('a', a1);
+      chatHistory.push({ role: 'user', content: u1 }, { role: 'assistant', content: a1 });
+    }
+  }
+  $('#chatform').onsubmit = (e) => { e.preventDefault(); handleUserChat($('#chatin').value); };
+  $('#chatreset').onclick = () => resetChat(false);
+
+  /* ==================== 02 RAG ==================== */
+  const RAG_DOCS = [
+    { id: 'D1', src: 'ERP · Тарифы СВХ', acc: 'all', tags: 'варшав warsaw varsovie хранен storage stockage паллет pallet бесплатн free', text: 'Склад Варшава: бесплатное хранение — 5 календарных дней с даты выгрузки, с 6-го дня — 1,20 € за паллету в сутки. Опасные грузы ADR не принимаются.' },
+    { id: 'D2', src: 'E-mail · Magazyn Łódź (PL)', acc: 'all', tags: 'лодз lodz łódź łodzi sobot суббот расписан график samedi', text: 'Od 1 grudnia magazyn w Łodzi pracuje również w soboty w godzinach 08:00–14:00. Rozładunki sobotnie wyłącznie po awizacji dzień wcześniej.' },
+    { id: 'D3', src: 'Telegram · Диспетчерская', acc: 'all', tags: 'познан poznan пропуск gate въезд паспорт машин водит badge', text: 'Терминал Познань: введены электронные пропуска. Номер тягача и паспорт водителя подавать за 24 часа через диспетчера Ольгу.' },
+    { id: 'D4', src: 'Regulamin reklamacji (PL)', acc: 'all', tags: 'reklamacj претенз поврежд uszkodz срок дней dni protok réclamat avarie', text: 'Reklamacje dotyczące uszkodzeń ładunku przyjmujemy do 7 dni kalendarzowych od dostawy. Wymagane zdjęcia plomb, towaru oraz protokół podpisany przez kierowcę.' },
+    { id: 'D5', src: 'Договор страхования', acc: 'all', tags: 'страхов insur assur лимит покрыт франшиз электроник пломб', text: 'Страхование груза: покрытие до 50 000 € на рейс, безусловная франшиза 500 €. Партии электроники застрахованы только при наличии силовой пломбы.' },
+    { id: 'D6', src: 'SQL View · v_monthly_orders', acc: 'all', tags: 'заказ октябр филиал сколько статистик итог october orders commandes octobre', text: 'Отгруженные заказы за октябрь 2026 по филиалам (SQL-срез ERP): Варшава — 412, Лодзь — 236, Познань — 198. Итого: 846.' },
+    { id: 'D7', src: 'Протокол совещания', acc: 'all', tags: 'накладн cmr e-cmr электрон бумажн январ март', text: 'С 1 января регулярные линии переходят на электронные накладные e-CMR. Бумажные CMR принимаются параллельно до 31 марта.' },
+    { id: 'D8', src: 'SOP · Baltic Foods (EN)', acc: 'all', tags: 'baltic foods reefer рефриж температур лог pdf frigo température', text: 'Baltic Foods shipments: every reefer load requires a continuous temperature log exported as PDF and attached to the signed delivery note.' },
+    { id: 'D9', src: 'Дирекция · Закрытый контур', acc: 'mgmt', tags: 'бонус премия директор маржа q4 квартал bonus prime marge', text: 'Бонусы директоров филиалов за Q4: 8% от прироста чистой маржи к Q3, выплата в феврале. Доступ: только дирекция.' },
+    { id: 'D10', src: 'M&A · Закрытый контур', acc: 'mgmt', tags: 'краков krakow kraków cracovie покупк бюджет склад сделка злотых budget entrepôt', text: 'Переговоры о покупке кросс-док склада в Кракове: потолок бюджета — 2,1 млн PLN, решение инвесткомитета до 15 декабря.' },
+  ];
+
+  const RAG_PRESETS = [
+    ['Сколько дней бесплатное хранение в Варшаве?', 'How many free storage days in Warsaw?', 'Combien de jours de stockage gratuit à Varsovie ?'],
+    ['Какой бюджет на покупку склада в Кракове?', 'What is the budget for the Kraków warehouse?', 'Quel est le budget pour l’entrepôt de Cracovie ?'],
+    ['Do kiedy można zgłosić reklamację uszkodzenia?', 'Do kiedy można zgłosić reklamację uszkodzenia?', 'Do kiedy można zgłosić reklamację uszkodzenia?'],
+    ['What does Baltic Foods require for reefer loads?', 'What does Baltic Foods require for reefer loads?', 'Qu’exige Baltic Foods pour les camions frigo ?'],
+    ['Сколько заказов было в октябре по филиалам?', 'How many orders per branch in October?', 'Combien de commandes par agence en octobre ?'],
+  ];
+
+  let ragRole = 'staff';
+
+  function tokenize(str) {
+    return (str.toLowerCase().match(/[\p{L}\d-]+/gu) || [])
+      .filter((w) => w.length > 2)
+      .map((w) => w.slice(0, 5));
+  }
+
+  function retrieveChunks(query) {
+    const allowedPool = RAG_DOCS.filter((d) => d.acc === 'all' || ragRole === 'mgmt');
+    const hiddenCount = RAG_DOCS.length - allowedPool.length;
+    const qStems = tokenize(query);
+
+    const restrictedHit = ragRole === 'staff' && RAG_DOCS.filter((d) => d.acc === 'mgmt').some((d) => {
+      const dt = tokenize(d.text + ' ' + d.tags);
+      return qStems.some((qt) => dt.includes(qt));
+    });
+
+    const df = {};
+    allowedPool.forEach((d) => {
+      new Set(tokenize(d.text + ' ' + d.src + ' ' + d.tags)).forEach((t) => { df[t] = (df[t] || 0) + 1; });
+    });
+
+    const scored = allowedPool.map((d) => {
+      const docTokens = tokenize(d.text + ' ' + d.src + ' ' + d.tags);
+      const matched = [];
+      let score = 0;
+      new Set(qStems).forEach((qt) => {
+        if (docTokens.includes(qt)) {
+          score += Math.log(1.4 + allowedPool.length / (df[qt] || 1));
+          matched.push(qt);
+        }
+      });
+      return { d, score, matched };
+    }).sort((a, b) => b.score - a.score);
+
+    return {
+      hits: scored.filter((x) => x.score > 0.35).slice(0, 3),
+      hiddenCount,
+      restrictedHit,
+      allowedCount: allowedPool.length,
+    };
+  }
+
+  async function runRagSearch(q, useLive = true) {
+    $('#ragin').value = q;
+    const res = retrieveChunks(q);
+    let empty = false;
+    let ansText = '';
+
+    if (!res.hits.length) {
+      empty = true;
+      ansText = res.restrictedHit
+        ? T(
+            `В доступных для роли «Логист» источниках (${res.allowedCount} из ${RAG_DOCS.length}) ответа нет. Переключите роль на «Директор» вверху справа — закрытый документ был отсечён фильтром прав ещё до поиска.`,
+            `Not found in the ${res.allowedCount} sources open to Dispatcher. Switch role to "Director" above — the board memo was filtered out before retrieval by RBAC.`,
+            `Aucune information dans les ${res.allowedCount} sources ouvertes au rôle Exploitant. Passez sur le rôle « Direction » en haut à droite : la note confidentielle a été filtrée avant l'appel au modèle.`
+          )
+        : T(
+            'В подключённых документах ответа нет — агент возвращает честный отказ без догадок.',
+            'No matching facts in indexed sources — returning an explicit "not found".',
+            'Aucun élément trouvé dans les sources indexées — réponse honnête sans hallucination.'
+          );
+    } else {
+      const top = res.hits[0].d;
+      ansText = `${top.text} [${top.id}]`;
+      if (res.hits[1] && res.hits[1].score > res.hits[0].score * 0.7) {
+        ansText += `\n+ ${res.hits[1].d.text} [${res.hits[1].d.id}]`;
+      }
+    }
+
+    const renderRagAnswer = (txt) => {
+      const ansBox = $('#raganswer');
+      ansBox.className = 'answer' + (empty ? ' empty' : '');
+      ansBox.replaceChildren();
+      txt.split(/(\[D\d+\])/).forEach((p) => {
+        if (/^\[D\d+\]$/.test(p)) ansBox.append(el('span', 'cite', p.slice(1, -1)));
+        else ansBox.append(document.createTextNode(p));
+      });
+    };
+    renderRagAnswer(ansText);
+
+    if (useLive && backendInfo.llmEnabled && res.hits.length) {
+      try {
+        const apiRes = await fetch('/api/rag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: q,
+            role: ragRole,
+            chunks: res.hits.map((h) => ({ id: h.d.id, src: h.d.src, text: h.d.text })),
+          }),
+        });
+        if (apiRes.ok) {
+          const data = await apiRes.json();
+          if (data.answer) renderRagAnswer(data.answer);
+        }
+      } catch {}
+    }
+
+    const frags = $('#ragfrags');
+    frags.replaceChildren();
+    if (!res.hits.length) {
+      frags.append(el('p', 'note', T('Совпадений выше порога релевантности нет.', 'No chunks above threshold.', 'Aucun extrait au-dessus du seuil.')));
+    } else {
+      res.hits.forEach(({ d, score, matched }) => {
+        const card = el('div', 'frag');
+        const head = el('div', 'frag-h');
+        head.append(el('span', '', `[${d.id}] ${d.src}${d.acc === 'mgmt' ? ' [mgmt-only]' : ''}`), el('span', '', `score ${score.toFixed(2)}`));
+        const body = el('div', '');
+        const parts = d.text.split(/([\p{L}\d-]+)/gu);
+        parts.forEach((tok) => {
+          if (tok.length > 2 && matched.includes(tok.toLowerCase().slice(0, 5))) body.append(el('mark', '', tok));
+          else body.append(document.createTextNode(tok));
+        });
+        card.append(head, body);
+        frags.append(card);
+      });
+    }
+
+    $('#raglocked').textContent = res.hiddenCount
+      ? T(`Скрыто политикой RBAC: ${res.hiddenCount} док.`, `RBAC hidden: ${res.hiddenCount} docs`, `Filtrés par RBAC : ${res.hiddenCount} doc.`)
+      : T('Полный доступ (10/10 док.)', 'Full access (10/10 docs)', 'Accès complet (10/10 doc.)');
+  }
+
+  function renderRagChips() {
+    const box = $('#ragq');
+    box.replaceChildren();
+    RAG_PRESETS.forEach(([ru, en, fr]) => {
+      const label = T(ru, en, fr);
+      const b = el('button', 'chip', label);
+      b.type = 'button';
+      b.onclick = () => runRagSearch(label);
+      box.append(b);
+    });
+  }
+
+  $('#ragform').onsubmit = (e) => { e.preventDefault(); const q = $('#ragin').value.trim(); if (q) runRagSearch(q); };
+  $('#roles').onclick = (e) => {
+    const b = e.target.closest('[data-role]');
+    if (!b) return;
+    ragRole = b.dataset.role;
+    $$('#roles [data-role]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    const q = $('#ragin').value.trim();
+    if (q) runRagSearch(q);
+  };
+
+  /* ==================== 03 DOCS PARSER & ZERO-DEP DOCX ==================== */
+  const DOC_PRESETS = {
+    bad: {
+      a: `ООО «СеверСнаб»\nИНН 7813452915, КПП 781301001\nЮр. адрес: 197110, г. Санкт-Петербург, ул. Чапаева, д. 15, лит. А, оф. 204\nР/с 40702810432000014892 в АО «Альфа-Банк»\nБИК 044030786\nГенеральный директор: Карпов Илья Сергеевич (на основании Устава)`,
+      b: `Счёт на оплату № 318 от 18.11.2026\nПоставщик: ООО "Север Снаб", ИНН 7813452915, КПП 781301002\n1. Стеллаж архивный СТ-200 — 12 шт × 8 400 = 100 800\n2. Монтаж и крепление стеллажей — 1 усл × 15 000 = 15 000\nИтого к оплате: 118 800 руб. (в т.ч. НДС 20%)\nСрок поставки: 10 рабочих дней`,
+    },
+    clean: {
+      a: `ООО «СеверСнаб»\nИНН 7813452915, КПП 781301001\nЮр. адрес: 197110, г. Санкт-Петербург, ул. Чапаева, д. 15, лит. А, оф. 204\nР/с 40702810432000014892 в АО «Альфа-Банк»\nБИК 044030786\nГенеральный директор: Карпов Илья Сергеевич (на основании Устава)`,
+      b: `Счёт на оплату № 318/1 от 18.11.2026\nПоставщик: ООО «СеверСнаб», ИНН 7813452915, КПП 781301001\n1. Стеллаж архивный СТ-200 — 12 шт × 8 400 = 100 800\n2. Монтаж и крепление стеллажей — 1 усл × 15 000 = 15 000\nИтого к оплате: 115 800 руб. (в т.ч. НДС 20%)\nСрок поставки: 10 рабочих дней`,
+    },
+  };
+
+  function checkInn10(inn) {
+    if (!/^\d{10}$/.test(inn)) return false;
+    const w = [2, 4, 10, 3, 5, 9, 4, 6, 8];
+    const s = w.reduce((acc, k, i) => acc + k * Number(inn[i]), 0);
+    return (s % 11) % 10 === Number(inn[9]);
+  }
+  const parseNum = (s) => Number(String(s || '').replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+  const fmtMoney = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  let parsedFields = [];
+
+  function extractAndVerifyDocs() {
+    const a = $('#srcA').value;
+    const b = $('#srcB').value;
+
+    const nameA = (a.match(/(?:ООО|АО|ПАО|ИП)\s*[«"„]?([^»"\n,]+)[»""]?/i) || [])[0]?.trim() || '';
+    const nameB = (b.match(/Поставщик:\s*([^\n,]+)/i) || [])[1]?.trim() || '';
+
+    const normOrg = (s) => s.toLowerCase().replace(/[«»""„\s]/g, '');
+    let nameLevel = 'ok', nameNote = T('Совпадает в обоих документах', 'Matches in A & B', 'Identique dans A et B');
+    if (nameA && nameB && nameA !== nameB) {
+      if (normOrg(nameA) === normOrg(nameB)) {
+        nameLevel = 'warn';
+        nameNote = T(`В счёте написано «${nameB}» (пробел/кавычки). Подставлено уставное из А.`, `Invoice writes "${nameB}". Using card spelling.`, `Écrit « ${nameB} » sur la facture. Nom officiel retenu.`);
+      } else {
+        nameLevel = 'bad';
+        nameNote = T(`Разные юрлица: ${nameA} vs ${nameB}`, `Entity mismatch: ${nameA} vs ${nameB}`, `Sociétés différentes : ${nameA} vs ${nameB}`);
+      }
+    }
+
+    const innA = (a.match(/ИНН\s*(\d{10}|\d{12})/i) || [])[1] || '';
+    const innB = (b.match(/ИНН\s*(\d{10}|\d{12})/i) || [])[1] || '';
+    let innLevel = 'ok', innNote = T('Совпадает, контрольный разряд ФНС верный', 'Matches, checksum valid', 'Identique, clé de contrôle valide');
+    if (innA && innB && innA !== innB) {
+      innLevel = 'bad';
+      innNote = T(`Конфликт ИНН: ${innA} vs ${innB}`, `Tax ID conflict: ${innA} vs ${innB}`, `Conflit d'identifiant fiscal : ${innA} vs ${innB}`);
+    } else if ((innA || innB).length === 10 && !checkInn10(innA || innB)) {
+      innLevel = 'warn';
+      innNote = T('Не сходится контрольное число ИНН', 'Tax ID checksum warning', 'Clé de contrôle invalide');
+    }
+
+    const kppA = (a.match(/КПП\s*(\d{9})/i) || [])[1] || '';
+    const kppB = (b.match(/КПП\s*(\d{9})/i) || [])[1] || '';
+    let kppLevel = 'ok', kppNote = T('Совпадает в А и Б', 'Matches in A & B', 'Conforme entre A et B');
+    if (kppA && kppB && kppA !== kppB) {
+      kppLevel = 'bad';
+      kppNote = T(`Расхождение КПП: в А ${kppA}, в счёте ${kppB}`, `KPP mismatch: ${kppA} vs ${kppB}`, `Écart de code KPP : ${kppA} vs ${kppB}`);
+    }
+
+    const addr = (a.match(/(?:Юр\.?\s*адрес|Адрес)\s*:\s*([^\n]+)/i) || [])[1]?.trim() || '—';
+    const rs = (a.match(/Р\/с\s*(\d{20}[^\n]*)/i) || [])[1]?.trim() || '';
+    const bik = (a.match(/БИК\s*(\d{9})/i) || [])[1]?.trim() || '';
+    const signer = (a.match(/Генеральный директор\s*:\s*([^\n]+)/i) || [])[1]?.trim() || '—';
+
+    const itemLines = [];
+    let calcSum = 0;
+    let lineErr = null;
+    b.split(/\r?\n/).forEach((line) => {
+      const m = line.match(/^\s*\d+\.\s*(.+?)\s*[—\-–]\s*(\d+(?:[.,]\d+)?)\s*[^\d×x*]*[×x*]\s*([\d\s]+)\s*=\s*([\d\s]+)/i);
+      if (m) {
+        const qty = parseNum(m[2]), price = parseNum(m[3]), stated = parseNum(m[4]);
+        const exp = qty * price;
+        if (Math.abs(exp - stated) > 0.5) lineErr = `${m[1].trim()}: ${qty}×${price}=${exp} != ${stated}`;
+        calcSum += exp;
+        itemLines.push(`${m[1].trim()} (${qty})`);
+      }
+    });
+
+    const totalRaw = (b.match(/Итого[^:\n]*:\s*([^\n]+)/i) || [])[1]?.trim() || '';
+    const statedTotal = parseNum((totalRaw.match(/[\d\s]+/) || [])[0]);
+    let totLevel = 'ok', totNote = T(`Позиции сходятся с итогом (${fmtMoney(calcSum)} ₽)`, `Line items sum matches (${fmtMoney(calcSum)})`, `Somme des lignes conforme (${fmtMoney(calcSum)})`);
+    if (lineErr) { totLevel = 'bad'; totNote = lineErr; }
+    else if (calcSum > 0 && statedTotal > 0 && Math.abs(calcSum - statedTotal) > 0.5) {
+      totLevel = 'bad';
+      totNote = T(
+        `Ошибка суммы: по строкам ${fmtMoney(calcSum)} ₽, а в «Итого» указано ${fmtMoney(statedTotal)} ₽`,
+        `Math mismatch: lines sum to ${fmtMoney(calcSum)}, invoice states ${fmtMoney(statedTotal)}`,
+        `Écart de calcul : somme des lignes = ${fmtMoney(calcSum)}, total affiché = ${fmtMoney(statedTotal)}`
+      );
+    }
+
+    const term = (b.match(/Срок поставки\s*:\s*([^\n]+)/i) || [])[1]?.trim() || '—';
+
+    parsedFields = [
+      { key: 'name', l: ['Поставщик', 'Supplier', 'Fournisseur'], val: nameA || nameB || '—', note: nameNote, level: nameLevel },
+      { key: 'inn', l: ['ИНН', 'Tax ID (INN)', 'Identifiant INN'], val: innA || innB || '—', note: innNote, level: innLevel },
+      { key: 'kpp', l: ['КПП', 'Branch code (KPP)', 'Code établissement'], val: kppA || kppB || '—', note: kppNote, level: kppLevel },
+      { key: 'addr', l: ['Юр. адрес', 'Address', 'Adresse'], val: addr, note: T('Из источника А', 'From Source A', 'Extrait de A'), level: 'ok' },
+      { key: 'bank', l: ['Банк и р/с', 'Bank details', 'Coordonnées bancaires'], val: `р/с ${rs}${bik ? ', БИК ' + bik : ''}`, note: T('Из источника А', 'From Source A', 'Extrait de A'), level: 'ok' },
+      { key: 'signer', l: ['Подписант', 'Signatory', 'Signataire'], val: `Генеральный директор ${signer}`, note: T('Полномочия проверены', 'Authority verified', 'Pouvoir vérifié'), level: 'ok' },
+      { key: 'subj', l: ['Позиции', 'Line items', 'Postes'], val: itemLines.join('; ') || '—', note: `${itemLines.length} поз.`, level: itemLines.length ? 'ok' : 'warn' },
+      { key: 'total', l: ['Итоговая сумма', 'Total amount', 'Montant total'], val: totalRaw || '—', note: totNote, level: totLevel },
+      { key: 'term', l: ['Срок поставки', 'Lead time', 'Délai'], val: term, note: T('Из источника Б', 'From Source B', 'Extrait de B'), level: 'ok' },
+    ];
+    renderFieldsTable();
+  }
+
+  function buildContractBody(fields) {
+    const get = (k) => (fields.find((x) => x.key === k) || {}).val || '________';
+    return [
+      'ДОГОВОР ПОСТАВКИ № 318-П',
+      'г. Санкт-Петербург                                           «18» ноября 2026 г.',
+      '',
+      `${get('name')} (ИНН ${get('inn')}, КПП ${get('kpp')}), в лице: ${get('signer')}, именуемое в дальнейшем «Поставщик», и ООО «Заказчик», именуемое в дальнейшем «Покупатель», заключили настоящий Договор:`,
+      '',
+      '1. ПРЕДМЕТ И СРОКИ',
+      `1.1. Наименование и количество: ${get('subj')}.`,
+      `1.2. Срок поставки: ${get('term')} с даты оплаты.`,
+      '',
+      '2. СТОИМОСТЬ И РАСЧЁТЫ',
+      `2.1. Общая стоимость Договора: ${get('total')}.`,
+      '',
+      '3. РЕКВИЗИТЫ ПОСТАВЩИКА',
+      `${get('name')}, ИНН ${get('inn')} / КПП ${get('kpp')}`,
+      `Адрес: ${get('addr')}`,
+      `Банк: ${get('bank')}`,
+    ].join('\n');
+  }
+
+  function renderFieldsTable() {
+    if (!parsedFields.length) return;
+    const tb = $('#fields');
+    tb.replaceChildren();
+    const lIdx = L === 'fr' ? 2 : L === 'en' ? 1 : 0;
+    parsedFields.forEach((f) => {
+      const tr = el('tr');
+      const icon = f.level === 'bad' ? '✖ ' : f.level === 'warn' ? '△ ' : '✓ ';
+      const cls = f.level === 'bad' ? 'st-bad' : f.level === 'warn' ? 'st-warn' : 'st-ok';
+      tr.append(el('td', '', f.l[lIdx]), el('td', 'mono', f.val), el('td', cls, icon + f.note));
+      tb.append(tr);
+    });
+
+    const bads = parsedFields.filter((f) => f.level === 'bad').length;
+    $('#docnote').textContent = bads
+      ? T(`Критических расхождений: ${bads} (отправлено на ручную проверку)`, `${bads} critical mismatch(es) flagged`, `${bads} anomalie(s) bloquante(s) à vérifier`)
+      : T('Расхождений не обнаружено, готово к выгрузке', 'Verified clean — ready to export', 'Aucune anomalie — prêt pour export');
+
+    const box = $('#contract');
+    box.replaceChildren();
+    const text = buildContractBody(parsedFields);
+    const flagged = parsedFields.filter((f) => f.level !== 'ok' && f.val && f.val !== '—').map((f) => f.val);
+    let segs = [text];
+    flagged.forEach((val) => {
+      const next = [];
+      segs.forEach((s) => {
+        if (typeof s !== 'string') { next.push(s); return; }
+        const parts = s.split(val);
+        parts.forEach((p, idx) => {
+          if (p) next.push(p);
+          if (idx < parts.length - 1) next.push({ mark: val });
+        });
+      });
+      segs = next;
+    });
+    segs.forEach((s) => box.append(typeof s === 'string' ? document.createTextNode(s) : el('mark', '', s.mark)));
+  }
+
+  /* Zero-dependency ZIP builder for .docx */
+  const CRC_TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[i] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(bytes) {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function makeZipStore(entries) {
+    const enc = new TextEncoder();
+    const localParts = [], centralParts = [];
+    let offset = 0;
+    entries.forEach(({ name, content }) => {
+      const nb = enc.encode(name), db = enc.encode(content), crc = crc32(db);
+      const lh = new Uint8Array(30 + nb.length), lv = new DataView(lh.buffer);
+      lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true);
+      lv.setUint32(14, crc, true); lv.setUint32(18, db.length, true); lv.setUint32(22, db.length, true);
+      lv.setUint16(26, nb.length, true); lh.set(nb, 30);
+
+      const ch = new Uint8Array(46 + nb.length), cv = new DataView(ch.buffer);
+      cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
+      cv.setUint32(16, crc, true); cv.setUint32(20, db.length, true); cv.setUint32(24, db.length, true);
+      cv.setUint16(28, nb.length, true); cv.setUint32(42, offset, true); ch.set(nb, 46);
+
+      localParts.push(lh, db); centralParts.push(ch);
+      offset += lh.length + db.length;
+    });
+    const cSize = centralParts.reduce((s, b) => s + b.length, 0);
+    const eocd = new Uint8Array(22), ev = new DataView(eocd.buffer);
+    ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, entries.length, true);
+    ev.setUint16(10, entries.length, true); ev.setUint32(12, cSize, true); ev.setUint32(16, offset, true);
+    return new Blob([...localParts, ...centralParts, eocd], {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+  }
+
+  const xmlEsc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  $('#docdl').onclick = () => {
+    const paras = buildContractBody(parsedFields).split('\n').map((line, idx) => {
+      const bold = idx === 0 || /^\d\.\s+[А-ЯЁ]/.test(line);
+      return `<w:p><w:pPr>${idx === 0 ? '<w:jc w:val="center"/>' : ''}</w:pPr><w:r><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>${bold ? '<w:b/>' : ''}<w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">${xmlEsc(line)}</w:t></w:r></w:p>`;
+    }).join('');
+    const blob = makeZipStore([
+      { name: '[Content_Types].xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>' },
+      { name: '_rels/.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+      { name: 'word/document.xml', content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paras}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="850" w:bottom="1134" w:left="1701"/></w:sectPr></w:body></w:document>` },
+    ]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'dogovor-318.docx';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  };
+
+  $('#srcA').value = DOC_PRESETS.bad.a;
+  $('#srcB').value = DOC_PRESETS.bad.b;
+  $('#docbtn').onclick = extractAndVerifyDocs;
+  $('#doc-preset-bad').onclick = () => { $('#srcA').value = DOC_PRESETS.bad.a; $('#srcB').value = DOC_PRESETS.bad.b; extractAndVerifyDocs(); };
+  $('#doc-preset-clean').onclick = () => { $('#srcA').value = DOC_PRESETS.clean.a; $('#srcB').value = DOC_PRESETS.clean.b; extractAndVerifyDocs(); };
+
+  /* ==================== 04 SUPPLIER PARSER & SKU MATCHER ==================== */
+  const MASTER_CATALOG = [
+    { sku: 'ETM-9814201', name: 'Кабель силовой ВВГнг(А)-LS 3х2.5 ок(N,PE)-0.66', unit: 'м', price: 94, keys: ['ввг', '3х2.5', '3*2.5', '3x2.5', 'ls'] },
+    { sku: 'ETM-4401928', name: 'Кабель силовой ВВГнг(А)-LS 3х1.5 ок(N,PE)-0.66', unit: 'м', price: 62, keys: ['ввг', '3х1.5', '3*1.5', '3x1.5', 'ls'] },
+    { sku: 'ETM-2104882', name: 'Выключатель автоматический ABB SH201L C16 1P 4.5кА', unit: 'шт', price: 410, keys: ['авт', 'abb', 'sh201', 'c16', 'с16', '1p'] },
+    { sku: 'ETM-7751034', name: 'Дифавтомат Schneider Easy9 1P+N C16 30мА AC', unit: 'шт', price: 1890, keys: ['диф', 'узо', 'schneider', 'easy9', '30ма', '30ma', 'c16', 'с16'] },
+    { sku: 'ETM-6390115', name: 'Светильник светодиодный ДВО 6565 36Вт 4000К IP20 595х595', unit: 'шт', price: 1240, keys: ['свет', 'дво', '36вт', '36w', '4000', '595'] },
+    { sku: 'ETM-5092310', name: 'Труба гофрированная ПВХ d20 мм с зондом серая (бухта)', unit: 'м', price: 19, keys: ['гофр', 'труб', 'пвх', 'd20', '20мм', 'зонд'] },
+  ];
+
+  $('#raw-spec').value = [
+    'Кабель ВВГ-Пнг(А)-LS 3*2,5мм2 — 450 м',
+    'Автомат. выкл ABB SH201L С16 1п - 24 шт.',
+    'Светильник Армстронг ДВО 36W 4000K 595x595 — 18 шт',
+    'Гофра ПВХ 20мм с протяжкой — 300 м',
+    'Диф. автомат Easy9 16А 30мА — 6 шт',
+  ].join('\n');
+
+  let matchedRows = [];
+
+  function normSpecLine(s) {
+    return s.toLowerCase()
+      .replace(/,/g, '.')
+      .replace(/[×*x]/g, 'х')
+      .replace(/(\d)\s*мм2?/g, '$1');
+  }
+
+  function runSpecMatcher() {
+    const lines = $('#raw-spec').value.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    matchedRows = [];
+    let grandTotal = 0;
+
+    lines.forEach((raw) => {
+      const norm = normSpecLine(raw);
+      // Extract trailing quantity: e.g. "— 450 м" or "- 24 шт"
+      const qMatch = raw.match(/[—\-–:]\s*(\d+(?:[.,]\d+)?)\s*([а-яa-z.]+)?\s*$/i) || raw.match(/(\d+)\s*(м|шт|уп|бух|pcs|m)\.?\s*$/i);
+      const qty = qMatch ? parseNum(qMatch[1]) : 1;
+
+      let best = null, bestScore = 0;
+      MASTER_CATALOG.forEach((item) => {
+        let hits = 0;
+        item.keys.forEach((k) => { if (norm.includes(k)) hits += 1; });
+        if (hits > bestScore) { bestScore = hits; best = item; }
+      });
+
+      if (best && bestScore >= 2) {
+        const sub = qty * best.price;
+        grandTotal += sub;
+        const conf = bestScore >= 3 ? 'ok' : 'warn';
+        matchedRows.push({ raw, sku: best.sku, name: best.name, qty, unit: best.unit, price: best.price, sub, conf });
+      } else {
+        matchedRows.push({ raw, sku: 'MANUAL-CHECK', name: T('Точного совпадения нет — требуется проверка снабженца', 'No confident match — routed to buyer review', 'Aucune correspondance fiable — revue manuelle'), qty, unit: '—', price: 0, sub: 0, conf: 'bad' });
+      }
+    });
+
+    const tb = $('#spec-tbody');
+    tb.replaceChildren();
+    matchedRows.forEach((r) => {
+      const tr = el('tr');
+      const skuCell = el('td', '');
+      const badge = el('span', 'pill ' + (r.conf === 'ok' ? 'ok' : r.conf === 'warn' ? 'warn' : 'bad'), r.conf === 'ok' ? r.sku : r.conf === 'warn' ? `${r.sku} · аналог?` : r.sku);
+      skuCell.append(badge, el('div', '', r.name));
+      tr.append(
+        el('td', '', r.raw),
+        skuCell,
+        el('td', 'mono', r.price ? `${r.qty} ${r.unit} × ${fmtMoney(r.price)} ₽` : `${r.qty}`),
+        el('td', 'mono', r.sub ? `${fmtMoney(r.sub)} ₽` : '—')
+      );
+      tb.append(tr);
+    });
+
+    $('#spec-summary').textContent = T(
+      `Сопоставлено: ${matchedRows.filter((x) => x.conf !== 'bad').length}/${matchedRows.length} · Итого по прайсу: ${fmtMoney(grandTotal)} ₽`,
+      `Matched: ${matchedRows.filter((x) => x.conf !== 'bad').length}/${matchedRows.length} · Estimated total: ${fmtMoney(grandTotal)} RUB`,
+      `Rapprochés : ${matchedRows.filter((x) => x.conf !== 'bad').length}/${matchedRows.length} · Total chiffré : ${fmtMoney(grandTotal)} RUB`
+    );
+  }
+
+  $('#match-btn').onclick = runSpecMatcher;
+  $('#csv-dl').onclick = () => {
+    const header = 'Input;SKU;Catalog_Name;Qty;Unit;Unit_Price_RUB;Subtotal_RUB\n';
+    const body = matchedRows.map((r) => `"${r.raw.replace(/"/g, '""')}";"${r.sku}";"${r.name.replace(/"/g, '""')}";${r.qty};"${r.unit}";${r.price};${r.sub}`).join('\n');
+    const blob = new Blob(['\uFEFF' + header + body], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'smeta-matched.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  };
+
+  /* ==================== 05 EBAY LISTING BUILDER ==================== */
+  const EBAY_SAMPLES = [
+    { label: 'Vending machine', note: 'Used combo snack + drink vending machine, 2019, 6 spiral trays + 6 can columns, MDB coin mech fitted, card reader ready (not included), works fine, few scratches on left side, keys x2, collection only from Leeds.' },
+    { label: 'ThinkPad T14 Gen 2', note: 'Lenovo ThinkPad T14 Gen 2 laptop, 2021, Intel i7-1165G7, 16GB RAM, 512GB NVMe SSD, 14" FHD IPS matte screen, UK backlit keyboard, Windows 11 Pro, battery 86% health, original 65W USB-C charger included, slight shine on spacebar, insured courier.' },
+    { label: 'Seiko SKX007J1 Diver', note: 'Pre-owned Seiko SKX007J1 Made in Japan automatic 200m diver watch, 7S26 movement keeps good time, 42mm steel case, Jubilee bracelet + spare NATO strap, faint mark on clasp, crystal clean, no box, Royal Mail Special Delivery.' },
+  ];
+
+  const ebayPresetBox = $('#ebay-presets');
+  EBAY_SAMPLES.forEach((s, i) => {
+    const b = el('button', 'chip', s.label);
+    b.type = 'button';
+    if (i === 0) b.setAttribute('aria-pressed', 'true');
+    b.onclick = () => {
+      $$('#ebay-presets .chip').forEach((x) => x.setAttribute('aria-pressed', x === b));
+      $('#lnote').value = s.note;
+      generateEbayListing();
+    };
+    ebayPresetBox.append(b);
+  });
+  $('#lnote').value = EBAY_SAMPLES[0].note;
+
+  let currentEbayPayload = {};
+
+  function parseSellerNote(raw) {
+    const clean = raw.replace(/\s+/g, ' ').trim();
+    const low = clean.toLowerCase();
+    let category = 'Business, Office & Industrial › Retail & Shop Fitting';
+    const conditionEnum = /new|sealed|unused/i.test(low) ? 'NEW' : 'USED_GOOD';
+    const specifics = {};
+
+    const year = (clean.match(/\b(19\d{2}|20\d{2})\b/) || [])[1];
+    if (year) specifics.Year = year;
+
+    if (/vending|snack|coin mech/i.test(low)) {
+      category = 'Business, Office & Industrial › Restaurant & Food Service › Vending Machines';
+      specifics.Type = 'Combination Snack & Drink';
+    } else if (/laptop|thinkpad|ssd|ram/i.test(low)) {
+      category = 'Computers/Tablets & Networking › Laptops & Netbooks › PC Laptops';
+      const cpu = (clean.match(/(Intel\s+i\d[-\w]+|Ryzen\s+\d[-\w ]+)/i) || [])[1];
+      const ram = (clean.match(/(\d+\s*GB)\s*RAM/i) || [])[1];
+      const ssd = (clean.match(/(\d+\s*(?:GB|TB)\s*(?:NVMe\s*)?SSD)/i) || [])[1];
+      if (cpu) specifics.Processor = cpu.trim();
+      if (ram) specifics['RAM Size'] = ram.toUpperCase();
+      if (ssd) specifics['SSD Capacity'] = ssd;
+    } else if (/watch|seiko|diver|automatic/i.test(low)) {
+      category = 'Jewellery & Watches › Watches › Wristwatches';
+      specifics.Movement = 'Mechanical (Automatic)';
+      const mm = (clean.match(/(\d{2}\s*mm)/i) || [])[1];
+      if (mm) specifics['Case Size'] = mm;
+    }
+
+    const clauses = clean.split(/[,;.]+/).map((c) => c.trim()).filter(Boolean);
+    const flaws = clauses.filter((c) => /scratch|mark|shine|dent|wear|no box|not included/i.test(c));
+    const delivery = clauses.find((c) => /collection|post|delivery|courier|royal mail/i.test(c)) || 'See postage options';
+    const inc = clauses.filter((c) => /key|charger|strap|mdb|fitted/i.test(c));
+
+    specifics.Condition = conditionEnum === 'NEW' ? 'New' : 'Used – fully working';
+    if (inc.length) specifics.Included = inc.join('; ');
+    specifics.Delivery = delivery;
+
+    const stop = new Set(['used', 'pre-owned', 'fine', 'works', 'good', 'keeps', 'time', 'slight', 'faint', 'few', 'from', 'only']);
+    const words = clauses.slice(0, 4).join(' ').replace(/\([^)]*\)/g, '').replace(/[!*+$]+/g, '').split(/\s+/).filter((w) => w.length > 1 && !stop.has(w.toLowerCase()));
+    let title = '';
+    for (const w of words) {
+      const fw = /^[a-z]/.test(w) && w.length > 2 ? w[0].toUpperCase() + w.slice(1) : w;
+      if ((title + ' ' + fw).trim().length <= 78) title = (title + ' ' + fw).trim();
+      else break;
+    }
+    if (!title) title = clean.slice(0, 78);
+
+    const paragraphs = [
+      clauses.slice(0, 3).join(', ') + '.',
+      clauses.slice(3).filter((c) => !flaws.includes(c) && c !== delivery).join('. ') || 'Tested and ready for use.',
+      flaws.length ? `Condition notes: ${flaws.join('; ')}.` : 'Clean condition throughout.',
+      `Fulfilment: ${delivery}.`,
+    ];
+    return { title, category, conditionEnum, specifics, paragraphs };
+  }
+
+  async function generateEbayListing(useLive = false) {
+    const raw = $('#lnote').value.trim();
+    if (!raw) return;
+    let data = parseSellerNote(raw);
+    if (useLive && backendInfo.llmEnabled) {
+      $('#lbtn').disabled = true;
+      $('#lnotes').textContent = T('Генерация через LLM…', 'Generating via LLM…', 'Génération via LLM…');
+      try {
+        const res = await fetch('/api/listing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note: raw }),
+        });
+        if (res.ok) {
+          const out = await res.json();
+          if (out && out.title) data = out;
+        }
+      } catch {} finally {
+        $('#lbtn').disabled = false;
+        $('#lnotes').textContent = '';
+      }
+    }
+    const pane = $('#pane-ebay-preview');
+    pane.replaceChildren();
+
+    const head = el('div', 'between');
+    head.append(el('span', 'lbl', 'Title (<= 80 chars)'));
+    const gauge = el('span', 'counter' + (data.title.length > 80 ? ' over' : ''), `${data.title.length} / 80`);
+    head.append(gauge);
+
+    const inp = el('input', '');
+    inp.type = 'text'; inp.value = data.title;
+    inp.oninput = () => {
+      const len = inp.value.length;
+      gauge.textContent = `${len} / 80`;
+      gauge.className = 'counter' + (len > 80 ? ' over' : '');
+      currentEbayPayload.product.title = inp.value;
+      $('#pane-ebay-json').textContent = JSON.stringify(currentEbayPayload, null, 2);
+    };
+    const wrap = el('div', ''); wrap.append(head, inp);
+    pane.append(wrap, el('p', 'note', data.category));
+
+    const tblWrap = el('div', 'tbl'), tbl = el('table'), tb = el('tbody');
+    Object.entries(data.specifics).forEach(([k, v]) => {
+      const tr = el('tr'); tr.append(el('th', '', k), el('td', '', v)); tb.append(tr);
+    });
+    tbl.append(tb); tblWrap.append(tbl); pane.append(tblWrap);
+
+    const desc = el('div', 'contract');
+    desc.style.fontFamily = 'var(--f-sans)';
+    desc.textContent = data.paragraphs.join('\n\n');
+    pane.append(desc);
+
+    currentEbayPayload = {
+      sku: 'ITEM-' + Math.abs(data.title.split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0)).toString(16).slice(0, 6).toUpperCase(),
+      condition: data.conditionEnum,
+      product: {
+        title: data.title,
+        aspects: Object.fromEntries(Object.entries(data.specifics).map(([k, v]) => [k, [v]])),
+        description: data.paragraphs.map((p) => `<p>${p}</p>`).join(''),
+      },
+    };
+    $('#pane-ebay-json').textContent = JSON.stringify(currentEbayPayload, null, 2);
+  }
+
+  $('#lbtn').onclick = () => generateEbayListing(true);
+  $('#lcopy').onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(currentEbayPayload, null, 2));
+      $('#lnotes').textContent = T('JSON скопирован', 'Copied!', 'JSON copié');
+      setTimeout(() => { $('#lnotes').textContent = ''; }, 1800);
+    } catch {}
+  };
+  $('#tab-ebay-preview').onclick = () => { $('#tab-ebay-preview').setAttribute('aria-selected', 'true'); $('#tab-ebay-json').setAttribute('aria-selected', 'false'); $('#pane-ebay-preview').hidden = false; $('#pane-ebay-json').hidden = true; };
+  $('#tab-ebay-json').onclick = () => { $('#tab-ebay-json').setAttribute('aria-selected', 'true'); $('#tab-ebay-preview').setAttribute('aria-selected', 'false'); $('#pane-ebay-json').hidden = false; $('#pane-ebay-preview').hidden = true; };
+
+  /* ==================== 06 HANDWRITING OCR ==================== */
+  const SCANS = {
+    en: {
+      paper: '#FAF6EB', ink: '#1C2D5A',
+      lines: [
+        { x: 38, y: 52, text: 'Tuesday 14th march' },
+        { x: 38, y: 106, text: 'Went to the market erly, bought apples pears & bread.' },
+        { x: 38, y: 160, text: 'Mrs Hale says the bridge is closed till friday??' },
+        { x: 38, y: 214, text: 'Remember: call Tom re. the Harrisons invoice' },
+      ],
+      strike: { prefix: 'Went to the market erly, bought ', word: 'apples', y: 96 },
+      smudge: { prefix: 'Remember: call Tom re. the ', word: 'Harrisons', y: 204 },
+      footer: '— p. 14 —',
+      verbatim: 'Tuesday 14th march\nWent to the market erly, bought ~~apples~~ pears & bread.\nMrs Hale says the bridge is closed till friday??\nRemember: call Tom re. the [illegible] invoice\n\n— page break (p. 14) —',
+      norm: 'Tuesday, 14 March\nWent to the market early, bought pears and bread.\nMrs Hale says the bridge is closed until Friday.\nRemember: call Tom regarding the [illegible — check original] invoice.',
+    },
+    ru: {
+      paper: '#F4F1E6', ink: '#22283A',
+      lines: [
+        { x: 38, y: 52, text: 'Акт осмотра уч-ка № 4 от 12 окт.' },
+        { x: 38, y: 106, text: 'Опора № 17 — изолятор треснут заменен, крен 3 град.' },
+        { x: 38, y: 160, text: 'Ввод кабеля сырой, проверить муфту до пятницы!!' },
+        { x: 38, y: 214, text: 'Подпись мастера: Соловьев П.К.' },
+      ],
+      strike: { prefix: 'Опора № 17 — изолятор ', word: 'треснут', y: 96 },
+      smudge: { prefix: 'Подпись мастера: ', word: 'Соловьев', y: 204 },
+      footer: '— л. 4 об. —',
+      verbatim: 'Акт осмотра уч-ка № 4 от 12 окт.\nОпора № 17 — изолятор ~~треснут~~ заменен, крен 3 град.\nВвод кабеля сырой, проверить муфту до пятницы!!\nПодпись мастера: [illegible] П.К.\n\n— разрыв страницы (л. 4 об.) —',
+      norm: 'Акт осмотра участка № 4 от 12 октября.\nОпора № 17: изолятор заменён, крен 3°.\nВвод кабеля отсырел — проверить муфту до пятницы.\nПодпись мастера: [нрзб. — пятно на оригинале] П. К.',
+    },
+  };
+
+  let curScan = 'en', curHandMode = 'verbatim';
+
+  function drawHandScan() {
+    const cfg = SCANS[curScan], c = $('#scan'), g = c.getContext('2d');
+    const boxes = $('#scan-boxes').checked;
+    g.fillStyle = cfg.paper; g.fillRect(0, 0, c.width, c.height);
+    g.strokeStyle = 'rgba(55, 95, 160, 0.16)'; g.lineWidth = 1;
+    for (let y = 62; y < c.height; y += 54) { g.beginPath(); g.moveTo(22, y); g.lineTo(c.width - 22, y); g.stroke(); }
+
+    g.fillStyle = cfg.ink; g.font = '32px Caveat, cursive';
+    cfg.lines.forEach((ln, idx) => {
+      g.save(); g.translate(ln.x, ln.y); g.rotate((idx % 2 ? -1 : 1) * 0.004); g.fillText(ln.text, 0, 0); g.restore();
+    });
+
+    const preW = g.measureText(cfg.strike.prefix).width, wordW = g.measureText(cfg.strike.word).width;
+    g.strokeStyle = cfg.ink; g.lineWidth = 2.5;
+    g.beginPath(); g.moveTo(38 + preW - 2, cfg.strike.y); g.lineTo(38 + preW + wordW + 3, cfg.strike.y - 2); g.stroke();
+
+    const smPreW = g.measureText(cfg.smudge.prefix).width, smWordW = g.measureText(cfg.smudge.word).width;
+    g.fillStyle = curScan === 'en' ? 'rgba(24, 38, 82, 0.86)' : 'rgba(34, 40, 58, 0.85)';
+    for (let i = 0; i < 48; i++) {
+      const rx = ((Math.sin(i * 12.9898) * 43758.5453) % 1 + 1) % 1;
+      const ry = ((Math.sin(i * 78.233) * 19341.123) % 1 + 1) % 1;
+      g.beginPath(); g.arc(38 + smPreW + rx * smWordW, cfg.smudge.y + (ry - 0.5) * 20, 5 + (i % 6), 0, Math.PI * 2); g.fill();
+    }
+
+    if (boxes) {
+      g.save(); g.setLineDash([4, 3]); g.lineWidth = 1.5;
+      g.strokeStyle = '#1856C4'; g.strokeRect(38 + preW - 5, cfg.strike.y - 22, wordW + 10, 34);
+      g.strokeStyle = '#B42318'; g.fillStyle = 'rgba(180, 35, 24, 0.08)';
+      g.fillRect(38 + smPreW - 5, cfg.smudge.y - 22, smWordW + 10, 36);
+      g.strokeRect(38 + smPreW - 5, cfg.smudge.y - 22, smWordW + 10, 36);
+      g.restore();
+    }
+    g.fillStyle = 'rgba(30, 40, 70, 0.55)'; g.font = '21px Caveat, cursive';
+    g.fillText(cfg.footer, c.width / 2 - 36, 272);
+  }
+
+  function renderHandwriting() {
+    const cfg = SCANS[curScan];
+    const raw = curHandMode === 'verbatim' ? cfg.verbatim : cfg.norm;
+    const out = $('#hout'); out.replaceChildren();
+    raw.split(/(~~[^~]+~~|\[(?:illegible|нрзб\.)[^\]]*\])/).forEach((tok) => {
+      if (/^~~.+~~$/.test(tok)) out.append(el('s', '', tok.slice(2, -2)));
+      else if (/^\[(?:illegible|нрзб\.)/.test(tok)) out.append(el('span', 'ill', tok));
+      else out.append(document.createTextNode(tok));
+    });
+    drawHandScan();
+  }
+
+  $('#scan-samples').onclick = (e) => {
+    const b = e.target.closest('[data-sample]'); if (!b) return;
+    curScan = b.dataset.sample;
+    $$('#scan-samples [data-sample]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    renderHandwriting();
+  };
+  $('#hand-mode').onclick = (e) => {
+    const b = e.target.closest('[data-hmode]'); if (!b) return;
+    curHandMode = b.dataset.hmode;
+    $$('#hand-mode [data-hmode]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    renderHandwriting();
+  };
+  $('#scan-boxes').onchange = drawHandScan;
+
+  /* ==================== 07 CLAUDE CODE SIMULATOR ==================== */
+  const CC_SNIPPETS = {
+    guard: `// .claude/hooks/scope-guard.mjs (PreToolUse: Edit | Write | MultiEdit)
+const ALWAYS_PROTECTED = [
+  /^\\.git(\\/|$)/i,
+  /(^|\\/)\\.env($|\\.)/i,
+  /(^|\\/)secrets?(\\/|$)/i,
+  /\\.(pem|key|p12|pfx|keystore)$/i,
+  /^\\.claude\\/settings(\\.local)?\\.json$/i,
+  /^\\.claude\\/hooks(\\/|$)/i,
+];
+
+if (relRaw.startsWith('..') || path.isAbsolute(relRaw))
+  deny(\`Refused: "\${target}" resolves outside workspace root.\`);
+
+if (ALWAYS_PROTECTED.some((re) => re.test(rel)))
+  deny(\`Refused: "\${rel}" is on the protected list.\`);
+
+if (rel.toLowerCase() === '.claude/scope.txt' && scope.length > 0)
+  deny('scope.txt is already locked for the active task.');
+
+if (scope.length > 0 && !scope.some((p) => compileGlob(p).test(rel)))
+  deny(\`Out-of-scope edit blocked: "\${rel}"\`); // exit 2 -> cancels tool call`,
+
+    gate: `// .claude/hooks/test-gate.mjs (Stop hook)
+const status = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
+if (status.status === 0 && !status.stdout.trim()) process.exit(0); // read-only turn
+
+const result = spawnSync(testCmd, { cwd: root, shell: true, encoding: 'utf8' });
+if (result.status === 0) {
+  fs.writeFileSync(scopeFile, '# Scope cleared after passing tests.\\n');
+  process.exit(0);
+}
+
+if (attempt > 3) process.exit(0); // cap retries; report failure honestly
+process.stderr.write(\`[test-gate] "\${testCmd}" failed (attempt \${attempt}/3)...\\n\${tail}\`);
+process.exit(2); // feeds failing output back to Claude Code`,
+  };
+
+  function compileGlobBrowser(pattern) {
+    let norm = pattern.replace(/\\/g, '/').replace(/^\.\//, '');
+    if (norm.endsWith('/')) norm += '**';
+    const expr = norm.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*\*\/?/g, '\0').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]').replace(/\0/g, '.*');
+    return new RegExp(`^${expr}$`, 'i');
+  }
+
+  function runScopeSim() {
+    const scopeLines = $('#cc-scope').value.split(/\r?\n/).map((s) => s.trim()).filter((s) => s && !s.startsWith('#'));
+    const rawTarget = $('#cc-target').value.trim().replace(/\\/g, '/').replace(/^\.\//, '');
+    const out = $('#cc-result');
+    if (!rawTarget) { out.className = 'term-out pass'; out.textContent = 'exit 0'; return; }
+
+    if (rawTarget.startsWith('..') || /^[a-z]:\//i.test(rawTarget) || rawTarget.startsWith('/')) {
+      out.className = 'term-out block';
+      out.textContent = `exit 2 (BLOCKED)\nstderr: Refused: "${rawTarget}" resolves outside workspace root.`;
+      return;
+    }
+    const prot = [/^\.git(\/|$)/i, /(^|\/)\.env($|\.)/i, /(^|\/)secrets?(\/|$)/i, /\.(pem|key|p12|pfx)$/i, /^\.claude\/settings(\.local)?\.json$/i, /^\.claude\/hooks(\/|$)/i];
+    if (prot.some((re) => re.test(rawTarget))) {
+      out.className = 'term-out block';
+      out.textContent = `exit 2 (BLOCKED)\nstderr: Refused: "${rawTarget}" is on the protected list.`;
+      return;
+    }
+    if (rawTarget.toLowerCase() === '.claude/scope.txt') {
+      if (scopeLines.length > 0) {
+        out.className = 'term-out block';
+        out.textContent = 'exit 2 (BLOCKED)\nstderr: scope.txt is already locked for the active task.';
+      } else {
+        out.className = 'term-out pass';
+        out.textContent = 'exit 0 (ALLOWED — initial scope write)';
+      }
+      return;
+    }
+    if (scopeLines.length === 0 || scopeLines.some((g) => compileGlobBrowser(g).test(rawTarget))) {
+      out.className = 'term-out pass';
+      out.textContent = `exit 0 (ALLOWED)\n"${rawTarget}" matches approved scope.`;
+      return;
+    }
+    out.className = 'term-out block';
+    out.textContent = `exit 2 (BLOCKED)\nstderr: Out-of-scope edit blocked: "${rawTarget}"\nAllowed patterns:\n` + scopeLines.map((s) => `  - ${s}`).join('\n');
+  }
+
+  $('#cc-scope').oninput = runScopeSim;
+  $('#cc-target').oninput = runScopeSim;
+  $('#cc-presets').onclick = (e) => { const b = e.target.closest('[data-path]'); if (!b) return; $('#cc-target').value = b.dataset.path; runScopeSim(); };
+  $('#cc-tabs').onclick = (e) => {
+    const tab = e.target.closest('[data-cctab]'); if (!tab) return;
+    const key = tab.dataset.cctab;
+    $$('#cc-tabs [data-cctab]').forEach((t) => t.setAttribute('aria-selected', t === tab));
+    $('#cc-pane-sim').hidden = key !== 'sim';
+    $('#cc-pane-code').hidden = key === 'sim';
+    if (key !== 'sim') $('#cc-code-box').textContent = CC_SNIPPETS[key];
+  };
+
+  /* ==================== 08 GOST TABS & TRACE ==================== */
+  $$('[data-trace]').forEach((row) => {
+    row.onclick = () => {
+      const key = row.dataset.trace;
+      $$('[data-trace]').forEach((r) => r.classList.toggle('hl-row', r.dataset.trace === key));
+    };
+  });
+  $('#tab-gost-trace').onclick = () => { $('#tab-gost-trace').setAttribute('aria-selected', 'true'); $('#tab-gost-virt').setAttribute('aria-selected', 'false'); $('#pane-gost-trace').hidden = false; $('#pane-gost-virt').hidden = true; };
+  $('#tab-gost-virt').onclick = () => { $('#tab-gost-virt').setAttribute('aria-selected', 'true'); $('#tab-gost-trace').setAttribute('aria-selected', 'false'); $('#pane-gost-virt').hidden = false; $('#pane-gost-trace').hidden = true; };
+
+  /* ==================== 09 AUDIT TABS ==================== */
+  $('#tab-aud-table').onclick = () => { $('#tab-aud-table').setAttribute('aria-selected', 'true'); $('#tab-aud-fix').setAttribute('aria-selected', 'false'); $('#pane-aud-table').hidden = false; $('#pane-aud-fix').hidden = true; };
+  $('#tab-aud-fix').onclick = () => { $('#tab-aud-fix').setAttribute('aria-selected', 'true'); $('#tab-aud-table').setAttribute('aria-selected', 'false'); $('#pane-aud-fix').hidden = false; $('#pane-aud-table').hidden = true; };
+
+  /* ====== Boot ====== */
+  resetChat(true);
+  extractAndVerifyDocs();
+  runSpecMatcher();
+  generateEbayListing();
+  setLang(L);
+  runRagSearch(T(RAG_PRESETS[0][0], RAG_PRESETS[0][1], RAG_PRESETS[0][2]), false);
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('32px Caveat').then(drawHandScan, drawHandScan);
+  }
+
+  if (location.protocol === 'http:' || location.protocol === 'https:') {
+    fetch('/api/health').then((r) => (r.ok ? r.json() : null)).then((info) => {
+      if (!info) return;
+      backendInfo = info;
+      const badge = $('#api-badge');
+      if (info.llmEnabled) {
+        badge.className = 'pill ok';
+        badge.textContent = `LLM: ${info.model}`;
+      } else {
+        badge.className = 'pill warn';
+        badge.textContent = 'local rules';
+      }
+    }).catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
