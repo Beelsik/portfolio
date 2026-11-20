@@ -30,6 +30,6 @@ services:
       - key: DAILY_BUDGET_USD
         value: "1.50"
       - key: HEAVY_IP_LIMIT
-        value: "10"
+        value: "30"
       - key: RATE_LIMIT_MAX
         value: "80"

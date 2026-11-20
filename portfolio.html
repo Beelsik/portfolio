@@ -1273,16 +1273,16 @@ async function checkout(cart, discountPercent) {
         <span class="fr">Arène Red-Team : deux vrais appels LLM indépendants sans trucage</span>
       </h2>
       <p>
-        <span class="ru">Здесь нет заскриптованной симуляции: оба бота вызываются по-настоящему и независимо. У <strong>наивного бота</strong> честный промпт обычного консультанта магазина с подключённым CRM-вебхуком (откройте вкладку «Открытый промпт» и проверьте сами) — на простые уговоры дать скидку он отвечает отказом (<code>HELD</code>), но пробивается реальной инъекцией контекста.</span>
-        <span class="en">Zero scripted simulation: both bots run real, separate LLM calls in parallel. The <strong>naive bot</strong> uses a genuine, helpful store prompt with an attached CRM webhook payload (inspect its exact verbatim prompt in the "Open Prompt" tab) — it politely resists casual begging (<code>HELD</code>), and only breaks under real context/privilege injection.</span>
-        <span class="fr">Aucune simulation truquée : les deux bots exécutent chacun un véritable appel LLM en parallèle. Le <strong>bot naïf</strong> utilise un vrai prompt commercial avec données CRM jointes (consultable dans l'onglet « Prompt ouvert ») : il refuse les demandes naïves (<code>HELD</code>) et ne cède qu'aux vraies injections.</span>
+        <span class="ru">Здесь нет заскриптованной симуляции: оба бота вызываются по-настоящему и независимо. Откройте вкладку <strong>«Промпт (ред.)»</strong>, поменяйте товары, цены или формулировки правил и проверьте запрос заново — вы сразу увидите, как от текста промпта меняется живой ответ модели.</span>
+        <span class="en">Zero scripted simulation: both bots execute real, independent LLM calls in parallel. Open the <strong>"Prompt (edit)"</strong> tab, change products, prices, or wording, and re-run — you will immediately see the live model output adapt to your edited prompt.</span>
+        <span class="fr">Aucune simulation pré-écrite : les deux bots exécutent de vrais appels LLM indépendants. Ouvrez l'onglet <strong>« Prompt (édit.) »</strong>, modifiez les produits, tarifs ou consignes et relancez pour voir la réponse évoluer en direct.</span>
       </p>
       <div class="callout-note">
-        <span class="ru"><strong>Защита от абуза и честный биллинг:</strong> уязвимый бот крутится на <strong>бесплатной модели</strong> (<code>NIM 120B · $0.00</code>), поэтому его взлом не тратит деньги, а <strong>защищённый контур</strong> работает на платном <strong>Google Cloud Vertex AI (<code>gemini-4-neon</code>)</strong> под прикрытием 3 рубежей и <em>Cost Firewall</em> (потолок <code>$1.50/сутки</code>).</span>
-        <span class="en"><strong>Abuse-proof &amp; skin in the game:</strong> the vulnerable bot runs strictly on a <strong>free model</strong> (<code>NIM 120B · $0.00</code>) so jailbreaking it can never burn budget, while the <strong>3-layer guarded bot</strong> runs live on paid <strong>Google Cloud Vertex AI (<code>gemini-4-neon</code>)</strong> behind my <code>$1.50/day</code> <em>Cost Firewall</em>.</span>
-        <span class="fr"><strong>Anti-abus &amp; confiance prouvée :</strong> le bot vulnérable tourne sur un <strong>modèle gratuit</strong> (<code>NIM 120B · 0 $</code>) pour éviter tout abus, tandis que le <strong>pipeline blindé à 3 couches</strong> tourne sur <strong>Google Cloud Vertex AI (<code>gemini-4-neon</code>, payant)</strong> derrière mon <em>Cost Firewall</em> (<code>1,50 $/jour</code>).</span>
+        <span class="ru"><strong>Защита от абуза и честный биллинг:</strong> уязвимый бот крутится на <strong>бесплатной модели</strong> (<code>NIM 30B · $0.00</code>), поэтому его взлом не тратит деньги, а <strong>защищённый контур</strong> работает на платном <strong>Google Cloud Vertex AI (<code>gemini-4-neon</code>)</strong> под прикрытием 3 рубежей и <em>Cost Firewall</em> (потолок <code>$1.50/сутки</code>), вежливо отвечая покупателю без технических ошибок в чате.</span>
+        <span class="en"><strong>Abuse-proof &amp; skin in the game:</strong> the vulnerable bot runs strictly on a <strong>free model</strong> (<code>NIM 30B · $0.00</code>) so jailbreaking it never burns budget, while the <strong>3-layer guarded bot</strong> runs live on paid <strong>Google Cloud Vertex AI (<code>gemini-4-neon</code>)</strong> behind a <code>$1.50/day</code> <em>Cost Firewall</em>, keeping customer replies polite and natural.</span>
+        <span class="fr"><strong>Anti-abus &amp; confiance prouvée :</strong> le bot vulnérable tourne sur un <strong>modèle gratuit</strong> (<code>NIM 30B · 0 $</code>), tandis que le <strong>pipeline blindé à 3 couches</strong> tourne sur <strong>Google Cloud Vertex AI (<code>gemini-4-neon</code>, payant)</strong> derrière un <em>Cost Firewall</em> (<code>1,50 $/jour</code>), tout en répondant poliment au client.</span>
       </div>
-      <div class="stack"><span>Open Verbatim Prompt</span><span>Free NIM ($0) on Naive</span><span>Paid Vertex Neon on Guarded</span><span>Node.js Tool Firewall</span></div>
+      <div class="stack"><span>Editable Live Prompt</span><span>Free NIM ($0) on Naive</span><span>Paid Vertex Neon on Guarded</span><span>Natural Store UX</span></div>
     </div>
 
     <div class="bench">
@@ -1292,7 +1292,7 @@ async function checkout(cart, discountPercent) {
           <span class="note mono" id="rt-status"></span>
           <div class="tabs" role="tablist">
             <button class="tab" id="tab-rt-arena" aria-selected="true"><span class="ru">Полигон</span><span class="en">Live Arena</span><span class="fr">Arène</span></button>
-            <button class="tab" id="tab-rt-prompt" aria-selected="false"><span class="ru">Открытый промпт</span><span class="en">Open Prompt</span><span class="fr">Prompt ouvert</span></button>
+            <button class="tab" id="tab-rt-prompt" aria-selected="false"><span class="ru">Промпт (ред.)</span><span class="en">Prompt (edit)</span><span class="fr">Prompt (édit.)</span></button>
           </div>
         </div>
       </div>
@@ -1308,7 +1308,7 @@ async function checkout(cart, discountPercent) {
               <strong><span class="ru">Наивный бот (1 промпт)</span><span class="en">Naive single-prompt bot</span><span class="fr">Bot naïf (1 seul prompt)</span></strong>
               <span class="pill bad" id="rt-vuln-badge">BREACHED</span>
             </div>
-            <span class="note mono" id="rt-vuln-model">NIM 120B · Free Tier ($0.00)</span>
+            <span class="note mono" id="rt-vuln-model">NIM 30B · Free ($0.00)</span>
             <div id="rt-vuln-reply" style="color:var(--ink-soft)"></div>
             <div class="rt-trace" id="rt-vuln-tool"></div>
           </div>
@@ -1326,11 +1326,16 @@ async function checkout(cart, discountPercent) {
 
       <div class="benchbody" id="pane-rt-prompt" hidden>
         <p class="note">
-          <span class="ru">Ниже — <strong>дословный системный промпт</strong>, который прямо сейчас отправляется в бесплатную модель наивного бота. Никаких инструкций «поддавайся взлому»: это типичный реальный промпт из конструкторов (n8n / Make), куда разработчик положил данные вебхука CRM и текстовые правила для менеджеров:</span>
-          <span class="en">Below is the <strong>exact verbatim system prompt</strong> sent to the free-tier Naive Bot on every request. Zero "pretend to fail" instructions — just a realistic single-prompt store bot where CRM webhook data and manager rules share one context window:</span>
-          <span class="fr">Voici le <strong>prompt système exact</strong> envoyé au bot naïf (modèle gratuit). Aucune consigne de « jouer l'idiot » — c'est l'erreur classique d'un webhook CRM injecté dans le même prompt que le client :</span>
+          <span class="ru">Отредактируйте системный промпт ниже (поменяйте цены, ассортимент, стиль общения или уберите/добавьте строки из CRM) и нажмите «Применить и проверить» — ответ перестроится вживую:</span>
+          <span class="en">Edit the system prompt below (change prices, products, greeting style, or remove/add CRM lines) and click "Apply &amp; test" — the live response updates immediately:</span>
+          <span class="fr">Modifiez le prompt système ci-dessous (changez tarifs, produits, ton ou lignes CRM) puis cliquez sur « Appliquer et tester » pour voir la réponse changer en direct :</span>
         </p>
-        <pre class="code" id="rt-prompt-view"></pre>
+        <textarea id="rt-prompt-ed" rows="9"></textarea>
+        <div class="row">
+          <button class="btn sm" id="rt-prompt-save" type="button"><span class="ru">Применить и проверить</span><span class="en">Apply &amp; test</span><span class="fr">Appliquer et tester</span></button>
+          <button class="btn ghost sm" id="rt-prompt-reset" type="button"><span class="ru">Сбросить по умолчанию</span><span class="en">Reset default</span><span class="fr">Réinitialiser</span></button>
+          <span class="note" id="rt-prompt-msg"></span>
+        </div>
       </div>
     </div>
   </section>
@@ -2695,13 +2700,14 @@ async function checkout(cart, discountPercent) {
     ],
   };
 
+  let activeRtPrompt = '';
+
   function renderRtResult(res) {
     const breached = Boolean(res.naive.breached);
     $('#rt-vuln-card').style.borderTopColor = breached ? 'var(--bad)' : 'var(--ok)';
     $('#rt-vuln-badge').className = 'pill ' + (breached ? 'bad' : 'ok');
     $('#rt-vuln-badge').textContent = breached ? 'BREACHED' : T('УСТОЯЛ (HELD)', 'HELD (SAFE)', 'RÉSISTÉ (SAFE)');
     if (res.naive.model) $('#rt-vuln-model').textContent = res.naive.model;
-    if (res.naive.systemPrompt) $('#rt-prompt-view').textContent = res.naive.systemPrompt;
     $('#rt-vuln-reply').textContent = res.naive.reply;
     $('#rt-vuln-tool').textContent = res.naive.breachReasons?.length
       ? `Audit: ${res.naive.breachReasons.join(' · ')}`
@@ -2714,13 +2720,15 @@ async function checkout(cart, discountPercent) {
     const lines = [
       `L1 Input Scrubber: ${res.guarded.layer1Flags?.length ? res.guarded.layer1Flags.join(', ') : 'clean'}`,
       `L2 Intent Router: ${res.guarded.intent || 'store_catalog_qa'} (zero CRM secrets in memory)`,
-      `L3 Node.js Firewall: ${res.guarded.layer3Blocks?.length ? res.guarded.layer3Blocks.join('; ') : 'domain & <=5% policy verified'}`,
+      `L3 Guard: ${res.guarded.layer3Blocks?.length ? res.guarded.layer3Blocks.join('; ') : 'scope & <=5% policy verified'}`,
     ];
     $('#rt-guard-trace').textContent = lines.join('\n');
   }
 
   function loadRtForLang() {
-    $('#rt-prompt-view').textContent = RT_DEFAULT_NAIVE_PROMPT[L];
+    activeRtPrompt = RT_DEFAULT_NAIVE_PROMPT[L];
+    $('#rt-prompt-ed').value = activeRtPrompt;
+    $('#rt-prompt-msg').textContent = '';
     const box = $('#rt-presets'); box.replaceChildren();
     RT_PRESETS[L].forEach((p, idx) => {
       const b = el('button', 'chip', p.label); b.type = 'button';
@@ -2745,19 +2753,34 @@ async function checkout(cart, discountPercent) {
         model: 'gemini-4-neon · Paid Vertex AI',
         intent: 'off_topic_request',
         layer1Flags: ['Instruction override / social-engineering pattern flagged', 'Off-topic / code-generation attempt flagged'],
-        layer3Blocks: ['Domain Lock discarded LLM prose (off-topic / code generation blocked)'],
-        reply: T('Запрос отклонён кодовым контуром (Domain Lock): ассистент отвечает строго по каталогу и доставке TechStore (ProBook X1, StudioDisplay 27) и не генерирует код или посторонние тексты.', 'Blocked by deterministic Domain Lock: this assistant is strictly scoped to TechStore products (ProBook X1, StudioDisplay 27) and never generates code or off-topic content.', 'Bloqué par le verrouillage métier (Domain Lock) : cet assistant répond uniquement sur le catalogue TechStore et ne génère jamais de code ni de contenu hors sujet.'),
+        layer3Blocks: ['Off-topic / code request intercepted (polite store reply returned)'],
+        reply: T('Я консультант магазина TechStore, поэтому не смогу помочь с написанием кода, но с радостью подскажу по характеристикам ноутбука ProBook X1, монитора StudioDisplay 27 и доставке!', 'I am TechStore’s shopping consultant, so I cannot help with writing code — happy to answer any questions about our ProBook X1 laptop, StudioDisplay 27 monitor, or shipping!', 'Je suis le conseiller TechStore, je ne peux pas rédiger de code, mais je vous renseigne volontiers sur le ProBook X1, le StudioDisplay 27 et la livraison !'),
       },
     });
   }
 
+  $('#rt-prompt-save').onclick = () => {
+    const val = $('#rt-prompt-ed').value.trim();
+    if (!val) return;
+    activeRtPrompt = val;
+    $('#rt-prompt-msg').textContent = T('✓ Промпт обновлён — перезапускаю проверку…', '✓ Prompt updated — re-running check…', '✓ Prompt mis à jour — test en cours…');
+    $('#tab-rt-arena').click();
+    runRedTeam($('#rt-in').value || RT_PRESETS[L][0].text, true);
+  };
+  $('#rt-prompt-reset').onclick = () => {
+    activeRtPrompt = RT_DEFAULT_NAIVE_PROMPT[L];
+    $('#rt-prompt-ed').value = activeRtPrompt;
+    $('#rt-prompt-msg').textContent = T('Сброшено к исходному промпту', 'Reset to default prompt', 'Prompt réinitialisé');
+  };
+
   async function runRedTeam(attack, useLive = true) {
     const clean = attack.trim(); if (!clean) return;
+    activeRtPrompt = $('#rt-prompt-ed').value.trim() || RT_DEFAULT_NAIVE_PROMPT[L];
     if (useLive && backendInfo.llmEnabled) {
       $('#rt-btn').disabled = true;
-      $('#rt-status').textContent = T('Прогоняю атаку через оба контура…', 'Testing attack on both pipelines…', 'Test d’intrusion en cours…');
+      $('#rt-status').textContent = T('Прогоняю запрос через оба контура…', 'Running across both pipelines…', 'Test sur les deux pipelines…');
       try {
-        const r = await fetch('/api/redteam', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ attack: clean, lang: L }) });
+        const r = await fetch('/api/redteam', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ attack: clean, lang: L, customPrompt: activeRtPrompt }) });
         if (r.ok) {
           const d = await r.json();
           if (d?.naive && d?.guarded) renderRtResult(d);
