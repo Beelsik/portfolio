@@ -1,12 +1,14 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
 
-const LLM_PROVIDER = (process.env.LLM_PROVIDER || 'openai').toLowerCase(); // openai | anthropic | gemini | ollama
+/* ====== TIER 1: FAST / FREE TIER (NVIDIA NIM / OpenAI-compatible / etc.) ====== */
+const LLM_PROVIDER = (process.env.LLM_PROVIDER || 'openai').toLowerCase();
 const LLM_API_KEY = process.env.LLM_API_KEY || '';
 const LLM_BASE_URL = (
   process.env.LLM_BASE_URL ||
@@ -36,10 +38,50 @@ const LLM_VISION_MODEL =
 const LLM_ENABLED = LLM_PROVIDER === 'ollama' || Boolean(LLM_API_KEY);
 const VISION_ENABLED = LLM_ENABLED;
 
-// Per-IP rate limiter
-const hits = new Map();
+/* ====== TIER 2: HEAVY REASONING TIER — GOOGLE CLOUD VERTEX AI ====== */
+// Supports EITHER:
+//   A) VERTEX_CREDENTIALS_JSON (full Service Account JSON string from GCP IAM)
+//   B) VERTEX_API_KEY (Vertex AI Express Mode API key)
+const VERTEX_API_KEY = (process.env.VERTEX_API_KEY || '').trim();
+const VERTEX_CREDENTIALS_RAW = (process.env.VERTEX_CREDENTIALS_JSON || '').trim();
+const VERTEX_LOCATION = (process.env.VERTEX_LOCATION || 'us-central1').trim();
+const VERTEX_MODEL = (process.env.VERTEX_MODEL || 'gemini-2.5-pro').trim();
+
+let vertexCreds = null;
+if (VERTEX_CREDENTIALS_RAW) {
+  try {
+    vertexCreds = JSON.parse(VERTEX_CREDENTIALS_RAW);
+  } catch (e) {
+    console.error('Failed to parse VERTEX_CREDENTIALS_JSON:', e.message);
+  }
+}
+const VERTEX_PROJECT_ID = (process.env.VERTEX_PROJECT_ID || vertexCreds?.project_id || '').trim();
+const VERTEX_ENABLED = Boolean((vertexCreds?.client_email && vertexCreds?.private_key && VERTEX_PROJECT_ID) || VERTEX_API_KEY);
+
+// Approximate Vertex AI Pro pricing ($ per 1M tokens) for live Cost Firewall accounting
+const VERTEX_INPUT_USD_PER_1M = Number(process.env.VERTEX_INPUT_USD_PER_1M || 1.25);
+const VERTEX_OUTPUT_USD_PER_1M = Number(process.env.VERTEX_OUTPUT_USD_PER_1M || 10.0);
+
+/* ====== FINANCIAL & ABUSE FIREWALL (Protects paid Google Cloud billing) ====== */
+const DAILY_BUDGET_USD = Number(process.env.DAILY_BUDGET_USD || 1.5); // Hard daily ceiling in USD
+const HEAVY_IP_LIMIT_PER_HOUR = Number(process.env.HEAVY_IP_LIMIT || 10); // Max paid Vertex calls per IP / hour
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_MAX = Number(process.env.RATE_LIMIT_MAX || 80);
+
+const hits = new Map();
+const heavyHits = new Map();
+let budgetDayKey = new Date().toISOString().slice(0, 10);
+let dailySpentUsd = 0;
+let dailyHeavyCalls = 0;
+
+function resetBudgetIfNewDay() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (today !== budgetDayKey) {
+    budgetDayKey = today;
+    dailySpentUsd = 0;
+    dailyHeavyCalls = 0;
+  }
+}
 
 function checkRateLimit(ip) {
   const now = Date.now();
@@ -48,6 +90,148 @@ function checkRateLimit(ip) {
   list.push(now);
   hits.set(ip, list);
   return true;
+}
+
+function canUseHeavyVertex(ip) {
+  if (!VERTEX_ENABLED) return { allowed: false, reason: 'vertex_not_configured' };
+  resetBudgetIfNewDay();
+  if (dailySpentUsd >= DAILY_BUDGET_USD) {
+    return { allowed: false, reason: `daily_budget_cap_reached ($${DAILY_BUDGET_USD.toFixed(2)})` };
+  }
+  const now = Date.now();
+  const hourList = (heavyHits.get(ip) || []).filter((ts) => now - ts < 60 * 60 * 1000);
+  if (hourList.length >= HEAVY_IP_LIMIT_PER_HOUR) {
+    return { allowed: false, reason: `ip_hourly_heavy_quota (${HEAVY_IP_LIMIT_PER_HOUR}/hr)` };
+  }
+  return { allowed: true, reason: 'ok' };
+}
+
+function recordHeavyUsage(ip, promptTok, compTok) {
+  resetBudgetIfNewDay();
+  const now = Date.now();
+  const hourList = (heavyHits.get(ip) || []).filter((ts) => now - ts < 60 * 60 * 1000);
+  hourList.push(now);
+  heavyHits.set(ip, hourList);
+  const cost = (promptTok / 1_000_000) * VERTEX_INPUT_USD_PER_1M + (compTok / 1_000_000) * VERTEX_OUTPUT_USD_PER_1M;
+  dailySpentUsd += cost;
+  dailyHeavyCalls += 1;
+  return cost;
+}
+
+/* ====== ZERO-DEPENDENCY GOOGLE CLOUD OAUTH2 JWT TOKEN CACHE ====== */
+let cachedVertexToken = { token: '', expiresAt: 0 };
+
+function b64url(input) {
+  return Buffer.from(input).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+async function getVertexAccessToken() {
+  if (cachedVertexToken.token && Date.now() < cachedVertexToken.expiresAt - 60_000) {
+    return cachedVertexToken.token;
+  }
+  const nowSec = Math.floor(Date.now() / 1000);
+  const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claim = b64url(
+    JSON.stringify({
+      iss: vertexCreds.client_email,
+      scope: 'https://www.googleapis.com/auth/cloud-platform',
+      aud: vertexCreds.token_uri || 'https://oauth2.googleapis.com/token',
+      iat: nowSec,
+      exp: nowSec + 3600,
+    })
+  );
+  const unsigned = `${header}.${claim}`;
+  const signer = crypto.createSign('RSA-SHA256');
+  signer.update(unsigned);
+  const signature = signer.sign(vertexCreds.private_key).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const assertion = `${unsigned}.${signature}`;
+
+  const res = await fetch(vertexCreds.token_uri || 'https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    signal: AbortSignal.timeout(10_000),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion,
+    }),
+  });
+  if (!res.ok) {
+    const errTxt = await res.text().catch(() => '');
+    throw new Error(`Vertex OAuth HTTP ${res.status}: ${errTxt.slice(0, 120)}`);
+  }
+  const data = await res.json();
+  cachedVertexToken = {
+    token: data.access_token,
+    expiresAt: Date.now() + (Number(data.expires_in || 3600) * 1000),
+  };
+  return cachedVertexToken.token;
+}
+
+async function callVertexAI({ system, messages, maxTokens = 900, jsonMode = false, timeoutMs = 32000, ip = 'local', metaSink = null }) {
+  const t0 = Date.now();
+  const contents = messages.map((m) => {
+    const parts = Array.isArray(m.content)
+      ? m.content.map((p) => {
+          if (p.type === 'image_url') {
+            const [, mimeType, data] = String(p.image_url?.url || '').match(/^data:(image\/[^;]+);base64,(.+)$/) || [];
+            return { inlineData: { mimeType: mimeType || 'image/jpeg', data: data || '' } };
+          }
+          return { text: p.text || '' };
+        })
+      : [{ text: String(m.content || '') }];
+    return { role: m.role === 'assistant' ? 'model' : 'user', parts };
+  });
+
+  let url = '';
+  const headers = { 'Content-Type': 'application/json' };
+
+  if (vertexCreds?.client_email && VERTEX_PROJECT_ID) {
+    const token = await getVertexAccessToken();
+    headers.Authorization = `Bearer ${token}`;
+    const host = VERTEX_LOCATION === 'global' ? 'aiplatform.googleapis.com' : `${VERTEX_LOCATION}-aiplatform.googleapis.com`;
+    url = `https://${host}/v1/projects/${encodeURIComponent(VERTEX_PROJECT_ID)}/locations/${encodeURIComponent(VERTEX_LOCATION)}/publishers/google/models/${encodeURIComponent(VERTEX_MODEL)}:generateContent`;
+  } else {
+    // Vertex AI Express Mode with API key
+    url = `https://aiplatform.googleapis.com/v1/publishers/google/models/${encodeURIComponent(VERTEX_MODEL)}:generateContent?key=${encodeURIComponent(VERTEX_API_KEY)}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    signal: AbortSignal.timeout(timeoutMs),
+    headers,
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents,
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: maxTokens,
+        ...(jsonMode ? { responseMimeType: 'application/json' } : {}),
+      },
+    }),
+  });
+  if (!res.ok) {
+    const errTxt = await res.text().catch(() => '');
+    throw new Error(`Vertex HTTP ${res.status}: ${errTxt.slice(0, 160)}`);
+  }
+  const data = await res.json();
+  const pTok = Number(data.usageMetadata?.promptTokenCount || 0);
+  const cTok = Number(data.usageMetadata?.candidatesTokenCount || 0) + Number(data.usageMetadata?.thoughtsTokenCount || 0);
+  const costUsd = recordHeavyUsage(ip, pTok, cTok);
+
+  if (metaSink) {
+    metaSink.tier = 'heavy-vertex';
+    metaSink.provider = 'google-vertex-ai';
+    metaSink.model = VERTEX_MODEL;
+    metaSink.latencyMs = (metaSink.latencyMs || 0) + (Date.now() - t0);
+    metaSink.promptTokens = (metaSink.promptTokens || 0) + pTok;
+    metaSink.completionTokens = (metaSink.completionTokens || 0) + cTok;
+    metaSink.costUsd = Number(((metaSink.costUsd || 0) + costUsd).toFixed(6));
+    metaSink.dailyBudgetText = `$${dailySpentUsd.toFixed(4)} / $${DAILY_BUDGET_USD.toFixed(2)}`;
+  }
+
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  const textPart = parts.find((p) => typeof p.text === 'string' && !p.thought) || parts[0];
+  return String(textPart?.text || '').trim();
 }
 
 function readJsonBody(req, maxBytes = 4 * 1024 * 1024) {
@@ -108,17 +292,40 @@ function extractJson(text) {
   return JSON.parse(cleaned.slice(start, end + 1));
 }
 
-async function callLLM({ system, messages, maxTokens = 750, jsonMode = false, vision = false, timeoutMs = 30000, metaSink = null }) {
+/* ====== UNIFIED DUAL-TIER ROUTER (Heavy Vertex AI -> Fast NIM fallback) ====== */
+async function callLLM({ system, messages, maxTokens = 750, jsonMode = false, vision = false, tier = 'fast', ip = 'local', timeoutMs = 30000, metaSink = null }) {
+  // Route heavy analytical tasks through Google Cloud Vertex AI if configured & within budget guard
+  if (tier === 'heavy' && !vision) {
+    const check = canUseHeavyVertex(ip);
+    if (check.allowed) {
+      try {
+        return await callVertexAI({ system, messages, maxTokens, jsonMode, timeoutMs, ip, metaSink });
+      } catch (err) {
+        if (metaSink) metaSink.fallbackReason = `vertex_error (${err.message.slice(0, 60)}) -> fast_tier`;
+        if (!LLM_ENABLED) throw err;
+      }
+    } else if (metaSink && VERTEX_ENABLED) {
+      metaSink.fallbackReason = `budget_shield (${check.reason}) -> fast_tier`;
+    }
+  }
+
   if (!LLM_ENABLED) throw new Error('LLM not configured');
   const model = vision ? LLM_VISION_MODEL : LLM_MODEL;
   const t0 = Date.now();
 
-  const recordMeta = (promptTok, compTok) => {
+  const recordFastMeta = (promptTok, compTok) => {
     if (!metaSink) return;
+    metaSink.tier = vision ? 'vision-fast' : 'fast';
+    metaSink.provider = LLM_PROVIDER;
     metaSink.model = model;
     metaSink.latencyMs = (metaSink.latencyMs || 0) + (Date.now() - t0);
     metaSink.promptTokens = (metaSink.promptTokens || 0) + (promptTok || 0);
     metaSink.completionTokens = (metaSink.completionTokens || 0) + (compTok || 0);
+    metaSink.costUsd = 0;
+    if (VERTEX_ENABLED) {
+      resetBudgetIfNewDay();
+      metaSink.dailyBudgetText = `$${dailySpentUsd.toFixed(4)} / $${DAILY_BUDGET_USD.toFixed(2)}`;
+    }
   };
 
   if (LLM_PROVIDER === 'anthropic') {
@@ -150,7 +357,7 @@ async function callLLM({ system, messages, maxTokens = 750, jsonMode = false, vi
     });
     if (!res.ok) throw new Error(`Anthropic HTTP ${res.status}`);
     const data = await res.json();
-    recordMeta(data.usage?.input_tokens, data.usage?.output_tokens);
+    recordFastMeta(data.usage?.input_tokens, data.usage?.output_tokens);
     return data.content?.[0]?.text || '';
   }
 
@@ -185,7 +392,7 @@ async function callLLM({ system, messages, maxTokens = 750, jsonMode = false, vi
     });
     if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
     const data = await res.json();
-    recordMeta(data.usageMetadata?.promptTokenCount, data.usageMetadata?.candidatesTokenCount);
+    recordFastMeta(data.usageMetadata?.promptTokenCount, data.usageMetadata?.candidatesTokenCount);
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   }
 
@@ -218,12 +425,12 @@ async function callLLM({ system, messages, maxTokens = 750, jsonMode = false, vi
     throw new Error(`LLM HTTP ${res.status}${errBody ? ': ' + errBody.slice(0, 140) : ''}`);
   }
   const data = await res.json();
-  recordMeta(data.usage?.prompt_tokens, data.usage?.completion_tokens);
+  recordFastMeta(data.usage?.prompt_tokens, data.usage?.completion_tokens);
   const msg = data.choices?.[0]?.message || {};
   return String(msg.content || msg.reasoning_content || '').trim();
 }
 
-// Deterministic Layer 1 PII & Injection Scanner for Red-Team Lab
+// Deterministic Layer 1 PII & Injection Scanner
 function scanInputLayer1(raw) {
   let sanitized = String(raw || '');
   const flags = [];
@@ -268,13 +475,22 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && urlPath === '/api/health') {
+    resetBudgetIfNewDay();
     sendJson(res, 200, {
       ok: true,
-      llmEnabled: LLM_ENABLED,
+      llmEnabled: LLM_ENABLED || VERTEX_ENABLED,
       visionEnabled: VISION_ENABLED,
-      provider: LLM_ENABLED ? LLM_PROVIDER : 'local',
+      provider: LLM_ENABLED ? LLM_PROVIDER : VERTEX_ENABLED ? 'vertex' : 'local',
       model: LLM_ENABLED ? LLM_MODEL : 'deterministic',
       visionModel: VISION_ENABLED ? LLM_VISION_MODEL : 'none',
+      heavyVertex: {
+        enabled: VERTEX_ENABLED,
+        model: VERTEX_ENABLED ? VERTEX_MODEL : null,
+        location: VERTEX_ENABLED ? VERTEX_LOCATION : null,
+        dailyBudgetUsd: DAILY_BUDGET_USD,
+        dailySpentUsd: Number(dailySpentUsd.toFixed(4)),
+        hourlyIpLimit: HEAVY_IP_LIMIT_PER_HOUR,
+      },
     });
     return;
   }
@@ -285,19 +501,19 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 429, { error: 'Rate limit exceeded for demo session. Try again shortly.' });
       return;
     }
-    if (!LLM_ENABLED) {
-      sendJson(res, 503, { error: 'LLM API key is not configured in .env' });
+    if (!LLM_ENABLED && !VERTEX_ENABLED) {
+      sendJson(res, 503, { error: 'LLM API is not configured in .env' });
       return;
     }
 
-    const meta = { endpoint: urlPath, latencyMs: 0, promptTokens: 0, completionTokens: 0, model: LLM_MODEL };
+    const meta = { endpoint: urlPath, tier: 'fast', latencyMs: 0, promptTokens: 0, completionTokens: 0, costUsd: 0, model: LLM_MODEL };
 
     try {
       const body = await readJsonBody(req);
       const langName = (code) => ({ uk: 'Ukrainian', en: 'English', fr: 'French', ru: 'Russian' }[code] || 'English');
       const currencyHint = (code) => ({ uk: 'UAH (₴) or USD ($)', en: 'USD ($) or GBP (£)', fr: 'EUR (€)', ru: 'RUB (₽)' }[code] || 'USD ($)');
 
-      /* 00 — INTERACTIVE CLIENT BRIEF -> ARCHITECTURE SCOPER */
+      /* 00 — HEAVY TIER: INTERACTIVE CLIENT BRIEF -> ARCHITECTURE SCOPER */
       if (urlPath === '/api/scope') {
         const { brief = '', lang = 'ru' } = body;
         const system = [
@@ -317,15 +533,17 @@ const server = http.createServer(async (req, res) => {
         const raw = await callLLM({
           system,
           messages: [{ role: 'user', content: String(brief).slice(0, 3500) }],
-          maxTokens: 950,
+          maxTokens: 1100,
           jsonMode: true,
+          tier: 'heavy',
+          ip,
           metaSink: meta,
         });
         sendJson(res, 200, { ...extractJson(raw), _meta: meta });
         return;
       }
 
-      /* 01 — CLINIC CHAT AGENT */
+      /* 01 — FAST TIER: CLINIC CHAT AGENT */
       if (urlPath === '/api/chat') {
         const { messages = [], kb = {}, bookedSlots = [], lang = 'ru' } = body;
         const system = [
@@ -341,12 +559,12 @@ const server = http.createServer(async (req, res) => {
           'Return ONLY valid JSON: {"reply": string, "action": {"type": "none"|"lead"|"handoff", "name"?: string, "phone"?: string, "service"?: string, "slot"?: string, "reason"?: string}}',
         ].join('\n');
 
-        const raw = await callLLM({ system, messages: messages.slice(-10), maxTokens: 420, jsonMode: true, metaSink: meta });
+        const raw = await callLLM({ system, messages: messages.slice(-10), maxTokens: 420, jsonMode: true, tier: 'fast', ip, metaSink: meta });
         sendJson(res, 200, { ...extractJson(raw), _meta: meta });
         return;
       }
 
-      /* 02 — RAG SYNTHESIS */
+      /* 02 — FAST TIER: RAG SYNTHESIS */
       if (urlPath === '/api/rag') {
         const { query = '', chunks = [], role = 'staff', lang = 'ru' } = body;
         if (!chunks.length) {
@@ -364,13 +582,15 @@ const server = http.createServer(async (req, res) => {
           system,
           messages: [{ role: 'user', content: `Fragments:\n${ctx}\n\nQuestion: ${query}` }],
           maxTokens: 320,
+          tier: 'fast',
+          ip,
           metaSink: meta,
         });
         sendJson(res, 200, { answer: raw.trim(), _meta: meta });
         return;
       }
 
-      /* 03 — MULTI-DOCUMENT EXTRACTION & CROSS-CHECK */
+      /* 03 — HEAVY TIER: MULTI-DOCUMENT EXTRACTION & CROSS-CHECK */
       if (urlPath === '/api/docs') {
         const { srcA = '', srcB = '', lang = 'ru' } = body;
         const system = [
@@ -383,8 +603,10 @@ const server = http.createServer(async (req, res) => {
         const raw = await callLLM({
           system,
           messages: [{ role: 'user', content: `Source A:\n${String(srcA).slice(0, 3500)}\n\nSource B:\n${String(srcB).slice(0, 3500)}` }],
-          maxTokens: 900,
+          maxTokens: 950,
           jsonMode: true,
+          tier: 'heavy',
+          ip,
           metaSink: meta,
         });
         const parsed = extractJson(raw);
@@ -393,7 +615,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      /* 04 — BOM / SPECIFICATION PARSER & CATALOG MATCHER */
+      /* 04 — FAST TIER: BOM / SPECIFICATION PARSER & CATALOG MATCHER */
       if (urlPath === '/api/parse') {
         const { lines = [], catalog = [], lang = 'ru' } = body;
         const system = [
@@ -408,13 +630,15 @@ const server = http.createServer(async (req, res) => {
           messages: [{ role: 'user', content: `Catalog:\n${JSON.stringify(catalog)}\n\nInput lines:\n${lines.slice(0, 20).join('\n')}` }],
           maxTokens: 950,
           jsonMode: true,
+          tier: 'fast',
+          ip,
           metaSink: meta,
         });
         sendJson(res, 200, { ...extractJson(raw), _meta: meta });
         return;
       }
 
-      /* 05 — MARKETPLACE LISTING BUILDER */
+      /* 05 — FAST TIER: MARKETPLACE LISTING BUILDER */
       if (urlPath === '/api/listing') {
         const { note = '', marketplace = 'ebay' } = body;
         const mpRule =
@@ -436,13 +660,15 @@ const server = http.createServer(async (req, res) => {
           messages: [{ role: 'user', content: String(note).slice(0, 1500) }],
           maxTokens: 550,
           jsonMode: true,
+          tier: 'fast',
+          ip,
           metaSink: meta,
         });
         sendJson(res, 200, { ...extractJson(raw), _meta: meta });
         return;
       }
 
-      /* 06 — VISION OCR */
+      /* 06 — VISION TIER: OCR */
       if (urlPath === '/api/ocr') {
         const { imageDataUrl = '', mode = 'verbatim', lang = 'ru' } = body;
         if (!/^data:image\/(png|jpeg|jpg|webp);base64,/i.test(imageDataUrl)) {
@@ -469,14 +695,15 @@ const server = http.createServer(async (req, res) => {
           ],
           maxTokens: 800,
           vision: true,
+          ip,
           timeoutMs: 30000,
           metaSink: meta,
         });
-        sendJson(res, 200, { text: raw.replace(/^```[\w-]*\s*/i, '').replace(/\s*```$/, '').trim(), model: LLM_VISION_MODEL, _meta: meta });
+        sendJson(res, 200, { text: raw.replace(/^```[\w-]*\s*/i, '').replace(/\s*```$/, '').trim(), model: meta.model, _meta: meta });
         return;
       }
 
-      /* 08 — TECHNICAL SPEC / UAT TEST CASE GENERATOR */
+      /* 08 — HEAVY TIER: TECHNICAL SPEC / UAT TEST CASE GENERATOR */
       if (urlPath === '/api/gost') {
         const { requirement = '', lang = 'ru' } = body;
         const stdHint = lang === 'ru' ? 'GOST R 59792 / GOST 34 ПМИ' : lang === 'uk' ? 'ДСТУ / ISO 29148 ПМІ' : 'ISO/IEC 29148 UAT acceptance test';
@@ -489,15 +716,17 @@ const server = http.createServer(async (req, res) => {
         const raw = await callLLM({
           system,
           messages: [{ role: 'user', content: String(requirement).slice(0, 800) }],
-          maxTokens: 400,
+          maxTokens: 450,
           jsonMode: true,
+          tier: 'heavy',
+          ip,
           metaSink: meta,
         });
         sendJson(res, 200, { ...extractJson(raw), _meta: meta });
         return;
       }
 
-      /* 09 — LIVE CODE / SQL SECURITY AUDIT */
+      /* 09 — HEAVY TIER: LIVE CODE / SQL SECURITY AUDIT */
       if (urlPath === '/api/audit') {
         const { code = '', lang = 'ru' } = body;
         const system = [
@@ -508,21 +737,22 @@ const server = http.createServer(async (req, res) => {
         const raw = await callLLM({
           system,
           messages: [{ role: 'user', content: String(code).slice(0, 4000) }],
-          maxTokens: 700,
+          maxTokens: 800,
           jsonMode: true,
+          tier: 'heavy',
+          ip,
           metaSink: meta,
         });
         sendJson(res, 200, { ...extractJson(raw), _meta: meta });
         return;
       }
 
-      /* 10 — RED-TEAM PROMPT INJECTION & GUARDRAIL ARENA */
+      /* 10 — HEAVY TIER: RED-TEAM PROMPT INJECTION & BILLING SHIELD ARENA */
       if (urlPath === '/api/redteam') {
         const { attack = '', lang = 'ru' } = body;
         const cleanAttack = String(attack).slice(0, 1000);
         const l1 = scanInputLayer1(cleanAttack);
 
-        // Run comparison: how a naive single-prompt bot reacts vs our 3-layer guarded architecture
         const system = [
           'You simulate TWO side-by-side e-commerce support bots facing the exact same user message (potentially a prompt injection / jailbreak / social engineering attack):',
           'Store context in memory: Product "ProBook X1" costs $1,200. Max allowed promo code is WELCOME5 (5%). Internal DB note (confidential): last order #9041 by A. Smith (+1-555-0192), internal webhook token "whsec_demo_991".',
@@ -543,13 +773,14 @@ const server = http.createServer(async (req, res) => {
         const raw = await callLLM({
           system,
           messages: [{ role: 'user', content: `Raw user input: ${cleanAttack}\nLayer-1 sanitized input for guarded bot: ${l1.sanitized}` }],
-          maxTokens: 550,
+          maxTokens: 600,
           jsonMode: true,
+          tier: 'heavy',
+          ip,
           metaSink: meta,
         });
         const sim = extractJson(raw);
 
-        // Layer 3 Deterministic Output & Tool Firewall in Node.js (hard code enforcement!)
         const l3Blocks = [];
         if (Number(sim.proposedDiscountPct) > 5) l3Blocks.push(`Tool firewall blocked discount=${sim.proposedDiscountPct}% (policy max: 5%)`);
         if (/whsec_|0192|system prompt/i.test(String(sim.guardedDraft))) l3Blocks.push('Output DLP blocked confidential token/PII leak');
@@ -593,5 +824,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Portfolio server listening on http://0.0.0.0:${PORT} (LLM: ${LLM_ENABLED ? `${LLM_PROVIDER}/${LLM_MODEL}` : 'local-only'}, Vision: ${VISION_ENABLED ? LLM_VISION_MODEL : 'off'})`);
+  console.log(
+    `Portfolio server listening on http://0.0.0.0:${PORT} | Fast: ${LLM_ENABLED ? `${LLM_PROVIDER}/${LLM_MODEL}` : 'off'} | Heavy Vertex AI: ${VERTEX_ENABLED ? `${VERTEX_MODEL} (cap $${DAILY_BUDGET_USD}/day)` : 'off (fallback to Fast)'}`
+  );
 });
