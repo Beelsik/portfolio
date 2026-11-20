@@ -1,4 +1,6 @@
 .env
 .git
+.github
 node_modules
 *.log
+ЗАМЕЧАНИЯ.md

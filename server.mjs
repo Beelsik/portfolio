@@ -580,7 +580,7 @@ const server = http.createServer(async (req, res) => {
           '  "summary": string (1 sharp sentence diagnosing the core technical goal),',
           '  "nodes": [{"title": string (short 2-3 words), "tech": string (e.g. "FastAPI + Webhook"), "kind": "io"|"code"|"ai"|"db"|"human"}] (4 to 6 sequential pipeline steps),',
           '  "split": {"code": string[] (2-3 things done by plain code/SQL), "ai": string[] (1-3 things done by LLM/Vision/RAG)},',
-          '  "milestones": [{"phase": string (e.g. "1. Pilot (2 days)"), "deliverable": string, "estimate": string (time + realistic freelance price range)}] (3 phases: Pilot -> MVP -> Prod),',
+          '  "milestones": [{"phase": string (phase 1 is a 1-2 day pilot on 10-15 anonymized client files; state that pilot price is agreed in chat — never write "free"), "deliverable": string, "estimate": string (time + realistic freelance price range)}] (3 phases: Pilot -> MVP -> Prod),',
           '  "monthlyOps": string (realistic monthly server + LLM API cost estimate at moderate load),',
           '  "questions": string[] (3 sharp engineering edge-case questions to ask the client before coding)',
           '}',
@@ -719,7 +719,14 @@ const server = http.createServer(async (req, res) => {
           ip,
           metaSink: meta,
         });
-        sendJson(res, 200, { ...extractJson(raw), _meta: meta });
+        const out = extractJson(raw);
+        const maxLen = marketplace === 'wb' ? 60 : marketplace === 'vinted' || marketplace === 'prom' ? 70 : 80;
+        if (typeof out.title === 'string' && out.title.length > maxLen) {
+          const cut = out.title.slice(0, maxLen);
+          const sp = cut.lastIndexOf(' ');
+          out.title = (sp > maxLen * 0.6 ? cut.slice(0, sp) : cut).replace(/[,;:\-–\s]+$/, '');
+        }
+        sendJson(res, 200, { ...out, _meta: meta });
         return;
       }
 

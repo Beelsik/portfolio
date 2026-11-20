@@ -1352,6 +1352,11 @@ async function checkout(cart, discountPercent) {
         <span class="en">Reply in our project thread with a couple of sample files or requirements — I'll break down realistic milestones, costs, and the simplest architecture that solves the problem.</span>
         <span class="fr">Répondez directement dans la messagerie du projet avec quelques exemples anonymisés — je vous proposerai un découpage clair par étapes et un chiffrage réaliste.</span>
       </p>
+      <p class="note mono" style="margin-top:12px;max-width:74ch;opacity:0.85">
+        <span class="ru">Все стенды — демонстрация на вымышленных данных (клиника «Апрель», TransLogik, «СеверСнаб» и др.): реквизиты, прайсы и заказы синтетические, реальные данные клиентов под NDA не публикуются.</span>
+        <span class="en">All sandboxes run on synthetic demo data (April Clinic, TransLogik, NorthSupply, etc.): company records, catalogs, and orders are fictional; zero real client data under NDA is published.</span>
+        <span class="fr">Tous les bacs à sable utilisent des données fictives de démonstration (Clinique Avril, EuroTrans, etc.) : aucune donnée client réelle sous NDA n'est publiée.</span>
+      </p>
     </div>
     <div class="foot-links" id="foot-links"></div>
   </footer>
@@ -2048,36 +2053,52 @@ async function checkout(cart, discountPercent) {
   $('#lnote').value = EBAY_SAMPLES[0].note;
   let currentEbayPayload = {};
 
+  function fitTitleLimit(str, maxLen) {
+    const clean = String(str || '').replace(/\s+/g, ' ').trim();
+    if (clean.length <= maxLen) return clean;
+    const cut = clean.slice(0, maxLen);
+    const sp = cut.lastIndexOf(' ');
+    return (sp > maxLen * 0.6 ? cut.slice(0, sp) : cut).replace(/[,;:\-–\s]+$/, '');
+  }
+
   function localParseListing(raw) {
+    const mpVal = $('#ebay-mp').value;
+    const limit = mpVal === 'wb' ? 60 : mpVal === 'vinted' ? 70 : 80;
     const clauses = raw.split(/[,;.]+/).map((c) => c.trim()).filter(Boolean);
-    const title = clauses.slice(0, 3).join(' ').slice(0, 78);
+    const title = fitTitleLimit(clauses.slice(0, 3).join(' · '), limit);
     return { title, category: $('#ebay-mp').selectedOptions[0].textContent, conditionEnum: 'USED_GOOD', specifics: { Summary: clauses[0] || 'Item', Details: clauses.slice(1, 3).join('; ') || '—' }, paragraphs: [raw] };
   }
 
   async function generateEbayListing(useLive = false) {
     const raw = $('#lnote').value.trim(); if (!raw) return;
+    const mpVal = $('#ebay-mp').value;
+    const mpLabel = $('#ebay-mp').selectedOptions[0].textContent;
+    const limit = mpVal === 'wb' ? 60 : mpVal === 'vinted' ? 70 : 80;
     let data = localParseListing(raw);
     if (useLive && backendInfo.llmEnabled) {
       $('#lbtn').disabled = true; $('#lnotes').textContent = T('Генерация через LLM…', 'Generating via LLM…', 'Génération LLM…');
       try {
-        const res = await fetch('/api/listing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note: raw, marketplace: $('#ebay-mp').value }) });
+        const res = await fetch('/api/listing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note: raw, marketplace: mpVal }) });
         if (res.ok) { const o = await res.json(); if (o?.title) data = o; }
       } catch {} finally { $('#lbtn').disabled = false; $('#lnotes').textContent = ''; }
     }
+    data.title = fitTitleLimit(data.title, limit);
+    const subLabel = data.category && data.category !== mpLabel ? `${mpLabel} · ${data.category}` : mpLabel;
+
     const pane = $('#pane-ebay-preview'); pane.replaceChildren();
-    const limit = $('#ebay-mp').value === 'wb' ? 60 : $('#ebay-mp').value === 'vinted' ? 70 : 80;
     const head = el('div', 'between'); head.append(el('span', 'lbl', `Title (<= ${limit} chars)`));
     const gauge = el('span', 'counter' + (data.title.length > limit ? ' over' : ''), `${data.title.length} / ${limit}`); head.append(gauge);
     const inp = el('input', ''); inp.type = 'text'; inp.value = data.title;
     inp.oninput = () => { gauge.textContent = `${inp.value.length} / ${limit}`; gauge.className = 'counter' + (inp.value.length > limit ? ' over' : ''); currentEbayPayload.product.title = inp.value; $('#pane-ebay-json').textContent = JSON.stringify(currentEbayPayload, null, 2); };
-    const w = el('div', ''); w.append(head, inp); pane.append(w, el('p', 'note', data.category || ''));
+    const w = el('div', ''); w.append(head, inp); pane.append(w, el('p', 'note', subLabel));
     const tw = el('div', 'tbl'), tbl = el('table'), tb = el('tbody');
     Object.entries(data.specifics || {}).forEach(([k, v]) => { const tr = el('tr'); tr.append(el('th', '', k), el('td', '', String(v))); tb.append(tr); });
     tbl.append(tb); tw.append(tbl); pane.append(tw);
     const desc = el('div', 'contract'); desc.style.fontFamily = 'var(--f-sans)'; desc.textContent = (data.paragraphs || []).join('\n\n'); pane.append(desc);
-    currentEbayPayload = { marketplace: $('#ebay-mp').value, condition: data.conditionEnum || 'USED_GOOD', product: { title: data.title, aspects: data.specifics, description: (data.paragraphs || []).map((p) => `<p>${p}</p>`).join('') } };
+    currentEbayPayload = { marketplace: mpVal, marketplaceLabel: mpLabel, condition: data.conditionEnum || 'USED_GOOD', product: { title: data.title, aspects: data.specifics, description: (data.paragraphs || []).map((p) => `<p>${p}</p>`).join('') } };
     $('#pane-ebay-json').textContent = JSON.stringify(currentEbayPayload, null, 2);
   }
+  $('#ebay-mp').onchange = () => generateEbayListing(false);
   $('#lbtn').onclick = () => generateEbayListing(true);
   $('#lcopy').onclick = async () => { try { await navigator.clipboard.writeText(JSON.stringify(currentEbayPayload, null, 2)); $('#lnotes').textContent = T('Скопировано', 'Copied', 'Copié'); setTimeout(() => { $('#lnotes').textContent = ''; }, 1600); } catch {} };
   $('#tab-ebay-preview').onclick = () => { $('#tab-ebay-preview').setAttribute('aria-selected', 'true'); $('#tab-ebay-json').setAttribute('aria-selected', 'false'); $('#pane-ebay-preview').hidden = false; $('#pane-ebay-json').hidden = true; };
@@ -2493,7 +2514,7 @@ async function checkout(cart, discountPercent) {
         ai: ['Чтение косых фото/сканов реквизитов и нестандартных PDF-таблиц через Vision LLM', 'Сопоставление «грязных» названий клиента с артикулами вашего каталога (top-3 кандидата + score)'],
       },
       milestones: [
-        { phase: '1. Пилот на ваших файлах', deliverable: 'Прогон на 15 реальных обезличенных письмах, замер точности извлечения', estimate: '2 дня · бесплатно / тест' },
+        { phase: '1. Пилот на 10–15 ваших файлах', deliverable: 'Прогон на обезличенных реальных письмах/сканах, замер точности извлечения', estimate: '1–2 дня · обсудим в переписке' },
         { phase: '2. Рабочий MVP', deliverable: 'IMAP → разбор PDF/XLSX → сверка с прайсом → черновик сделки в CRM', estimate: '2 недели · 45 000 – 65 000 ₽' },
         { phase: '3. Прод + панель проверки', deliverable: 'Веб-очередь для спорных строк, Docker на вашем VPS, логи и обучение', estimate: '1–1,5 недели · 30 000 ₽' },
       ],
@@ -2514,7 +2535,7 @@ async function checkout(cart, discountPercent) {
         ai: ['Extracting structured line items from non-standard supplier PDFs and scans', 'Fuzzy matching messy customer descriptions against your master SKU catalog'],
       },
       milestones: [
-        { phase: '1. Proof-of-Concept Pilot', deliverable: 'Benchmark accuracy on 15 anonymized real emails/PDFs', estimate: '2 days · Fixed $150 (or free sample)' },
+        { phase: '1. Pilot on 10–15 sample files', deliverable: 'Benchmark accuracy on anonymized real emails/PDFs', estimate: '1–2 days · scoped in chat' },
         { phase: '2. Core Pipeline MVP', deliverable: 'Automated ingestion → schema check → draft ERP order creation', estimate: '2 weeks · $900 – $1,300' },
         { phase: '3. Exception UI & Handover', deliverable: 'Human review queue for low-confidence rows, Docker deploy & docs', estimate: '1 week · $500' },
       ],
@@ -2535,7 +2556,7 @@ async function checkout(cart, discountPercent) {
         ai: ['Classification du type de demande (PTF, Consuel, devis) et extraction sur scans', 'Rapprochement des libellés libres avec votre catalogue d’articles'],
       },
       milestones: [
-        { phase: '1. Pilote sur échantillon', deliverable: 'Test réel sur 10 e-mails anonymisés pour valider la précision', estimate: '2 jours · Démo / forfait léger' },
+        { phase: '1. Pilote sur 10–15 fichiers', deliverable: 'Test réel sur échantillon anonymisé pour valider la précision', estimate: '1–2 jours · à définir ensemble' },
         { phase: '2. MVP Flux Complet', deliverable: 'Ingestion → extraction structurée → file d’anomalies → Axelor', estimate: '2–3 semaines · 1 400 € – 2 200 €' },
         { phase: '3. Mise en prod & RGPD', deliverable: 'Déploiement Docker (option Ollama local), tests et passation', estimate: '1 semaine · 700 €' },
       ],
@@ -2819,7 +2840,10 @@ async function checkout(cart, discountPercent) {
     loadCatalogForLang();
     runSpecMatcher(false);
 
-    $('#ebay-mp').value = L === 'ru' ? 'wb' : L === 'fr' ? 'vinted' : 'ebay';
+    const defSampleIdx = L === 'ru' ? 2 : L === 'fr' ? 3 : 0;
+    $$('#ebay-presets .chip').forEach((x, idx) => x.setAttribute('aria-pressed', idx === defSampleIdx));
+    $('#lnote').value = EBAY_SAMPLES[defSampleIdx].note;
+    $('#ebay-mp').value = EBAY_SAMPLES[defSampleIdx].mp;
     generateEbayListing(false);
 
     if (!uploadedImageDataUrl) {
@@ -2847,7 +2871,7 @@ async function checkout(cart, discountPercent) {
       if (info.llmEnabled) {
         b.className = 'pill ok';
         b.textContent = 'Live LLM + Vision API';
-        $('#chat-status-note').textContent = `Fast Tier: ${info.model}`;
+        { const m = String(info.model).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); const heavy = info.heavyVertex?.enabled ? 'Gemini 4 Neon' : 'NIM 120B'; $('#chat-status-note').innerHTML = `<span class="ru">Диалог — быстрая модель <code>${m}</code>, разбор ТЗ и защищённый контур — ${heavy}: модель под задачу</span><span class="en">Chat runs on a fast model <code>${m}</code>; brief analysis and the guarded bot use ${heavy}: the model fits the task</span><span class="fr">Dialogue : modèle rapide <code>${m}</code> ; analyse du cahier des charges et bot protégé : ${heavy}, le modèle adapté à la tâche</span>`; }
         if (info.heavyVertex?.enabled) {
           $('#router-badge').textContent = `VERTEX AI (${info.heavyVertex.model}) · cap $${info.heavyVertex.dailyBudgetUsd}/day`;
         } else {
