@@ -80,6 +80,8 @@ const heavyHits = new Map();
 let budgetDayKey = new Date().toISOString().slice(0, 10);
 let dailySpentUsd = 0;
 let dailyHeavyCalls = 0;
+let dailyRequests = 0;
+let dailyTokens = 0;
 
 function resetBudgetIfNewDay() {
   const today = new Date().toISOString().slice(0, 10);
@@ -87,6 +89,8 @@ function resetBudgetIfNewDay() {
     budgetDayKey = today;
     dailySpentUsd = 0;
     dailyHeavyCalls = 0;
+    dailyRequests = 0;
+    dailyTokens = 0;
   }
 }
 
@@ -300,6 +304,12 @@ function readJsonBody(req, maxBytes = 4 * 1024 * 1024) {
 }
 
 function sendJson(res, status, data) {
+  // Public daily counters for the live meter in the site header (no IPs or content stored)
+  if (status === 200 && data && data._meta) {
+    resetBudgetIfNewDay();
+    dailyRequests += 1;
+    dailyTokens += (Number(data._meta.promptTokens) || 0) + (Number(data._meta.completionTokens) || 0);
+  }
   const body = JSON.stringify(data);
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -546,6 +556,7 @@ const server = http.createServer(async (req, res) => {
         dailySpentUsd: Number(dailySpentUsd.toFixed(4)),
         hourlyIpLimit: HEAVY_IP_LIMIT_PER_HOUR,
       },
+      today: { day: budgetDayKey, requests: dailyRequests, tokens: dailyTokens },
     });
     return;
   }

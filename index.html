@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Beelsik — Боты, RAG, парсеры и автоматизация процессов</title>
 <meta name="description" content="Интерактивные рабочие стенды с живым LLM и Vision API: чат-агенты с CRM, корпоративный RAG, сверка документов в DOCX, парсинг прайсов, Vision OCR, карточки маркетплейсов и аудит SaaS.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f2efe6'/%3E%3Crect x='3' y='3' width='26' height='26' fill='none' stroke='%231c1b19' stroke-width='2.5'/%3E%3Cpath d='M8 22L24 10' stroke='%23c22a1a' stroke-width='2.5'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ffffff'/%3E%3Crect x='3' y='3' width='26' height='26' fill='none' stroke='%231c1b19' stroke-width='2.5'/%3E%3Cpath d='M8 22L24 10' stroke='%23c22a1a' stroke-width='2.5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Fira+Sans+Extra+Condensed:ital,wght@1,500;1,600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@1,8..60,400;1,8..60,500&display=swap">
 <style>
 /* ====== ЧЕРТЁЖ — DESIGN TOKENS (ГОСТ 2.303 / 2.104 / 2.106) ====== */
 :root, :root[data-theme="light"] {
@@ -210,7 +211,7 @@ textarea { resize: vertical; font: 400 12.5px/20px var(--font-mono); }
 .between { display: flex; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
 .note { font: 400 13px/20px var(--font-sans); color: var(--ink-muted); margin: 0; }
 .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3); }
-@media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .two { grid-template-columns: minmax(0, 1fr); } }
 
 /* ====== ALBUM LAYOUT & LEFT TOC SIDEBAR ====== */
 .album-layout {
@@ -265,7 +266,8 @@ textarea { resize: vertical; font: 400 12.5px/20px var(--font-mono); }
 .toc a .num { font-weight: 500; color: var(--ink); min-width: 22px; }
 
 @media (max-width: 1060px) {
-  .album-layout { grid-template-columns: 1fr; gap: var(--space-3); }
+  .album-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .album-sidebar, .album-main { min-width: 0; }
   .album-sidebar {
     position: sticky; top: 53px; z-index: 35;
     padding: 8px 12px; gap: 8px;
@@ -321,7 +323,8 @@ textarea { resize: vertical; font: 400 12.5px/20px var(--font-mono); }
   }
 }
 
-.ch-sheet__body { padding: var(--space-4); display: grid; gap: var(--space-3); min-width: 0; }
+.ch-sheet__body { padding: var(--space-4); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); min-width: 0; }
+.ch-sheet__body [style*="display:grid"]:not([style*="grid-template-columns"]) { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 680px) { .ch-sheet__body { padding: var(--space-3); } }
 
 /* ====== COVER SHEET (Титульный лист альбома) ====== */
@@ -329,26 +332,11 @@ textarea { resize: vertical; font: 400 12.5px/20px var(--font-mono); }
   position: relative;
   background: var(--paper);
   border-bottom: var(--stroke-main) solid var(--ink);
-  min-height: 250px;
   padding: var(--space-4);
   overflow: hidden;
   display: flex;
   align-items: flex-end;
 }
-.cv-banner svg.cv-art {
-  position: absolute;
-  right: 0; top: 0;
-  width: 440px; height: 260px;
-  pointer-events: none;
-}
-@media (max-width: 820px) { .cv-banner svg.cv-art { opacity: 0.18; } }
-.cv-banner .ink-fill { fill: var(--ink); }
-.cv-banner .red-fill { fill: var(--redline); }
-.cv-banner .hl-fill { fill: var(--highlight); }
-.cv-banner .r-main { stroke: var(--ink); stroke-width: var(--stroke-main); fill: none; }
-.cv-banner .r-ai { stroke: var(--ink); stroke-width: var(--stroke-thin); stroke-dasharray: var(--dash-ai); fill: none; }
-.cv-banner .r-axis { stroke: var(--paper); stroke-width: var(--stroke-thin); stroke-dasharray: var(--dash-human); fill: none; }
-.cv-banner .r-human { stroke: var(--redline); stroke-width: var(--stroke-main); stroke-dasharray: var(--dash-human); fill: none; }
 .cv-copy { position: relative; z-index: 1; max-width: 620px; }
 .display-xl {
   font-family: var(--font-display);
@@ -521,11 +509,11 @@ td.st-ok { color: var(--ink); }
   padding: 9px 14px; border-bottom: var(--stroke-thin) solid var(--ink); background: var(--paper); flex-wrap: wrap;
 }
 .bench-title { display: flex; align-items: center; gap: 8px; font: 500 12px/16px var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; flex-wrap: wrap; }
-.benchbody { padding: var(--space-3); display: grid; gap: 12px; min-width: 0; }
+.benchbody { padding: var(--space-3); display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
 
 /* Chat & CRM */
 .chatgrid { display: grid; grid-template-columns: minmax(0, 1fr) 248px; gap: 12px; }
-@media (max-width: 680px) { .chatgrid { grid-template-columns: 1fr; } }
+@media (max-width: 680px) { .chatgrid { grid-template-columns: minmax(0, 1fr); } }
 .chat { display: flex; flex-direction: column; gap: 8px; height: 300px; overflow-y: auto; padding: 12px; background: var(--paper); border: var(--stroke-thin) solid var(--ink); }
 .msg { max-width: 86%; padding: 8px 12px; font-size: 14px; line-height: 21px; white-space: pre-wrap; overflow-wrap: anywhere; border-radius: 0; }
 .msg.c { align-self: flex-end; background: var(--ink); color: var(--on-ink); border: var(--stroke-thin) solid var(--ink); }
@@ -604,6 +592,258 @@ pre.code {
 
 footer { background: var(--paper-raised); border: var(--stroke-main) solid var(--ink); padding: var(--space-3) var(--space-4); display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; font-size: 14px; color: var(--ink-muted); }
 .foot-links { display: flex; gap: 16px; flex-wrap: wrap; font: 500 12.5px/18px var(--font-mono); text-transform: uppercase; }
+
+/* ====== v2: меньше декора — белый лист, обычные подписи, рамки только у листа и таблиц ====== */
+:root, :root[data-theme="light"] {
+  --paper: #ffffff;
+  --paper-raised: #ffffff;
+  --panel: #f3f4f5;       /* фон вложенных блоков вместо рамок */
+  --ink: #161616;
+  --ink-muted: #5f6368;   /* 6.3:1 на белом, 5.8:1 на panel */
+  --hairline: #e3e5e8;
+  --redline: #c8261b;
+}
+:root[data-theme="dark"] { --panel: #0f3356; }
+
+/* без миллиметровки и дырокола */
+body { background-image: none; }
+.ch-sheet { border: 0; padding: 0; background: transparent; }
+.ch-sheet::before, .ch-sheet::after { content: none; display: none; }
+
+/* без анимации появления */
+.ch-sheet.ch-reveal .ch-sheet__frame, .ch-sheet__frame { animation: none !important; clip-path: none !important; }
+
+/* подписи — обычным текстом; моноширинные прописные остаются только в штампе и на схеме */
+.ch-label, .lbl, .ident-sub, .case-head, .split-col strong, .kv-list div strong,
+.bench-title, .crm-head, .telem-bar, .foot-links, .seg button, .tab, .fbtn, select,
+.pill, .sev, .counter, .icon-btn, .btn, .ch-btn {
+  font-family: var(--font-sans);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.ch-label, .lbl { font-size: 13px; line-height: 18px; font-weight: 500; }
+.btn, .ch-btn, .icon-btn { font-size: 14px; line-height: 20px; font-weight: 500; }
+.fbtn, .seg button, .tab, .pill, .sev, .counter { font-size: 13px; }
+.ident-sub::before { content: none; }
+.ch-stamp-block .ch-label {
+  font-family: var(--font-mono); font-size: 10.5px; line-height: 14px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+/* маркер — подчёркивание вместо жёлтой заливки */
+.ch-mark, mark {
+  background: none; color: inherit; padding: 0;
+  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px;
+}
+
+/* вложенные блоки — фон вместо рамки */
+.answer, .bench, .callout-note, .kv-list, .rt-trace, .subbox, .ch-pipe, .scan-wrap {
+  border: 0; background: var(--panel);
+}
+.bench .chat, .bench .crm, .bench .frag, .bench .lead, .bench .contract,
+.bench .verbatim, .bench .term-out, .answer .frag, .answer .lead {
+  border: 0; background: var(--paper);
+}
+.benchbar { border-bottom: 0; background: transparent; }
+.cv-banner { border-bottom: 0; }
+footer { border: 0; border-top: var(--stroke-main) solid var(--ink); }
+th, .ch-spec th { font-family: var(--font-sans); text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; }
+.album-sidebar { border: 0; background: transparent; padding-left: 0; }
+.toc a { font-family: var(--font-sans); font-size: 14px; line-height: 20px; }
+.toc a .num { font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted); }
+.toc a.is-active .num { color: var(--ink); }
+
+/* ====== Анимации: только в ответ на событие, контент никогда не прячется ====== */
+.btn, .ch-btn, .chip, .fbtn, .tab, .seg button, .toc a {
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease, transform .08s ease;
+}
+.btn:active, .ch-btn:active, .chip:active, .fbtn:active { transform: translateY(1px); }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* подпись карандашом под именем — один раз при загрузке */
+  .cv-copy .display-xl { position: relative; display: inline-block; }
+  .cv-copy .display-xl::after {
+    content: ""; position: absolute; left: 4px; right: -6px; bottom: -4px; height: 3px;
+    background: var(--ink); border-radius: 2px;
+    transform-origin: left center; transform: scaleX(0) rotate(-1deg);
+    animation: ch-pencil .8s .3s cubic-bezier(.65, .05, .25, 1) forwards;
+  }
+  @keyframes ch-pencil { to { transform: scaleX(1) rotate(-1deg); } }
+
+  /* схема чертится слева направо после разбора ТЗ */
+  .ch-pipe svg.ch-drawn { animation: ch-wipe 1s cubic-bezier(.45, 0, .2, 1) both; }
+  @keyframes ch-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+  /* печать «ударяет» по результату */
+  .ch-seal.ch-hit { animation: ch-stamp .5s cubic-bezier(.2, 1.5, .35, 1); }
+  @keyframes ch-stamp {
+    0% { transform: rotate(-14deg) scale(1.9); opacity: 0; }
+    55% { opacity: 1; }
+    100% { transform: rotate(-4deg) scale(1); opacity: 1; }
+  }
+
+  /* красный карандаш подчёркивает найденную ошибку */
+  td.st-bad {
+    background-image: linear-gradient(var(--redline), var(--redline));
+    background-repeat: no-repeat; background-position: 8px calc(100% - 6px);
+    background-size: 0 2px;
+    animation: ch-redpen .55s .2s cubic-bezier(.6, 0, .3, 1) forwards;
+  }
+  @keyframes ch-redpen { to { background-size: calc(100% - 16px) 2px; } }
+
+  /* модель думает: под кнопкой бежит штриховая линия (штрих = модель) */
+  .btn[disabled], .ch-btn[disabled] { position: relative; }
+  .btn[disabled]::after, .ch-btn[disabled]::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -7px; height: 2px;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 8px, transparent 8px 12px);
+    animation: ch-ants .5s linear infinite;
+  }
+  @keyframes ch-ants { from { background-position: 0 0; } to { background-position: 12px 0; } }
+
+  /* смена темы: синька растекается от кнопки, как проявитель */
+  ::view-transition-old(root) { animation: none; }
+  ::view-transition-new(root) { animation: ch-develop .75s cubic-bezier(.3, .6, .2, 1); }
+  @keyframes ch-develop {
+    from { clip-path: circle(0 at var(--vt-x, 90%) var(--vt-y, 0)); }
+    to { clip-path: circle(150vmax at var(--vt-x, 90%) var(--vt-y, 0)); }
+  }
+}
+@media (max-width: 680px) {
+  .ch-spec th[style*="width:240px"], .ch-spec th[style*="width:220px"] { width: auto !important; }
+  .ch-spec th:first-child, .ch-spec td.pos { display: none; }
+}
+
+/* ====== v3: без печатей, прописи, красного и коробок ====== */
+:root, :root[data-theme="light"] { --redline: var(--ink); --line: #d9dce0; }
+:root[data-theme="dark"] { --redline: var(--ink); --line: #33618f; }
+a:hover { color: var(--ink); text-decoration-thickness: 2px; }
+
+/* печати и рукописные правки убраны */
+.ch-seal { display: none !important; }
+.ch-redline del { color: var(--ink-muted); text-decoration-color: var(--ink-muted); text-decoration-thickness: 1px; }
+.ch-redline ins {
+  font-family: var(--font-sans); font-weight: 600; font-size: inherit; line-height: inherit;
+  color: var(--ink); transform: none; margin-left: 6px;
+  text-decoration: underline wavy; text-decoration-thickness: 1px; text-underline-offset: 4px;
+}
+
+/* ошибка = знак ✕ + волнистое подчёркивание, без цвета */
+td.st-bad {
+  color: var(--ink); font-weight: 600; background: none !important; animation: none !important;
+  text-decoration: underline wavy; text-decoration-thickness: 1px; text-underline-offset: 5px;
+}
+.verbatim s { text-decoration-color: var(--ink); text-decoration-thickness: 1px; }
+.verbatim .ill { border: 0; color: var(--ink); text-decoration: underline wavy; text-underline-offset: 4px; }
+.term-out.block { color: var(--ink); }
+
+/* статусы — текст со знаком, без плашек */
+.pill, .sev, .counter { border: 0 !important; background: none !important; padding: 0; color: var(--ink) !important; font-weight: 600; }
+.pill.bad::before, .sev.c::before, .sev.h::before, .counter.over::before { content: "✕ "; }
+.pill.ok::before { content: "✓ "; }
+
+/* лист: без рамки, разделитель — одна линия сверху */
+.ch-sheet__frame { border: 0; border-top: 1px solid var(--ink); background: transparent; }
+.ch-sheet__body { padding: var(--space-4) 0; }
+.cv-banner { padding: var(--space-5) 0 var(--space-3); background: transparent; }
+.album-main { gap: var(--space-6); }
+.case-idx::before, .case-idx::after { content: none; }
+.case-idx { color: var(--ink-muted); }
+
+/* штамп → строка метаданных */
+.ch-stamp-block {
+  display: flex; flex-wrap: wrap; gap: 6px 28px; width: auto;
+  border: 0 !important; background: none; padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--line) !important;
+}
+.ch-stamp-block tbody, .ch-stamp-block tr { display: contents; }
+.ch-stamp-block td { display: block; border: 0 !important; padding: 0 !important; width: auto !important; }
+.ch-stamp-block .ch-label {
+  display: inline; margin: 0 6px 0 0; font-family: var(--font-sans); font-size: 13px;
+  text-transform: none; letter-spacing: 0; color: var(--ink-muted); font-weight: 400;
+}
+.ch-stamp-block .v, .ch-stamp-block .name {
+  display: inline; font: 400 13px/20px var(--font-sans); font-style: normal; color: var(--ink);
+}
+.ch-stamp-block .ch-mark { text-decoration: none; }
+
+/* таблицы: только горизонтальные линии */
+table, .ch-spec { border: 0 !important; background: transparent; }
+th, .ch-spec th { border: 0 !important; border-bottom: 1px solid var(--ink) !important; padding-left: 0; }
+td, .ch-spec td { border: 0 !important; border-bottom: 1px solid var(--line) !important; padding-left: 0; }
+th + th, td + td { padding-left: var(--space-3); }
+
+/* вложенные блоки — фон без рамок */
+.split-col, .frag, .lead, .crm, .contract, .verbatim, pre.code, .term-out, .rt-card, .rt-card.vuln, .rt-card.guard,
+.msg.a, .chat, .scan-wrap, .subbox, .rt-trace { border: 0 !important; }
+.split-col, .frag, pre.code, .rt-card, .msg.a { background: var(--panel); }
+.bench .rt-card, .bench .frag, .bench .msg.a { background: var(--paper); }
+
+/* контролы */
+.chip { border: 0; background: var(--panel); font-family: var(--font-sans); font-size: 13px; }
+.chip:hover { background: var(--line); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+.seg, .tabs { border: 0; gap: 4px; }
+.seg button, .tab { border: 0 !important; background: transparent; }
+.fbtn { border: 0; background: transparent; padding: 4px 8px; }
+.btn.ghost, .ch-btn--ghost, .icon-btn { border: 0; background: transparent; color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+.btn.ghost:hover, .icon-btn:hover { background: var(--panel); }
+textarea, input[type="text"], select { border-color: var(--ink-muted); }
+:focus-visible, textarea:focus, input[type="text"]:focus, select:focus { outline-color: var(--ink); }
+.topbar { border-bottom: 1px solid var(--line); }
+footer { border-top: 1px solid var(--ink); }
+.bench .chip, .answer .chip { background: var(--paper); }
+.bench .chip:hover { background: var(--line); }
+.bench .chip[aria-pressed="true"] { background: var(--ink); }
+
+/* ====== v4: два почерка (модель / код), развороты, живой счётчик ====== */
+:root { --font-model: "Source Serif 4", "PT Serif", Georgia, serif; }
+
+/* Почерк модели: всё, что написала LLM */
+.ink-model,
+#arch-summary, #arch-code-list, #arch-ai-list, #arch-qs, #arch-ops,
+#chat .msg.a, #raganswer, #hout, #rt-vuln-reply, #rt-guard-reply,
+#aud-live-tbody td:nth-child(2), #aud-live-tbody td:nth-child(3),
+#gost-virt-body td, #spec-tbody td:nth-child(2) {
+  font-family: var(--font-model); font-style: italic; font-weight: 400;
+  font-size: 1.06em; letter-spacing: 0;
+}
+/* Почерк кода: всё, что посчитал или проверил код */
+.ink-code,
+[data-st-tok], [data-st-ms], #fields td:nth-child(2), #fields td:nth-child(3),
+#spec-tbody td:nth-child(3), #spec-tbody td:nth-child(4), #spec-summary,
+#contract, #crm, #ragfrags, #raglocked, #rt-guard-trace, #cc-result {
+  font-family: var(--font-mono); font-style: normal; font-size: .92em; letter-spacing: -0.01em;
+}
+.ink-model { font-size: 1.04em; }
+.ink-code { font-size: .9em; }
+
+/* Подсказка «кто это написал» */
+[data-ink] { position: relative; }
+[data-ink]:hover { outline: 1px solid var(--line); outline-offset: 3px; }
+[data-ink]:hover::after {
+  content: attr(data-ink);
+  position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 5; pointer-events: none;
+  font: 500 11px/16px var(--font-sans); font-style: normal; letter-spacing: 0;
+  background: var(--ink); color: var(--on-ink); padding: 2px 7px; white-space: nowrap;
+}
+.ink-legend { font-size: 14px; line-height: 22px; color: var(--ink-muted); margin: var(--space-3) 0 0; max-width: 62ch; }
+.ink-legend .ink-model, .ink-legend .ink-code { color: var(--ink); }
+
+/* Развороты: огромный номер стенда */
+.case-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.case-idx {
+  display: block; font-family: var(--font-display); font-style: italic; font-weight: 600;
+  font-size: clamp(88px, 12vw, 176px); line-height: .78; letter-spacing: -0.03em;
+  color: var(--ink); margin-bottom: 4px;
+}
+.ch-sheet__frame { padding-top: var(--space-4); }
+.album-main { gap: calc(var(--space-6) * 1.5); }
+
+/* Живой счётчик в шапке */
+.live-meter { font: 400 12.5px/18px var(--font-mono); color: var(--ink-muted); white-space: nowrap; }
+.live-meter b { color: var(--ink); font-weight: 500; }
+@media (max-width: 900px) { .live-meter { display: none; } }
+.term-out, #cc-result { max-width: 100%; overflow-x: auto; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
@@ -613,12 +853,13 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
     <a href="#" class="ident">
       <span class="ident-text" id="brand-name">BEELSIK</span>
       <span class="ident-sub">
-        <span class="ru">Альбом рабочих стендов · КД-2026</span>
-        <span class="en">Engineering Sandbox Album · 2026</span>
-        <span class="fr">Album de Bancs d'Essai · 2026</span>
+        <span class="ru">10 рабочих примеров</span>
+        <span class="en">10 working demos</span>
+        <span class="fr">10 démos fonctionnelles</span>
       </span>
     </a>
     <div class="controls">
+      <span class="live-meter" id="live-meter" hidden></span>
       <button class="icon-btn" id="telem-btn" type="button" title="Журнал испытаний API">
         <span class="dot-live"></span>
         <span id="telem-label">Журнал API · 0</span>
@@ -639,7 +880,7 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
 <main class="wrap album-layout">
   <aside class="album-sidebar" aria-label="Оглавление альбома">
     <div class="ch-sidebar-head">
-      <span class="ch-label"><span class="ru">Оглавление альбома</span><span class="en">Sheet Index</span><span class="fr">Sommaire de l'album</span></span>
+      <span class="ch-label"><span class="ru">Примеры</span><span class="en">Demos</span><span class="fr">Démos</span></span>
     </div>
     <div class="filters" role="group" aria-label="Filter">
       <button class="fbtn" data-cat="all" aria-pressed="true"><span class="ru">Все · 10</span><span class="en">All · 10</span><span class="fr">Tous · 10</span></button>
@@ -648,18 +889,18 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
       <button class="fbtn" data-cat="eng" aria-pressed="false"><span class="ru">Код и ТЗ</span><span class="en">Code/Spec</span><span class="fr">Code/Spec</span></button>
     </div>
     <nav class="toc" aria-label="Cases">
-      <a href="#cover" class="is-active"><span class="num">ТИТ</span><span class="ru">Титульный лист</span><span class="en">Cover &amp; Spec</span><span class="fr">Page de garde</span></a>
-      <a href="#architect"><span class="num">00</span><span class="ru">Лист 00 · Разбор ТЗ</span><span class="en">Sheet 00 · Scoper</span><span class="fr">Folio 00 · Cadrage</span></a>
-      <a href="#sales"><span class="num">01</span><span class="ru">Лист 01 · Продажи</span><span class="en">Sheet 01 · CRM Bot</span><span class="fr">Folio 01 · Agent CRM</span></a>
-      <a href="#rag"><span class="num">02</span><span class="ru">Лист 02 · RAG + ERP</span><span class="en">Sheet 02 · RBAC RAG</span><span class="fr">Folio 02 · RAG RBAC</span></a>
-      <a href="#docs"><span class="num">03</span><span class="ru">Лист 03 · Договор</span><span class="en">Sheet 03 · Invoice</span><span class="fr">Folio 03 · Contrats</span></a>
-      <a href="#parser"><span class="num">04</span><span class="ru">Лист 04 · Сметы</span><span class="en">Sheet 04 · BOM CSV</span><span class="fr">Folio 04 · Devis CSV</span></a>
-      <a href="#listing"><span class="num">05</span><span class="ru">Лист 05 · E-com API</span><span class="en">Sheet 05 · Listings</span><span class="fr">Folio 05 · Annonces</span></a>
-      <a href="#hand"><span class="num">06</span><span class="ru">Лист 06 · Vision OCR</span><span class="en">Sheet 06 · Vision OCR</span><span class="fr">Folio 06 · OCR Vision</span></a>
-      <a href="#cc"><span class="num">07</span><span class="ru">Лист 07 · Claude Kit</span><span class="en">Sheet 07 · Claude Kit</span><span class="fr">Folio 07 · Claude Kit</span></a>
-      <a href="#gost"><span class="num">08</span><span class="ru">Лист 08 · ГОСТ 34</span><span class="en">Sheet 08 · UAT Spec</span><span class="fr">Folio 08 · Recette UAT</span></a>
-      <a href="#audit"><span class="num">09</span><span class="ru">Лист 09 · SaaS-аудит</span><span class="en">Sheet 09 · SaaS Audit</span><span class="fr">Folio 09 · Audit SaaS</span></a>
-      <a href="#redteam"><span class="num">10</span><span class="ru">Лист 10 · Red-Team</span><span class="en">Sheet 10 · Red-Team</span><span class="fr">Folio 10 · Red-Team</span></a>
+      <a href="#cover" class="is-active"><span class="num">ТИТ</span><span class="ru">Начало</span><span class="en">Intro</span><span class="fr">Accueil</span></a>
+      <a href="#architect"><span class="num">00</span><span class="ru">Разбор ТЗ</span><span class="en">Scoper</span><span class="fr">Cadrage</span></a>
+      <a href="#sales"><span class="num">01</span><span class="ru">Продажи</span><span class="en">CRM Bot</span><span class="fr">Agent CRM</span></a>
+      <a href="#rag"><span class="num">02</span><span class="ru">RAG + ERP</span><span class="en">RBAC RAG</span><span class="fr">RAG RBAC</span></a>
+      <a href="#docs"><span class="num">03</span><span class="ru">Договор</span><span class="en">Invoice</span><span class="fr">Contrats</span></a>
+      <a href="#parser"><span class="num">04</span><span class="ru">Сметы</span><span class="en">BOM CSV</span><span class="fr">Devis CSV</span></a>
+      <a href="#listing"><span class="num">05</span><span class="ru">E-com API</span><span class="en">Listings</span><span class="fr">Annonces</span></a>
+      <a href="#hand"><span class="num">06</span><span class="ru">Vision OCR</span><span class="en">Vision OCR</span><span class="fr">OCR Vision</span></a>
+      <a href="#cc"><span class="num">07</span><span class="ru">Claude Kit</span><span class="en">Claude Kit</span><span class="fr">Claude Kit</span></a>
+      <a href="#gost"><span class="num">08</span><span class="ru">ГОСТ 34</span><span class="en">UAT Spec</span><span class="fr">Recette UAT</span></a>
+      <a href="#audit"><span class="num">09</span><span class="ru">SaaS-аудит</span><span class="en">SaaS Audit</span><span class="fr">Audit SaaS</span></a>
+      <a href="#redteam"><span class="num">10</span><span class="ru">Red-Team</span><span class="en">Red-Team</span><span class="fr">Red-Team</span></a>
     </nav>
   </aside>
 
@@ -668,72 +909,64 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
     <section class="ch-sheet" id="cover">
       <div class="ch-sheet__frame">
         <div class="cv-banner">
-          <svg class="cv-art" viewBox="0 0 440 260" aria-hidden="true">
-            <rect class="ink-fill" x="60" y="0" width="220" height="200"/>
-            <rect class="red-fill" x="280" y="0" width="160" height="88"/>
-            <rect class="hl-fill" x="280" y="88" width="160" height="112"/>
-            <path class="r-axis" d="M170 0 V200"/>
-            <path class="r-main" d="M16 218 H440"/>
-            <path class="r-ai" d="M16 234 H440"/>
-            <path class="r-human" d="M16 250 H440"/>
-          </svg>
           <div class="cv-copy">
             <span class="ch-label">
-              <span class="ru">Комплект конструкторской документации · Живые стенды LLM &amp; Vision</span>
-              <span class="en">Engineering Documentation Set · Live LLM &amp; Vision Workbenches</span>
-              <span class="fr">Dossier Technique · Bancs d'Essai LLM &amp; Vision en Direct</span>
+              <span class="ru">Разработка ИИ-автоматизаций для бизнеса</span>
+              <span class="en">AI automation for businesses</span>
+              <span class="fr">Automatisation IA pour les entreprises</span>
             </span>
             <h1 class="display-xl">Beelsik</h1>
             <p class="cv-lead">
-              <span class="ru">Боты продаж с CRM, поиск по ERP с правами до промпта, сверка первички в .docx, парсеры прайсов и аудит SaaS — с жёсткими схемами и проверкой кодом.</span>
-              <span class="en">CRM agents, pre-retrieval RBAC search, invoice-to-.docx verification, BOM matchers, and SaaS security audits — built with strict schemas and deterministic code checks.</span>
-              <span class="fr">Agents CRM, recherche RAG filtrée, contrôle documentaire .docx, parsing de catalogues et audits SaaS — schémas stricts et vérification par le code.</span>
+              <span class="ru">Я делаю ботов, поиск по документам и парсеры. <span class="ink-model">Модель у меня читает и понимает текст</span>, а <span class="ink-code">деньги, даты и права доступа проверяет обычный код</span>.</span>
+              <span class="en">I build bots, document search and parsers. <span class="ink-model">The model reads and understands text</span>; <span class="ink-code">money, dates and access rights are checked by plain code</span>.</span>
+              <span class="fr">Je crée des bots, de la recherche documentaire et des parsers. <span class="ink-model">Le modèle lit et comprend le texte</span> ; <span class="ink-code">l&#39;argent, les dates et les droits d&#39;accès sont vérifiés par du code classique</span>.</span>
             </p>
             <p class="cv-sub">
-              <span class="ru">Каждый стенд ниже — рабочий лист с живым API: загружайте своё ТЗ, фото рукописи или код, редактируйте JSON-базы, а в штампе каждого листа следите за реальным расходом токенов и временем ответа.</span>
-              <span class="en">Every sheet below is wired to live APIs: paste your brief, upload a handwriting photo or SQL snippet, edit JSON stores, and watch real token counts and latency update in each sheet's title block.</span>
-              <span class="fr">Chaque folio ci-dessous est connecté aux API en direct : testez vos propres textes, photos ou extraits SQL et observez les tokens et temps de réponse dans le cartouche.</span>
+              <span class="ru">Ниже десять примеров, и все они работают по-настоящему. Можно вставить своё ТЗ, загрузить фото счёта или попробовать уговорить бота на скидку.</span>
+              <span class="en">Below are ten demos, and they all actually work. Paste your own brief, upload a photo of an invoice, or try talking the bot into a discount.</span>
+              <span class="fr">Ci-dessous, dix démos qui fonctionnent vraiment. Collez votre cahier des charges, envoyez la photo d'une facture ou essayez d'obtenir une remise du bot.</span>
             </p>
+            <p class="ink-legend"><span class="ru">Так устроен весь сайт: <span class="ink-model">курсивом</span> пишет модель, <span class="ink-code">моноширинным</span> шрифтом ставит код. Наведите курсор на ответ, чтобы проверить.</span><span class="en">The whole site works this way: <span class="ink-model">italic</span> is written by the model, <span class="ink-code">monospace</span> is set by code. Hover over an answer to check.</span><span class="fr">Tout le site fonctionne ainsi : l&#39;<span class="ink-model">italique</span> est écrit par le modèle, la <span class="ink-code">chasse fixe</span> est posée par le code. Survolez une réponse pour vérifier.</span></p>
           </div>
         </div>
 
         <div class="ch-sheet__body">
-          <span class="ch-label"><span class="ru">Ведомость инженерных принципов (ГОСТ 2.106)</span><span class="en">Engineering Specification</span><span class="fr">Spécification d'ingénierie</span></span>
+          <span class="ch-label"><span class="ru">Как я работаю</span><span class="en">How I work</span><span class="fr">Ma façon de travailler</span></span>
           <div class="tbl">
             <table class="ch-spec">
               <thead>
                 <tr>
-                  <th style="width:52px"><span class="ru">Поз.</span><span class="en">Pos.</span><span class="fr">Pos.</span></th>
-                  <th style="width:240px"><span class="ru">Наименование узла</span><span class="en">Principle</span><span class="fr">Principe</span></th>
-                  <th><span class="ru">Реализация в коде</span><span class="en">Deterministic implementation</span><span class="fr">Implémentation concrète</span></th>
+                  <th style="width:52px"><span class="ru">№</span><span class="en">#</span><span class="fr">N°</span></th>
+                  <th style="width:240px"><span class="ru">Правило</span><span class="en">Rule</span><span class="fr">Règle</span></th>
+                  <th><span class="ru">Что это значит для вас</span><span class="en">What it means for you</span><span class="fr">Ce que cela change pour vous</span></th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td class="pos">01</td>
-                  <td><strong><span class="ru">Проверка кодом поверх LLM</span><span class="en">Code checks over LLM prose</span><span class="fr">Contrôle code sur l'IA</span></strong></td>
+                  <td><strong><span class="ru">Деньги считает код</span><span class="en">Code does the math</span><span class="fr">Le code fait les calculs</span></strong></td>
                   <td>
-                    <span class="ru">Модель никогда не считает деньги, скидки и свободные окна сама: суммы пересчитывает код, а расхождения помечаются <span class="ch-mark">на проверку</span>.</span>
-                    <span class="en">The model never invents prices, totals, or calendar slots: deterministic code recalculates math and flags discrepancies <span class="ch-mark">for review</span>.</span>
-                    <span class="fr">Le modèle n'invente ni prix ni totaux : le code recalcule chaque ligne et signale les écarts <span class="ch-mark">à vérifier</span>.</span>
+                    <span class="ru">Модель не считает суммы, скидки и свободные окна. Это делает код, а спорные места я <span class="ch-mark">показываю человеку</span>.</span>
+                    <span class="en">The model never calculates totals, discounts or free slots. Code does, and anything disputed <span class="ch-mark">goes to a person</span>.</span>
+                    <span class="fr">Le modèle ne calcule ni totaux, ni remises, ni créneaux. Le code s'en charge, et les cas litigieux <span class="ch-mark">passent à un humain</span>.</span>
                   </td>
                 </tr>
                 <tr>
                   <td class="pos">02</td>
-                  <td><strong><span class="ru">Пилот на 10–15 файлах</span><span class="en">1–2 day sample pilot</span><span class="fr">Pilote sur 10–15 pièces</span></strong></td>
+                  <td><strong><span class="ru">Сначала пилот</span><span class="en">Pilot first</span><span class="fr">D'abord un pilote</span></strong></td>
                   <td>
-                    <span class="ru">До большого договора собираю рабочий прототип на 10–15 ваших обезличенных документах за <span class="ch-mark">1–2 дня</span> с замером точности.</span>
-                    <span class="en">Before committing to full scope, I wire a working prototype on 10–15 anonymized sample files in <span class="ch-mark">1–2 days</span> to benchmark accuracy.</span>
-                    <span class="fr">Avant le périmètre complet, prototype fonctionnel en <span class="ch-mark">1–2 jours</span> sur 10 à 15 documents anonymisés.</span>
+                    <span class="ru">До большого договора за <span class="ch-mark">1–2 дня</span> собираю прототип на 10–15 ваших файлах. Сразу видно, работает это или нет.</span>
+                    <span class="en">Before a big contract, I build a prototype on 10–15 of your files in <span class="ch-mark">1–2 days</span>. You see right away whether it works.</span>
+                    <span class="fr">Avant un gros contrat, je monte un prototype sur 10 à 15 de vos fichiers en <span class="ch-mark">1–2 jours</span>. On voit tout de suite si ça marche.</span>
                   </td>
                 </tr>
                 <tr>
                   <td class="pos">03</td>
-                  <td><strong><span class="ru">Чистая передача в ваш контур</span><span class="en">Clean Docker &amp; Git handoff</span><span class="fr">Livraison Docker &amp; Git</span></strong></td>
+                  <td><strong><span class="ru">Всё остаётся у вас</span><span class="en">You keep everything</span><span class="fr">Tout reste chez vous</span></strong></td>
                   <td>
-                    <span class="ru">Ваш Git-репозиторий, Docker Compose, автотесты и поддержка локальных моделей (<code>Ollama / Qwen</code>) для закрытого контура 152-ФЗ / GDPR.</span>
-                    <span class="en">Delivered in your Git repo with Docker Compose, automated tests, and optional local <code>Ollama / Qwen</code> deployment for private data.</span>
-                    <span class="fr">Livré sur votre Git sous Docker Compose, avec option modèles locaux (<code>Ollama / Qwen</code>) pour données sensibles RGPD.</span>
+                    <span class="ru">Код в вашем Git, запуск через Docker, есть тесты. Если данные нельзя отдавать наружу, ставлю локальную модель (<code>Ollama</code>, <code>Qwen</code>).</span>
+                    <span class="en">Code in your Git, runs in Docker, with tests. If data can't leave your servers, I set up a local model (<code>Ollama</code>, <code>Qwen</code>).</span>
+                    <span class="fr">Code dans votre Git, lancé avec Docker, avec des tests. Si les données ne doivent pas sortir, j'installe un modèle local (<code>Ollama</code>, <code>Qwen</code>).</span>
                   </td>
                 </tr>
               </tbody>
@@ -743,7 +976,7 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
 
         <table class="ch-stamp-block">
           <tr>
-            <td style="width:38%"><span class="ch-label"><span class="ru">Наименование</span><span class="en">Title</span><span class="fr">Désignation</span></span><span class="name"><span class="ru">Альбом рабочих стендов</span><span class="en">Applied AI Workbenches</span><span class="fr">Album des Bancs IA</span></span></td>
+            <td style="width:38%"><span class="ch-label"><span class="ru">Наименование</span><span class="en">Title</span><span class="fr">Désignation</span></span><span class="name"><span class="ru">Портфолио Beelsik</span><span class="en">Beelsik portfolio</span><span class="fr">Portfolio Beelsik</span></span></td>
             <td><span class="ch-label"><span class="ru">Обозначение</span><span class="en">Doc ID</span><span class="fr">Réf.</span></span><span class="v">BLS-00.ALBUM</span></td>
             <td><span class="ch-label"><span class="ru">Контур</span><span class="en">Router</span><span class="fr">Routeur</span></span><span class="v" id="router-badge">VERTEX AI + NIM</span></td>
             <td><span class="ch-label"><span class="ru">Лит.</span><span class="en">Rev</span><span class="fr">Ind.</span></span><span class="v">О</span></td>
@@ -759,13 +992,13 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
         <div class="ch-sheet__body">
           <div class="brief">
             <div class="case-head">
-              <span><span class="case-idx">00</span> <span class="ru">Предпроектный расчёт · Gemini 4 Neon / NIM</span><span class="en">Project Scoper · Gemini 4 Neon / NIM</span><span class="fr">Cadrage Technique · Gemini 4 Neon / NIM</span></span>
+              <span><span class="case-idx">00</span> <span class="ru">Разбор ТЗ, Gemini 4 Neon</span><span class="en">Brief review, Gemini 4 Neon</span><span class="fr">Analyse du besoin, Gemini 4 Neon</span></span>
               <button class="btn ghost sm" id="arch-dl" type="button"><span class="ru">Скачать техплан .md</span><span class="en">Export plan .md</span><span class="fr">Exporter .md</span></button>
             </div>
             <h2 class="ch-sheet__title">
-              <span class="ru">Лист техзадания: разбор вашей задачи, схема конвейера и смета</span>
-              <span class="en">Technical Brief Sheet: pipeline schematic, code-vs-AI split &amp; estimate</span>
-              <span class="fr">Folio Cahier des Charges : schéma du pipeline, découpage et chiffrage</span>
+              <span class="ru">Вставьте ТЗ: покажу, что тут делает код, что модель и сколько это стоит</span>
+              <span class="en">Paste a brief: I'll show what code handles, what the model handles, and what it costs</span>
+              <span class="fr">Collez un besoin : je montre ce que fait le code, ce que fait le modèle et combien ça coûte</span>
             </h2>
           </div>
 
@@ -781,37 +1014,37 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
           <div id="arch-out" style="display:grid;gap:14px">
             <div class="answer" id="arch-summary"></div>
             <div>
-              <span class="ch-label"><span class="ru">Схема конвейера по ГОСТ 2.303 (роль узла задаётся типом линии)</span><span class="en">Pipeline schematic (node role encoded by line style)</span><span class="fr">Schéma du pipeline (rôle codé par le type de trait)</span></span>
+              <span class="ch-label"><span class="ru">Схема. Сплошная линия: код. Штриховая: модель.</span><span class="en">Diagram. Solid line: code. Dashed line: model.</span><span class="fr">Schéma. Trait plein : code. Trait pointillé : modèle.</span></span>
               <div class="ch-pipe" id="arch-flow"></div>
             </div>
             <div class="two">
               <div class="split-col split-code">
-                <strong><span class="ru">[Сплошная основная] Детерминированный код / SQL</span><span class="en">[Solid line] Plain deterministic code / SQL</span><span class="fr">[Trait continu fort] Code déterministe / SQL</span></strong>
+                <strong><span class="ru">Делает код</span><span class="en">Handled by code</span><span class="fr">Fait par le code</span></strong>
                 <ul id="arch-code-list"></ul>
               </div>
               <div class="split-col split-ai">
-                <strong><span class="ru">[Штриховая] Где реально нужен LLM / Vision / RAG</span><span class="en">[Dashed line] Where LLM / Vision earns its cost</span><span class="fr">[Trait interrompu] Où l'IA (LLM / Vision) est justifiée</span></strong>
+                <strong><span class="ru">Нужна модель</span><span class="en">Needs a model</span><span class="fr">Demande un modèle</span></strong>
                 <ul id="arch-ai-list"></ul>
               </div>
             </div>
             <div class="tbl">
               <table class="ch-spec">
                 <thead><tr>
-                  <th style="width:52px"><span class="ru">Поз.</span><span class="en">Pos.</span><span class="fr">Pos.</span></th>
+                  <th style="width:52px"><span class="ru">№</span><span class="en">#</span><span class="fr">N°</span></th>
                   <th><span class="ru">Этап</span><span class="en">Milestone</span><span class="fr">Étape</span></th>
-                  <th><span class="ru">Результат на выходе</span><span class="en">Deliverable</span><span class="fr">Livrable</span></th>
-                  <th style="width:220px"><span class="ru">Срок · бюджет</span><span class="en">Timeline · Estimate</span><span class="fr">Délai · Budget</span></th>
+                  <th><span class="ru">Что получите</span><span class="en">What you get</span><span class="fr">Ce que vous obtenez</span></th>
+                  <th style="width:220px"><span class="ru">Срок и цена</span><span class="en">Time and price</span><span class="fr">Délai et prix</span></th>
                 </tr></thead>
                 <tbody id="arch-miles"></tbody>
               </table>
             </div>
             <div class="two">
               <div class="split-col">
-                <strong><span class="ru">Расходы на сервер и API в месяц</span><span class="en">Estimated monthly server &amp; API cost</span><span class="fr">Coût mensuel serveur &amp; API estimé</span></strong>
+                <strong><span class="ru">Сколько стоит в месяц</span><span class="en">Monthly running cost</span><span class="fr">Coût mensuel</span></strong>
                 <p class="note" id="arch-ops" style="margin-top:6px"></p>
               </div>
               <div class="split-col">
-                <strong><span class="ru">Вопросы до старта (узкие места)</span><span class="en">Kickoff edge-case questions</span><span class="fr">Questions clés avant démarrage</span></strong>
+                <strong><span class="ru">Что спрошу до старта</span><span class="en">What I'll ask before starting</span><span class="fr">Ce que je demanderai avant de commencer</span></strong>
                 <ul id="arch-qs"></ul>
               </div>
             </div>
@@ -835,26 +1068,26 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">01</span>
-        <span class="ru">telegram / sip voice / amocrm &amp; bitrix24</span>
-        <span class="en">telegram / web widget / hubspot &amp; sip voice</span>
-        <span class="fr">telegram / widget / hubspot &amp; voix sip</span>
+        <span class="ru">Telegram, SIP, amoCRM, Битрикс24</span>
+        <span class="en">Telegram, web widget, HubSpot, SIP</span>
+        <span class="fr">Telegram, widget, HubSpot, SIP</span>
       </div>
       <h2>
-        <span class="ru">Агент отдела продаж: отвечает когда операторы заняты, записывает в слот и шлёт лид в CRM</span>
-        <span class="en">Front-desk AI agent: steps in when staff are busy, locks slots &amp; syncs CRM</span>
-        <span class="fr">Agent commercial IA : prend le relais si l'équipe est occupée, réserve et alimente le CRM</span>
+        <span class="ru">Бот для клиники: отвечает, пока администраторы заняты, записывает на приём и отправляет заявку в CRM</span>
+        <span class="en">A clinic bot: answers while staff are busy, books appointments and sends the lead to the CRM</span>
+        <span class="fr">Un bot pour une clinique : répond quand l'accueil est occupé, prend les rendez-vous et envoie le contact au CRM</span>
       </h2>
       <p>
-        <span class="ru">Агент отвечает строго по базе знаний (откройте вкладку «База JSON» и поменяйте цену или добавьте услугу — бот сразу начнёт использовать ваши правки). На вопросы вне правил (ДМС, седация, рассрочка) не галлюцинирует, а передаёт диалог человеку.</span>
-        <span class="en">Answers strictly from the live JSON knowledge base (open the "Agent KB" tab, change a price or add a service, and ask the bot — it picks up your edit immediately). Out-of-policy questions trigger a clean human handoff.</span>
-        <span class="fr">S'appuie uniquement sur la base JSON éditable (modifiez un tarif dans l'onglet « Base JSON » et testez aussitôt dans le chat). Toute question hors politique (mutuelle, paiement 3x) déclenche un transfert conseiller.</span>
+        <span class="ru">Бот знает только то, что есть в базе. Откройте вкладку «База JSON», поменяйте цену, и он сразу ответит по-новому. Про ДМС, седацию или рассрочку он не выдумывает, а зовёт человека.</span>
+        <span class="en">The bot only knows what's in its database. Open the “JSON base” tab, change a price, and it answers with the new one right away. Asked about insurance, sedation or installments, it doesn't make things up; it calls a person.</span>
+        <span class="fr">Le bot ne connaît que ce qui est dans sa base. Ouvrez l'onglet « Base JSON », changez un prix, et il répond aussitôt avec le nouveau. Sur l'assurance, la sédation ou le paiement échelonné, il n'invente rien et passe la main à un humain.</span>
       </p>
       <div class="kv-list">
         <div>
-          <strong><span class="ru">В проде (текст + телефония + 152-ФЗ)</span><span class="en">Production deployment (chat + SIP voice)</span><span class="fr">En production (chat, SMS &amp; voix SIP)</span></strong>
-          <span class="ru">Telegram, виджет на сайте, голосовой контур SIP/Voximplant (&lt;800 мс с перебиванием), маскирование ПДн до вызова LLM и веб-админка с ручным перехватом.</span>
-          <span class="en">Telegram, web widget, streaming SIP voice (&lt;800ms turn latency with barge-in), GDPR PII redaction before LLM calls, and operator takeover console.</span>
-          <span class="fr">Telegram, widget web, relances SMS/vocales SIP (&lt;800 ms), anonymisation RGPD avant appel API et console de reprise en main par l'équipe.</span>
+          <strong><span class="ru">Как это работает у клиента</span><span class="en">How it runs for a real client</span><span class="fr">En production chez un client</span></strong>
+          <span class="ru">Telegram, виджет на сайте и звонки через SIP/Voximplant: ответ быстрее 800 мс, бота можно перебивать. Персональные данные скрываются до того, как попадут в модель. Администратор может перехватить диалог в любой момент.</span>
+          <span class="en">Telegram, a website widget and phone calls via SIP/Voximplant: replies in under 800 ms, and you can interrupt it. Personal data is masked before it reaches the model. Staff can take over any conversation.</span>
+          <span class="fr">Telegram, un widget sur le site et des appels via SIP/Voximplant : réponse en moins de 800 ms, on peut l'interrompre. Les données personnelles sont masquées avant d'atteindre le modèle. L'accueil peut reprendre la conversation à tout moment.</span>
         </div>
       </div>
       <div class="stack">
@@ -934,21 +1167,21 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
       <div class="ch-sheet__frame">
         <div class="ch-sheet__body">
     <div class="brief">
-      <div class="case-head"><span class="case-idx">02</span><span>postgresql / pgvector / pre-retrieval rbac</span></div>
+      <div class="case-head"><span class="case-idx">02</span><span>PostgreSQL, pgvector, права до поиска</span></div>
       <h2>
-        <span class="ru">Корпоративный поиск (RAG) по ERP и документам с фильтрацией прав до промпта</span>
-        <span class="en">Multilingual company RAG with pre-retrieval RBAC &amp; live document ingestion</span>
-        <span class="fr">Recherche documentaire RAG multilingue avec filtrage RBAC et ajout de documents</span>
+        <span class="ru">Поиск по документам компании, где каждый видит только то, что ему положено</span>
+        <span class="en">Company document search where everyone sees only what they're allowed to</span>
+        <span class="fr">Recherche dans les documents de l'entreprise où chacun ne voit que ce qui le concerne</span>
       </h2>
       <p>
-        <span class="ru">В одном индексе лежат тарифы ERP, письма филиалов (RU/PL/EN) и закрытые меморандумы руководства. Вы можете нажать «+ Добавить документ», вставить свой фрагмент с уровнем доступа «Только директор» и проверить, что логисту он недоступен даже на этапе поиска.</span>
-        <span class="en">Indexes cross-border operations docs alongside restricted board memos. Click "+ Add document" to ingest your own policy snippet with either Staff or Director permissions and verify pre-retrieval isolation live.</span>
-        <span class="fr">Indexe des sources opérationnelles multilingues et des notes de direction. Cliquez sur « + Ajouter un document » pour indexer votre propre texte avec contrôle d'accès par rôle en temps réel.</span>
+        <span class="ru">В базе лежат тарифы, письма филиалов на трёх языках и закрытые записки директора. Добавьте свой документ с доступом «Только директор» и спросите от имени логиста. Он его не найдёт: документ отсекается ещё до поиска.</span>
+        <span class="en">The index holds rate cards, branch emails in three languages and the director's private memos. Add your own document marked “Director only” and ask as the logistics manager. They won't find it: it's filtered out before the search even runs.</span>
+        <span class="fr">L'index contient des tarifs, des e-mails d'agences en trois langues et des notes confidentielles du directeur. Ajoutez un document « Directeur uniquement » et posez la question en tant que logisticien : il ne le trouvera pas, le document est exclu avant même la recherche.</span>
       </p>
       <div class="callout-note">
-        <span class="ru"><strong>Цифры без ошибок:</strong> агрегаты («сколько отгрузок за октябрь») в проде идут через read-only SQL-представления реплики ERP, а не через векторный поиск.</span>
-        <span class="en"><strong>Exact aggregates via SQL:</strong> count/revenue questions route to whitelisted read-only SQL views on an ERP replica instead of vector guessing.</span>
-        <span class="fr"><strong>Chiffres exacts via SQL :</strong> les questions chiffrées interrogent des vues SQL en lecture seule sur le réplica ERP.</span>
+        <span class="ru">Цифры вроде «сколько рейсов в октябре» берутся SQL-запросом из базы, а не угадываются по похожим текстам.</span>
+        <span class="en">Numbers like “how many shipments in October” come from an SQL query, not from guessing over similar texts.</span>
+        <span class="fr">Les chiffres comme « combien d'expéditions en octobre » viennent d'une requête SQL, pas d'une devinette sur des textes similaires.</span>
       </div>
       <div class="stack"><span>PostgreSQL + pgvector</span><span>BM25 + Reranker</span><span>RBAC Isolation</span><span>Read-only SQL Views</span></div>
     </div>
@@ -988,7 +1221,7 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
         <div class="answer" id="raganswer" aria-live="polite"></div>
         <div>
           <div class="between" style="margin-bottom:5px">
-            <span class="lbl" style="margin:0"><span class="ru">Найденные фрагменты индекса</span><span class="en">Retrieved chunks</span><span class="fr">Extraits trouvés</span></span>
+            <span class="lbl" style="margin:0"><span class="ru">Что нашлось</span><span class="en">What was found</span><span class="fr">Résultats</span></span>
             <span class="ch-seal" id="rag-seal" style="padding:3px 9px;font-size:10.5px"><span class="ru">RBAC до промпта</span><span class="en">Pre-prompt RBAC</span><span class="fr">RBAC avant prompt</span><small id="raglocked"></small></span>
           </div>
           <div class="frags" id="ragfrags"></div>
@@ -1014,16 +1247,16 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
       <div class="ch-sheet__frame">
         <div class="ch-sheet__body">
     <div class="brief">
-      <div class="case-head"><span class="case-idx">03</span><span>vision ocr / schema validation / docx &amp; erp</span></div>
+      <div class="case-head"><span class="case-idx">03</span><span>Vision OCR, JSON Schema, .docx</span></div>
       <h2>
-        <span class="ru">Сверка первички (текст или фото счёта) и сборка договора .docx</span>
-        <span class="en">Invoice &amp; vendor record cross-check (text or photo) → .docx contract</span>
-        <span class="fr">Contrôle devis/facture (texte ou photo) → contrat .docx et flux ERP</span>
+        <span class="ru">Сверка счёта с реквизитами и готовый договор в .docx</span>
+        <span class="en">Checking an invoice against company details and generating a .docx contract</span>
+        <span class="fr">Vérification d'une facture et génération d'un contrat .docx</span>
       </h2>
       <p>
-        <span class="ru">Вставьте свои реквизиты и счёт в любом формате — или загрузите фотографию счёта через кнопку OCR. Модель пересчитает позиции против итога, сверит идентификаторы и соберёт готовый файл <code>.docx</code>, подсветив расхождения для человека.</span>
-        <span class="en">Paste any vendor details and invoice — or upload a photo of a real invoice using Vision OCR. The pipeline recalculates line items against the stated total, flags tax/ID mismatches without hiding them, and generates a native `.docx`.</span>
-        <span class="fr">Collez vos propres pièces ou importez la photo d'un devis/facture (OCR Vision). Le pipeline recalcule les lignes, signale les écarts SIRET/TVA/montant sans les masquer et génère le contrat `.docx`.</span>
+        <span class="ru">Вставьте реквизиты и счёт или сфотографируйте счёт. Модель вытащит данные, код пересчитает строки и сверит с итогом, а расхождения будут видны прямо в договоре.</span>
+        <span class="en">Paste company details and an invoice, or upload a photo of the invoice. The model extracts the data, code re-adds the lines and checks the total, and mismatches show up right in the contract.</span>
+        <span class="fr">Collez les coordonnées et une facture, ou envoyez-en une photo. Le modèle extrait les données, le code refait les additions et vérifie le total, et les écarts apparaissent dans le contrat.</span>
       </p>
       <div class="stack"><span>Vision OCR</span><span>JSON Schema Check</span><span>Math Reconciliation</span><span>OOXML (.docx)</span><span>Axelor / 1C API</span></div>
     </div>
@@ -1061,7 +1294,7 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
           </table>
         </div>
         <div>
-          <span class="lbl"><span class="ru">Предпросмотр договора (спорные поля выделены)</span><span class="en">Contract preview (flagged values highlighted)</span><span class="fr">Aperçu du contrat (écarts surlignés)</span></span>
+          <span class="lbl"><span class="ru">Договор (спорные места отмечены)</span><span class="en">Contract (disputed fields marked)</span><span class="fr">Contrat (champs litigieux signalés)</span></span>
           <div class="contract" id="contract"></div>
         </div>
       </div>
@@ -1085,16 +1318,16 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
       <div class="ch-sheet__frame">
         <div class="ch-sheet__body">
     <div class="brief">
-      <div class="case-head"><span class="case-idx">04</span><span>python / playwright / llm sku matching</span></div>
+      <div class="case-head"><span class="case-idx">04</span><span>Python, Playwright, LLM</span></div>
       <h2>
-        <span class="ru">Парсинг поставщиков и ИИ-сопоставление смет с прайсом в CSV</span>
-        <span class="en">Supplier scraping &amp; AI SKU matching from messy BOM specs to CSV</span>
-        <span class="fr">Parsing fournisseurs et rapprochement IA de devis vers Excel (CSV)</span>
+        <span class="ru">Сверка сметы с прайсом поставщика и выгрузка в CSV</span>
+        <span class="en">Matching an estimate against a supplier price list, exported to CSV</span>
+        <span class="fr">Rapprochement d'un devis avec le catalogue fournisseur, export CSV</span>
       </h2>
       <p>
-        <span class="ru">Подрядчики и прайсы называют один и тот же товар десятком способов (<code>3*2,5мм2</code> vs <code>3х2.5</code>, опечатки, разные бренды). Вставьте любые свои строки спецификации или поправьте справочник во вкладке «Каталог» — LLM подберёт артикул, посчитает смету и выгрузит <code>.csv</code>.</span>
-        <span class="en">Contractors write the same item ten different ways (`3x2.5mm²`, `3*2.5`, shorthand). Paste any messy BOM lines or edit the master price list tab — the LLM matches SKUs, flags close analogs, calculates totals, and exports Excel-ready CSV.</span>
-        <span class="fr">Les devis écrivent la même référence de dix façons. Collez vos propres lignes ou éditez le catalogue fournisseur dans le 2e onglet : l'IA rapproche les SKU, signale les équivalents et exporte le CSV.</span>
+        <span class="ru">Один и тот же кабель пишут как «3*2,5мм2» и «3х2.5», с опечатками и разными брендами. Вставьте свои строки или поправьте каталог: модель найдёт артикул, код посчитает сумму и выгрузит .csv.</span>
+        <span class="en">The same cable gets written as “3*2,5mm2” and “3x2.5”, with typos and different brands. Paste your own lines or edit the catalog: the model finds the SKU, code adds up the total and exports a .csv.</span>
+        <span class="fr">Le même câble s'écrit « 3*2,5mm2 » ou « 3x2.5 », avec des fautes et des marques différentes. Collez vos lignes ou modifiez le catalogue : le modèle trouve la référence, le code calcule le total et exporte un .csv.</span>
       </p>
       <div class="stack"><span>Python + Playwright</span><span>LLM Normalization</span><span>Catalog Matching</span><span>Excel CSV Export</span></div>
     </div>
@@ -1113,7 +1346,7 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
 
       <div class="benchbody" id="pane-spec-run">
         <label>
-          <span class="lbl"><span class="ru">Сырые строки из сметы / прайса (можно писать свои)</span><span class="en">Raw procurement / BOM lines (editable)</span><span class="fr">Lignes brutes du devis (modifiables)</span></span>
+          <span class="lbl"><span class="ru">Строки из сметы (можно свои)</span><span class="en">Estimate lines (use your own)</span><span class="fr">Lignes du devis (les vôtres aussi)</span></span>
           <textarea id="raw-spec" rows="5"></textarea>
         </label>
         <div class="between">
@@ -1161,16 +1394,16 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
       <div class="ch-sheet__frame">
         <div class="ch-sheet__body">
     <div class="brief">
-      <div class="case-head"><span class="case-idx">05</span><span>n8n / llm api / ebay, wb &amp; vinted</span></div>
+      <div class="case-head"><span class="case-idx">05</span><span>n8n, LLM API, eBay, WB, Vinted</span></div>
       <h2>
-        <span class="ru">Потоковая генерация карточек товаров с выгрузкой черновика по API</span>
-        <span class="en">Automated eBay / marketplace listings &amp; API payloads from raw notes</span>
-        <span class="fr">Génération d'annonces eBay / Vinted prêtes pour API depuis une note brute</span>
+        <span class="ru">Карточки товаров для маркетплейсов</span>
+        <span class="en">Marketplace product listings</span>
+        <span class="fr">Fiches produit pour marketplaces</span>
       </h2>
       <p>
-        <span class="ru">Выберите площадку (<code>eBay</code>, <code>WB / Ozon</code> или <code>Vinted</code>), впишите короткое описание товара со склада — получите SEO-заголовок с контролем лимита символов, характеристики, честное описание дефектов и JSON-пакет для публикации по API.</span>
-        <span class="en">Pick a target marketplace, enter a messy warehouse note, and generate a character-checked title, structured Item Specifics, honest condition copy, and a ready Sell Inventory API JSON payload.</span>
-        <span class="fr">Choisissez la plateforme (eBay, Vinted), saisissez une note rapide d'entrepôt et obtenez un titre optimisé, les attributs structurés et le JSON prêt pour l'API.</span>
+        <span class="ru">Выберите площадку и опишите товар парой слов. Получите заголовок в пределах лимита площадки, характеристики, честное описание дефектов и JSON для загрузки.</span>
+        <span class="en">Pick a marketplace and describe the item in a few words. You get a title within the marketplace's limit, specs, an honest note on defects and JSON ready to upload.</span>
+        <span class="fr">Choisissez une plateforme et décrivez l'article en quelques mots. Vous obtenez un titre dans la limite autorisée, les caractéristiques, une description honnête des défauts et le JSON à publier.</span>
       </p>
       <div class="stack"><span>n8n / Make</span><span>LLM JSON API</span><span>eBay Sell API</span><span>WB / Ozon / Vinted</span></div>
     </div>
@@ -1221,16 +1454,16 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
       <div class="ch-sheet__frame">
         <div class="ch-sheet__body">
     <div class="brief">
-      <div class="case-head"><span class="case-idx">06</span><span>live vision llm / verbatim ocr &amp; qa</span></div>
+      <div class="case-head"><span class="case-idx">06</span><span>Vision LLM, дословный OCR</span></div>
       <h2>
-        <span class="ru">Живое Vision-распознавание рукописей и сканов с загрузкой своего фото</span>
-        <span class="en">Live Vision OCR for handwritten notes &amp; scans — upload your own image</span>
-        <span class="fr">OCR Vision en direct pour manuscrits et scans — importez votre propre photo</span>
+        <span class="ru">Распознавание рукописей и сканов</span>
+        <span class="en">Reading handwriting and scans</span>
+        <span class="fr">Lecture d'écritures manuscrites et de scans</span>
       </h2>
       <p>
-        <span class="ru">Загрузите любую фотографию рукописной записки, чека или страницы тетради (или протестируйте встроенные сканы кнопкой «Распознать через Vision AI»). В дипломатическом режиме сохраняются опечатки, зачёркивания <code>~~слово~~</code>, а нечитаемые кляксы помечаются как <code>[illegible]</code> без додумывания.</span>
-        <span class="en">Upload any photo of handwritten notes, receipts, or archive pages (or run live Vision AI directly on the canvas samples). Diplomatic verbatim mode preserves original spelling, keeps strike-throughs as `~~word~~`, and marks smudged spots `[illegible]` instead of guessing.</span>
-        <span class="fr">Importez votre propre photo d'une note manuscrite ou d'un document (ou lancez l'IA Vision directement sur l'exemple). Le mode verbatim conserve l'orthographe d'origine, les ratures `~~mot~~` et signale les taches `[illegible]` sans rien inventer.</span>
+        <span class="ru">Загрузите фото записки, чека или страницы тетради. В режиме «дословно» опечатки и зачёркивания остаются как есть, а то, что прочитать нельзя, помечается [illegible]. Модель ничего не дописывает за автора.</span>
+        <span class="en">Upload a photo of a note, a receipt or a notebook page. In verbatim mode, typos and crossed-out words stay as they are, and anything unreadable is marked [illegible]. The model never fills in for the author.</span>
+        <span class="fr">Envoyez la photo d'une note, d'un ticket ou d'une page de cahier. En mode « mot à mot », les fautes et ratures restent telles quelles, et l'illisible est marqué [illegible]. Le modèle n'invente rien à la place de l'auteur.</span>
       </p>
       <div class="stack"><span>Multimodal Vision API</span><span>Verbatim Rules</span><span>Upload JPG / PNG / WebP</span><span>Human QA Flags</span></div>
     </div>
@@ -1286,11 +1519,11 @@ footer { background: var(--paper-raised); border: var(--stroke-main) solid var(-
       <div class="ch-sheet__frame">
         <div class="ch-sheet__body">
     <div class="brief">
-      <div class="case-head"><span class="case-idx">07</span><span>claude code / hooks / ai dev factory</span></div>
+      <div class="case-head"><span class="case-idx">07</span><span>Claude Code, hooks, Node.js</span></div>
       <h2>
-        <span class="ru">Обвязка Claude Code для больших проектов: замок на файлы и гейт по тестам</span>
-        <span class="en">Claude Code guardrails for large repos: locked scope &amp; test-gated Stop hook</span>
-        <span class="fr">Garde-fous Claude Code sur gros dépôt : périmètre verrouillé et tests obligatoires</span>
+        <span class="ru">Claude Code на большом проекте: правки только в разрешённых файлах и только с зелёными тестами</span>
+        <span class="en">Claude Code on a large project: edits only in allowed files, and only with passing tests</span>
+        <span class="fr">Claude Code sur un gros projet : modifications uniquement dans les fichiers autorisés, et seulement avec des tests verts</span>
       </h2>
       <p>
         <span class="ru">На проекте в 50–100k строк промпты быстро забываются: агент лезет править соседние модули и закрывает задачу с красными тестами. Кит <code>.claude/</code> на чистом Node.js блокирует правки вне утверждённого <code>scope.txt</code> (`exit 2`), закрывает `.env`/`.git/` и не даёт закончить, пока тесты не зелёные.</span>
@@ -1359,9 +1592,9 @@ server/routes/</textarea>
         <div class="ch-sheet__body">
     <div class="brief">
       <div class="case-head"><span class="case-idx">08</span>
-        <span class="ru">гост 34.602 / пми / предпроектное обследование</span>
-        <span class="en">iso/iec 29148 / uat matrix / infra architecture study</span>
-        <span class="fr">cahier des charges / recette uat / étude d'infrastructure</span>
+        <span class="ru">ГОСТ 34.602, ПМИ, обследование</span>
+        <span class="en">ISO/IEC 29148, UAT, architecture study</span>
+        <span class="fr">Cahier des charges, recette, étude d'infra</span>
       </div>
       <h2>
         <span class="ru">Предпроектное обследование, ТЗ и ПМИ по ГОСТ 34 со сквозной трассировкой</span>
@@ -1369,9 +1602,9 @@ server/routes/</textarea>
         <span class="fr">Cahier des charges, matrice de recette (UAT) et étude d'infrastructure</span>
       </h2>
       <p>
-        <span class="ru">Собираю рабочую документацию без «нейросетевой воды»: матрицу отработки замечаний, ПМИ со связью каждого теста с пунктом ТЗ и сравнительный анализ платформ. Ниже можно ввести любое своё требование — и сразу получить готовую строку тест-кейса ПМИ.</span>
-        <span class="en">Zero-fluff systems engineering: every stakeholder comment traces to a spec clause and a concrete pass/fail UAT procedure, paired with vendor-neutral infrastructure trade-off studies. Enter any requirement below to generate a live UAT test case.</span>
-        <span class="fr">Ingénierie documentaire concrète : chaque remarque client est tracée vers une clause fonctionnelle et un test de recette (UAT), complétée par des comparatifs d'infrastructure RGPD. Testez le générateur de cas UAT ci-contre.</span>
+        <span class="ru">Пишу документацию по ГОСТ без воды: таблицу замечаний, программу испытаний, где каждый тест ссылается на пункт ТЗ, и сравнение платформ. Введите своё требование и получите строку тест-кейса.</span>
+        <span class="en">I write GOST documentation without filler: a review-comments matrix, a test plan where every test links to a requirement, and a platform comparison. Enter your own requirement and get a test-case row.</span>
+        <span class="fr">Je rédige la documentation GOST sans remplissage : tableau des remarques, programme d'essais où chaque test renvoie à une exigence, comparatif de plateformes. Saisissez une exigence et obtenez une ligne de cas de test.</span>
       </p>
       <div class="stack">
         <span class="ru">ГОСТ 34.602-2020</span><span class="ru">ГОСТ Р 59792 (ПМИ)</span><span class="ru">Обследование платформ</span>
@@ -1425,16 +1658,16 @@ server/routes/</textarea>
       <div class="ch-sheet__frame">
         <div class="ch-sheet__body">
     <div class="brief">
-      <div class="case-head"><span class="case-idx">09</span><span>lovable / bolt / cursor → production react + supabase</span></div>
+      <div class="case-head"><span class="case-idx">09</span><span>React, Supabase, RLS</span></div>
       <h2>
-        <span class="ru">Аудит, защита и доводка до прода проектов после Lovable / Bolt / Cursor</span>
-        <span class="en">Securing, finishing &amp; migrating Lovable / AI-built SaaS apps to production</span>
-        <span class="fr">Audit, sécurisation et mise en production d'applications Lovable / IA</span>
+        <span class="ru">Проверка и доводка проектов, собранных в Lovable, Bolt и Cursor</span>
+        <span class="en">Reviewing and fixing projects built with Lovable, Bolt and Cursor</span>
+        <span class="fr">Audit et finition de projets créés avec Lovable, Bolt et Cursor</span>
       </h2>
       <p>
-        <span class="ru">Приложения из визуальных ИИ-конструкторов часто выглядят готовыми, но оставляют таблицы Supabase без RLS, ключи во фронтенде и расчёт цен в браузере. Откройте вкладку «Проверить свой код» и вставьте любой фрагмент SQL или React — получите живой разбор уязвимостей.</span>
-        <span class="en">AI-generated MVPs look great on the surface while leaking database rows, service keys, and client-side pricing. Open the "Audit your snippet" tab and paste any React or Supabase SQL code to run a live security review.</span>
-        <span class="fr">Les MVP générés par IA cachent souvent des failles critiques (RLS désactivé, clés exposées, prix calculés côté navigateur). Collez un extrait React ou SQL dans le 3e onglet pour lancer un pré-audit en direct.</span>
+        <span class="ru">Такие приложения выглядят готовыми, но часто таблицы Supabase в них открыты без RLS, ключи лежат во фронтенде, а цену считает браузер. Вставьте свой SQL или React во вкладке «Проверить свой код» и посмотрите, что найдётся.</span>
+        <span class="en">These apps look finished, but often the Supabase tables have no RLS, keys sit in the frontend, and the browser calculates prices. Paste your own SQL or React in the “Check your code” tab and see what turns up.</span>
+        <span class="fr">Ces applis semblent terminées, mais souvent les tables Supabase n'ont pas de RLS, les clés sont dans le frontend et le navigateur calcule les prix. Collez votre SQL ou React dans l'onglet « Vérifier votre code » et voyez ce qui ressort.</span>
       </p>
       <div class="stack"><span>Supabase RLS &amp; Edge Functions</span><span>React / TypeScript</span><span>SQL Migrations</span><span>PWA &amp; White-label</span></div>
     </div>
@@ -1529,28 +1762,28 @@ async function checkout(cart, discountPercent) {
       <div class="ch-sheet__frame">
         <div class="ch-sheet__body">
     <div class="brief">
-      <div class="case-head"><span class="case-idx">10</span><span>dual-model arena / open naive prompt / vertex ai shield</span></div>
+      <div class="case-head"><span class="case-idx">10</span><span>NIM, Vertex AI, защита промпта</span></div>
       <h2>
-        <span class="ru">Red-Team полигон: два реальных контура параллельно — без подставного «играй дурачка»</span>
-        <span class="en">Red-Team Arena: two real independent LLM pipelines — zero "play dumb" fakery</span>
-        <span class="fr">Arène Red-Team : deux vrais appels LLM indépendants sans trucage</span>
+        <span class="ru">Попробуйте уговорить бота на скидку</span>
+        <span class="en">Try talking the bot into a discount</span>
+        <span class="fr">Essayez d'obtenir une remise du bot</span>
       </h2>
       <p>
-        <span class="ru">Здесь нет заскриптованной симуляции: оба бота вызываются по-настоящему и независимо. Откройте вкладку <strong>«Промпт (ред.)»</strong>, поменяйте товары, цены или формулировки правил и проверьте запрос заново — вы сразу увидите, как от текста промпта меняется живой ответ модели.</span>
-        <span class="en">Zero scripted simulation: both bots execute real, independent LLM calls in parallel. Open the <strong>"Prompt (edit)"</strong> tab, change products, prices, or wording, and re-run — you will immediately see the live model output adapt to your edited prompt.</span>
-        <span class="fr">Aucune simulation pré-écrite : les deux bots exécutent de vrais appels LLM indépendants. Ouvrez l'onglet <strong>« Prompt (édit.) »</strong>, modifiez les produits, tarifs ou consignes et relancez pour voir la réponse évoluer en direct.</span>
+        <span class="ru">Здесь два настоящих бота, ничего не подстроено. Во вкладке «Промпт (ред.)» можно поменять товары, цены и правила и сразу увидеть, как меняется ответ.</span>
+        <span class="en">These are two real bots; nothing is staged. In the “Prompt (edit)” tab you can change products, prices and rules and see the answer change right away.</span>
+        <span class="fr">Ce sont deux vrais bots, rien n'est truqué. Dans l'onglet « Prompt (modif.) », changez les produits, les prix et les règles, et voyez la réponse changer aussitôt.</span>
       </p>
       <div class="callout-note">
-        <span class="ru"><strong>Защита от абуза и честный биллинг:</strong> уязвимый бот крутится на <strong>бесплатной модели</strong> (<code>NIM 30B · $0.00</code>), поэтому его взлом не тратит деньги, а <strong>защищённый контур</strong> работает на платном <strong>Google Cloud Vertex AI (<code>gemini-4-neon</code>)</strong> под прикрытием 3 рубежей и <em>Cost Firewall</em> (потолок <code>$1.50/сутки</code>), вежливо отвечая покупателю без технических ошибок в чате.</span>
-        <span class="en"><strong>Abuse-proof &amp; skin in the game:</strong> the vulnerable bot runs strictly on a <strong>free model</strong> (<code>NIM 30B · $0.00</code>) so jailbreaking it never burns budget, while the <strong>3-layer guarded bot</strong> runs live on paid <strong>Google Cloud Vertex AI (<code>gemini-4-neon</code>)</strong> behind a <code>$1.50/day</code> <em>Cost Firewall</em>, keeping customer replies polite and natural.</span>
-        <span class="fr"><strong>Anti-abus &amp; confiance prouvée :</strong> le bot vulnérable tourne sur un <strong>modèle gratuit</strong> (<code>NIM 30B · 0 $</code>), tandis que le <strong>pipeline blindé à 3 couches</strong> tourne sur <strong>Google Cloud Vertex AI (<code>gemini-4-neon</code>, payant)</strong> derrière un <em>Cost Firewall</em> (<code>1,50 $/jour</code>), tout en répondant poliment au client.</span>
+        <span class="ru">Чтобы полигон не стоил денег, простой бот работает на бесплатной модели (NIM 30B). Защищённый работает на Vertex AI (gemini-4-neon) с тремя уровнями проверки и лимитом $1.50 в сутки. Покупатель видит вежливый ответ, а не ошибку.</span>
+        <span class="en">To keep this free, the simple bot runs on a free model (NIM 30B). The protected one runs on Vertex AI (gemini-4-neon) with three layers of checks and a $1.50/day cap. Customers get a polite answer, never an error.</span>
+        <span class="fr">Pour que ce banc ne coûte rien, le bot simple tourne sur un modèle gratuit (NIM 30B). Le bot protégé tourne sur Vertex AI (gemini-4-neon) avec trois niveaux de contrôle et un plafond de 1,50 $/jour. Le client reçoit une réponse polie, jamais une erreur.</span>
       </div>
       <div class="stack"><span>Editable Live Prompt</span><span>Free NIM ($0) on Naive</span><span>Paid Vertex Neon on Guarded</span><span>Natural Store UX</span></div>
     </div>
 
     <div class="bench">
       <div class="benchbar">
-        <span class="bench-title"><span class="dot-live"></span><span class="ru">Параллельный прогон: Free NIM vs Paid Vertex AI</span><span class="en">Parallel Run: Free NIM vs Paid Vertex AI</span><span class="fr">Exécution parallèle : NIM Gratuit vs Vertex AI</span></span>
+        <span class="bench-title"><span class="dot-live"></span><span class="ru">Оба бота на одном вопросе</span><span class="en">Both bots, same question</span><span class="fr">Les deux bots, même question</span></span>
         <div class="row">
           <span class="note mono" id="rt-status"></span>
           <div class="tabs" role="tablist">
@@ -1618,14 +1851,14 @@ async function checkout(cart, discountPercent) {
   <footer>
     <div>
       <strong style="color:var(--ink)">
-        <span class="ru">Обсудить задачу или собрать быстрый пилот на ваших данных</span>
-        <span class="en">Discuss your task or run a quick pilot on sample data</span>
-        <span class="fr">Discuter de votre projet ou lancer un pilote rapide</span>
+        <span class="ru">Есть задача? Напишите</span>
+        <span class="en">Got a task? Message me</span>
+        <span class="fr">Un projet ? Écrivez-moi</span>
       </strong>
       <p style="margin:5px 0 0;max-width:62ch">
-        <span class="ru">Напишите в переписке на площадке, где мы общаемся, и приложите пару примеров файлов или вопросов — оценю сроки по этапам и предложу рабочую схему без лишнего усложнения.</span>
-        <span class="en">Reply in our project thread with a couple of sample files or requirements — I'll break down realistic milestones, costs, and the simplest architecture that solves the problem.</span>
-        <span class="fr">Répondez directement dans la messagerie du projet avec quelques exemples anonymisés — je vous proposerai un découpage clair par étapes et un chiffrage réaliste.</span>
+        <span class="ru">Напишите мне там, где мы общаемся, и приложите пару файлов или вопросов. Отвечу, сколько это займёт и с чего лучше начать.</span>
+        <span class="en">Message me wherever we're talking and attach a couple of files or questions. I'll tell you how long it takes and where to start.</span>
+        <span class="fr">Écrivez-moi là où nous échangeons et joignez quelques fichiers ou questions. Je vous dirai combien de temps cela prend et par où commencer.</span>
       </p>
       <p class="note mono" style="margin-top:12px;max-width:74ch;opacity:0.85">
         <span class="ru">Все стенды — демонстрация на вымышленных данных (клиника «Апрель», TransLogik, «СеверСнаб» и др.): реквизиты, прайсы и заказы синтетические, реальные данные клиентов под NDA не публикуются.</span>
@@ -3238,6 +3471,116 @@ async function checkout(cart, discountPercent) {
       }
     }).catch(() => {});
   }
+})();
+</script>
+
+<script>
+/* Анимации на события: схема, печать, счётчики в штампе. Ничего не скрывает. */
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const t0 = performance.now();
+  const ready = () => performance.now() - t0 > 1500; // не анимировать первичную отрисовку
+
+  const hit = (el) => { el.classList.remove('ch-hit'); void el.offsetWidth; el.classList.add('ch-hit'); };
+
+  // схема конвейера чертится после каждого нового разбора
+  const flow = document.getElementById('arch-flow');
+  if (flow) new MutationObserver(() => {
+    const svg = flow.querySelector('svg');
+    if (svg && ready()) { svg.classList.remove('ch-drawn'); void svg.getBBox; svg.classList.add('ch-drawn'); }
+  }).observe(flow, { childList: true });
+
+  // печать ударяет, когда меняется результат проверки
+  document.querySelectorAll('.ch-seal').forEach((seal) => {
+    new MutationObserver(() => { if (ready()) hit(seal); })
+      .observe(seal, { childList: true, characterData: true, subtree: true });
+  });
+
+  // цифры в штампе отщёлкивают до нового значения
+  const fmt = (n) => n.toLocaleString('ru-RU');
+  const countUp = (cell) => {
+    const m = cell.querySelector('.ch-mark') || cell;
+    const mm = m.textContent.match(/^([\d\s ]+)(.*)$/);
+    if (!mm) return;
+    const target = parseInt(mm[1].replace(/\D/g, ''), 10);
+    if (!target) return;
+    const suffix = mm[2], start = performance.now(), dur = 650;
+    const step = (now) => {
+      const k = Math.min(1, (now - start) / dur), e = 1 - Math.pow(1 - k, 3);
+      m.textContent = fmt(Math.round(target * e)) + suffix;
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  document.querySelectorAll('[data-st-tok],[data-st-ms]').forEach((cell) => {
+    new MutationObserver(() => countUp(cell)).observe(cell, { childList: true });
+  });
+
+  // смена темы через View Transitions: синька растекается от кнопки
+  const btn = document.getElementById('theme-btn');
+  if (btn && document.startViewTransition) {
+    const orig = btn.onclick;
+    btn.onclick = (e) => {
+      const r = btn.getBoundingClientRect();
+      document.documentElement.style.setProperty('--vt-x', (r.left + r.width / 2) + 'px');
+      document.documentElement.style.setProperty('--vt-y', (r.top + r.height / 2) + 'px');
+      document.startViewTransition(() => orig.call(btn, e));
+    };
+  }
+})();
+</script>
+
+<script>
+/* Два почерка: подсказка «кто написал» + живой счётчик расходов в шапке */
+(() => {
+  const lang = () => document.documentElement.dataset.l || document.documentElement.lang || 'ru';
+  const LBL = {
+    ru: ['написала модель', 'посчитал код'], en: ['written by the model', 'computed by code'],
+    fr: ['écrit par le modèle', 'calculé par le code'], uk: ['написала модель', 'порахував код'],
+  };
+  const MODEL = '.ink-model, #arch-summary, #arch-code-list, #arch-ai-list, #arch-qs, #arch-ops, #chat .msg.a, #raganswer, #hout, #rt-vuln-reply, #rt-guard-reply, #aud-live-tbody td:nth-child(2), #aud-live-tbody td:nth-child(3), #gost-virt-body td, #spec-tbody td:nth-child(2)';
+  const CODE = '.ink-code, [data-st-tok], [data-st-ms], #fields td:nth-child(2), #fields td:nth-child(3), #spec-tbody td:nth-child(3), #spec-tbody td:nth-child(4), #spec-summary, #contract, #crm, #ragfrags, #raglocked, #rt-guard-trace, #cc-result';
+  document.addEventListener('mouseover', (e) => {
+    const t = e.target instanceof Element ? e.target : null;
+    if (!t || t.closest('.ink-legend')) return;
+    const m = t.closest(MODEL), c = t.closest(CODE);
+    const el = m && c ? (m.contains(c) ? c : m) : (m || c);
+    if (!el || !el.textContent.trim()) return;
+    const l = LBL[lang()] || LBL.ru;
+    el.dataset.ink = el === m ? l[0] : l[1];
+  });
+
+  // живой счётчик: реальные запросы и токены за сегодня с сервера
+  const meter = document.getElementById('live-meter');
+  if (!meter) return;
+  const W = {
+    ru: ['Сегодня', 'запросов', 'токенов', 'из'], en: ['Today', 'requests', 'tokens', 'of'],
+    fr: ["Aujourd'hui", 'requêtes', 'tokens', 'sur'], uk: ['Сьогодні', 'запитів', 'токенів', 'з'],
+  };
+  const nf = (n) => Number(n || 0).toLocaleString('ru-RU');
+  const tick = async () => {
+    try {
+      const r = await origFetch('/api/health', { cache: 'no-store' });
+      if (!r.ok) throw 0;
+      const j = await r.json();
+      const w = W[lang()] || W.ru, d = j.today || {}, hv = j.heavyVertex || {};
+      meter.innerHTML = `${w[0]}: <b>${nf(d.requests)}</b> ${w[1]} · <b>${nf(d.tokens)}</b> ${w[2]}` +
+        (hv.enabled ? ` · <b>$${Number(hv.dailySpentUsd || 0).toFixed(2)}</b> ${w[3]} $${Number(hv.dailyBudgetUsd || 1.5).toFixed(2)}` : '');
+      meter.hidden = false;
+    } catch { meter.hidden = true; }
+  };
+  const origFetch = window.fetch.bind(window);
+  window.fetch = async (input, init) => {
+    const res = await origFetch(input, init);
+    try {
+      const u = String(input && input.url ? input.url : input);
+      if (u.includes('/api/') && !u.includes('/api/health')) setTimeout(tick, 400);
+    } catch {}
+    return res;
+  };
+  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => setTimeout(tick, 50)));
+  tick();
+  setInterval(tick, 30000);
 })();
 </script>
 </body>
