@@ -4,7 +4,8 @@ RUN apk add --no-cache python3
 
 WORKDIR /app
 
-COPY server.mjs index.html ua.html ./
+COPY server.mjs index.html ua.html .nojekyll ./
+COPY tasks ./tasks
 COPY ledgerguard ./ledgerguard
 
 ENV PYTHONPATH=/app/ledgerguard/src

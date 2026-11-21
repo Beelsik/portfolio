@@ -1,0 +1,51 @@
+{
+  "slug": "erp-intake",
+  "lang": "en",
+  "createdAt": "2026-11-21",
+  "title": "Architecture Plan: Automated B2B Email & PDF Order Intake into ERP",
+  "brief": "We receive ~80 B2B quote requests and supplier invoices daily via shared email with attached PDFs, scans, and Excel sheets. Ops staff manually re-key line items into ERP and routinely miss VAT ID mismatches, coil-vs-meter unit mix-ups, duplicate emails, and above-contract unit prices. Looking for reliable automation with human exception review before ERP posting.",
+  "summary": "Deterministic Python handles email deduplication, tax/IBAN checksums, unit expansion, and contract-price reconciliation, while Vision OCR + LLM is isolated strictly to reading messy PDF tables and proposing SKU matches.",
+  "nodes": [
+    { "title": "Inbound Email", "tech": "IMAP / Graph API", "kind": "io" },
+    { "title": "OCR & Table Parse", "tech": "PyMuPDF + Vision", "kind": "ai" },
+    { "title": "Tax & Math Guard", "tech": "Python + Decimal", "kind": "code" },
+    { "title": "Exception Queue", "tech": "1-Click Review UI", "kind": "human" },
+    { "title": "Idempotent ERP", "tech": "REST API + SQLite", "kind": "db" }
+  ],
+  "split": {
+    "code": [
+      "Attachment ingestion with SHA-256 idempotency keys so re-forwarded emails never create duplicate ERP bills",
+      "Strict Decimal line arithmetic (`qty × unit = total`), VAT/IBAN checksum checks, and pack-to-base unit expansion",
+      "Contract unit-price cap verification and idempotent ERP draft posting with retry/audit trail"
+    ],
+    "ai": [
+      "Structured line-item and supplier header extraction from skewed scans, stamps, and irregular PDF layouts",
+      "Fuzzy SKU resolution against the master catalog with deterministic technical-spec penalties (no silent spec swaps)"
+    ]
+  },
+  "milestones": [
+    {
+      "phase": "1. Pilot on 10–15 sample files",
+      "deliverable": "Benchmark OCR extraction accuracy and discrepancy detection on your anonymized emails/PDFs",
+      "estimate": "1–2 days · scoped in chat"
+    },
+    {
+      "phase": "2. Core Pipeline MVP",
+      "deliverable": "Email ingestion, PDF/XLSX parsers, contract/math verification engine, and draft ERP sync",
+      "estimate": "2 weeks · $1,000 – $1,400"
+    },
+    {
+      "phase": "3. Exception UI & Handover",
+      "deliverable": "Operator review queue for flagged mismatches, Docker Compose deployment, and test suite",
+      "estimate": "1 week · $550"
+    }
+  ],
+  "monthlyOps": "Cloud VPS ($12–$20/mo) + LLM/Vision API tokens for ~2,400 documents/mo: roughly $18–$32/mo (or $0 API cost on a self-hosted GPU with Qwen2.5-VL).",
+  "questions": [
+    "Which ERP receives the validated order (Odoo, NetSuite, SAP B1, Axelor, or custom REST) and is there a staging sandbox?",
+    "Can anonymized PDFs hit zero-retention cloud APIs (Vertex/OpenAI), or does compliance require self-hosted local models?",
+    "Should a single low-confidence or over-cap line hold the entire invoice for operator review or allow partial posting?"
+  ],
+  "relatedCase": "docs",
+  "pitch": "Hi! I put together an architecture & milestone breakdown tailored to your B2B email/PDF intake brief (pipeline schematic, code-vs-LLM split, and kickoff questions): https://beelsik.github.io/portfolio/?task=erp-intake — loads instantly, and you can inspect my live LedgerGuard & contract redline sandboxes right below."
+}

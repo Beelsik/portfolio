@@ -464,6 +464,14 @@ footer {
 .foot-links { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font: 400 13.5px/1.4 var(--font-sans); }
 .foot-links .icon-btn { font-size: 13px; padding: 5px 10px; color: var(--ink-muted); }
 
+/* Task hero promotion (?task=...) & private composer (?compose=1) */
+#architect.is-task-hero .ch-sheet__frame { border-top: 0; padding-top: 8px; }
+.album-main > #architect + #cover .ch-sheet__frame { border-top: 1px solid var(--line); padding-top: 48px; }
+.task-brief-head { display: flex; justify-content: space-between; align-items: center; gap: 10px 16px; flex-wrap: wrap; }
+.task-brief-head .ch-label { margin: 0; }
+.task-foot-callout { margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+.task-compose-box { margin-top: 8px; padding: 14px 16px; background: var(--panel); border: 1px dashed var(--line-strong); border-radius: 8px; display: grid; gap: 10px; }
+
 @media (prefers-reduced-motion: no-preference) {
   .btn[disabled], .ch-btn[disabled] { position: relative; opacity: 0.65; }
   ::view-transition-old(root) { animation: none; }
@@ -771,10 +779,10 @@ footer {
         <div class="ch-sheet__body">
           <div class="brief">
             <div class="case-head">
-              <span><span class="case-idx">00</span> <span class="ru">Оценка архитектуры · Gemini 4 Neon</span><span class="en">Architecture scoper · Gemini 4 Neon</span><span class="fr">Cadrage technique · Gemini 4 Neon</span></span>
+              <span id="arch-eyebrow"><span class="case-idx">00</span> <span class="ru">Оценка архитектуры · Gemini 4 Neon</span><span class="en">Architecture scoper · Gemini 4 Neon</span><span class="fr">Cadrage technique · Gemini 4 Neon</span></span>
               <button class="btn ghost sm" id="arch-dl" type="button"><span class="ru">Скачать план .md</span><span class="en">Export plan .md</span><span class="fr">Exporter .md</span></button>
             </div>
-            <h2 class="ch-sheet__title">
+            <h2 class="ch-sheet__title" id="arch-title">
               <span class="ru">Вставьте описание задачи — соберу схему конвейера, разделение «код / LLM» и оценку по этапам</span>
               <span class="en">Paste your task brief — get a pipeline diagram, code-vs-LLM split, and milestone estimate</span>
               <span class="fr">Collez votre besoin — obtenez le schéma du flux, la répartition code / LLM et le découpage par étapes</span>
@@ -782,6 +790,10 @@ footer {
           </div>
 
           <div class="chips" id="arch-presets"></div>
+          <div class="task-brief-head" id="task-brief-head" hidden>
+            <span class="ch-label"><span class="ru">Исходное ТЗ заказа</span><span class="en">Original task brief</span><span class="fr">Cahier des charges initial</span></span>
+            <button class="btn ghost sm" id="task-show-presets" type="button"><span class="ru">Другие примеры</span><span class="en">Other examples</span><span class="fr">Autres exemples</span></button>
+          </div>
           <div class="row" style="align-items:stretch">
             <textarea id="arch-in" rows="3" style="flex:1"></textarea>
           </div>
@@ -828,6 +840,7 @@ footer {
               </div>
             </div>
           </div>
+          <div class="callout-note task-foot-callout" id="task-foot-callout" hidden></div>
         </div>
         <table class="ch-stamp-block" data-sheet-stamp="architect">
           <tr>
@@ -1702,6 +1715,16 @@ async function checkout(cart, discountPercent) {
 
 <script>
 (() => {
+  const API_BASE = (location.hostname.endsWith('.github.io') || location.hostname.endsWith('.pages.dev') || location.hostname.endsWith('.netlify.app') || location.protocol === 'file:')
+    ? 'https://beelsik-portfolio.onrender.com'
+    : '';
+  if (API_BASE) {
+    const _baseFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      if (typeof input === 'string' && input.startsWith('/api/')) return _baseFetch(API_BASE + input, init);
+      return _baseFetch(input, init);
+    };
+  }
   const PROFILE = { brand: 'beelsik', githubUrl: 'https://github.com/Beelsik', githubLabel: 'github.com/Beelsik' };
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -3015,8 +3038,57 @@ async function checkout(cart, discountPercent) {
   };
 
   let currentArchPlan = ARCH_DEFAULT_PLAN.ru;
+  let activeCustomTask = null;
+  const defaultArchEyebrowHtml = $('#arch-eyebrow').innerHTML;
+  const defaultArchTitleHtml = $('#arch-title').innerHTML;
+  const urlParamsBoot = new URLSearchParams(window.location.search);
+  const taskParamBoot = (urlParamsBoot.get('task') || '').trim();
+  const composeModeBoot = urlParamsBoot.get('compose') === '1';
+
+  const CASE_TITLES = {
+    ru: {
+      project: '★ LedgerGuard — сверка счетов перед записью в 1С и ERP',
+      sales: '01 · Чат-агент продаж + CRM и запись в слоты',
+      rag: '02 · Корпоративный поиск (RAG) с правами доступа RBAC',
+      docs: '03 · Сверка договора и счёта + экспорт в .docx',
+      parser: '04 · Парсинг и матчинг прайсов в CSV',
+      listing: '05 · Генератор карточек для маркетплейсов',
+      hand: '06 · Живой Vision OCR сканов и рукописей',
+      cc: '07 · Claude Code Kit (хуки безопасности и тесты)',
+      gost: '08 · ТЗ по ГОСТ, матрица трассировки и ПМИ',
+      audit: '09 · Аудит и доводка SaaS после ИИ',
+      redteam: '10 · Защита промпта и Red-Team контур',
+    },
+    en: {
+      project: '★ LedgerGuard — invoice verification gateway before ERP',
+      sales: '01 · Sales & booking chat agent with CRM',
+      rag: '02 · Enterprise RAG search with RBAC permissions',
+      docs: '03 · Contract & invoice reconciliation → .docx',
+      parser: '04 · Price-list parsing & SKU matching → .csv',
+      listing: '05 · Marketplace listing generator',
+      hand: '06 · Live Vision OCR for scans & handwriting',
+      cc: '07 · Claude Code Kit (guardrail hooks & tests)',
+      gost: '08 · SRS, traceability matrix & UAT test plan',
+      audit: '09 · Security & pricing audit of AI-built SaaS',
+      redteam: '10 · Guarded bot & prompt-injection Red-Team arena',
+    },
+    fr: {
+      project: '★ LedgerGuard — contrôle des factures avant ERP',
+      sales: '01 · Agent commercial + CRM et créneaux',
+      rag: '02 · Recherche interne RAG avec droits RBAC',
+      docs: '03 · Rapprochement devis/contrat → .docx',
+      parser: '04 · Extraction de tarifs et mapping SKU → .csv',
+      listing: '05 · Générateur d’annonces e-commerce',
+      hand: '06 · OCR Vision sur scans et manuscrits',
+      cc: '07 · Claude Code Kit (hooks et tests)',
+      gost: '08 · Cahier des charges, traçabilité et UAT',
+      audit: '09 · Audit sécurité d’un SaaS généré par IA',
+      redteam: '10 · Bouclier anti-injection & test Red-Team',
+    },
+  };
 
   function svgEsc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function clipSvg(s, max) { const t = String(s || '').trim(); return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + '…'; }
   function renderArchPlan(plan) {
     currentArchPlan = plan;
     $('#arch-summary').textContent = plan.summary || '';
@@ -3033,8 +3105,8 @@ async function checkout(cart, discountPercent) {
         parts.push(`<path class="ln ${kind}" d="M${x1} ${boxY + 30} H${x2}"/>`);
         parts.push(`<path class="ln io" d="M${x2 - 6} ${boxY + 26} L${x2} ${boxY + 30} L${x2 - 6} ${boxY + 34}"/>`);
       }
-      const titleTxt = svgEsc(String(n.title || '').slice(0, 19));
-      const techTxt = svgEsc(String(n.tech || '').slice(0, 22));
+      const titleTxt = svgEsc(clipSvg(n.title, 19));
+      const techTxt = svgEsc(clipSvg(n.tech, 22));
       parts.push(`<g><rect class="ln ${kind} box" x="${x}" y="${boxY}" width="${boxW}" height="${boxH}"/>`);
       if (kind === 'db') parts.push(`<rect class="ln db" x="${x + 4}" y="${boxY + 4}" width="${boxW - 8}" height="${boxH - 8}"/>`);
       parts.push(`<text class="tag" x="${x}" y="${boxY - 7}">${kind.toUpperCase()}</text>`);
@@ -3069,6 +3141,67 @@ async function checkout(cart, discountPercent) {
     (plan.questions || []).forEach((q) => ql.append(el('li', '', q)));
   }
 
+  function renderTaskFootCallout(task) {
+    const box = $('#task-foot-callout');
+    box.replaceChildren();
+    let rc = String(task?.relatedCase || '').trim();
+    if (rc === 'spec') rc = 'gost';
+    const label = (CASE_TITLES[L] || CASE_TITLES.ru)[rc];
+    if (label && document.getElementById(rc)) {
+      const row = el('div');
+      row.append(document.createTextNode(T('Похожий рабочий стенд ниже: ', 'Closest interactive demo below: ', 'Démonstrateur similaire ci-dessous : ')));
+      const a = el('a', '', label + ' ↓');
+      a.href = '#' + rc;
+      row.append(a);
+      box.append(row);
+    }
+    box.append(el('div', '', T(
+      'Ниже — открытый проект LedgerGuard и 11 интерактивных стендов, которые можно проверить вживую ↓',
+      'Below are the open-source LedgerGuard project and 11 live interactive sandboxes you can test right here ↓',
+      'Ci-dessous : le projet open-source LedgerGuard et 11 démonstrateurs interactifs à tester ↓'
+    )));
+    box.hidden = false;
+  }
+
+  function applyCustomTask(task) {
+    activeCustomTask = task;
+    const archSec = $('#architect');
+    const mainList = $('.album-main');
+    if (archSec && mainList && mainList.firstElementChild !== archSec) {
+      mainList.prepend(archSec);
+    }
+    archSec.classList.add('is-task-hero', 'ch-reveal');
+    $('#arch-eyebrow').textContent = T('Предварительный разбор вашего ТЗ', 'Tailored architecture & scope', 'Architecture & cadrage sur mesure');
+    if (task.title) {
+      $('#arch-title').textContent = task.title;
+      document.title = `${task.title} — Beelsik`;
+    }
+    $('#arch-presets').hidden = true;
+    $('#task-brief-head').hidden = false;
+    $('#arch-in').value = task.brief || '';
+    renderArchPlan(task);
+    $('#arch-note').textContent = T(
+      'Готовый разбор под ваше ТЗ · можно уточнить текст выше и пересобрать',
+      'Pre-built breakdown for your brief · edit above and re-run anytime',
+      'Cadrage préparé pour votre besoin · modifiable ci-dessus'
+    );
+    renderTaskFootCallout(task);
+  }
+
+  function clearCustomTaskToPresets() {
+    activeCustomTask = null;
+    $('#arch-presets').hidden = false;
+    $('#task-brief-head').hidden = true;
+    $('#task-foot-callout').hidden = true;
+    $('#arch-eyebrow').innerHTML = defaultArchEyebrowHtml;
+    $('#arch-title').innerHTML = defaultArchTitleHtml;
+    $('#architect').classList.remove('is-task-hero');
+    document.title = T('Beelsik — Боты, RAG, Vision OCR и автоматизация', 'Beelsik — Applied LLM Agents, RAG, Vision OCR & Audits', 'Beelsik — Agents IA, RAG, OCR Vision & Audits SaaS');
+    loadArchForLang();
+    $('#arch-note').textContent = '';
+  }
+  $('#task-show-presets').onclick = clearCustomTaskToPresets;
+
   function loadArchForLang() {
     const box = $('#arch-presets'); box.replaceChildren();
     ARCH_PRESETS[L].forEach((p, idx) => {
@@ -3081,8 +3214,21 @@ async function checkout(cart, discountPercent) {
       };
       box.append(b);
     });
-    $('#arch-in').value = ARCH_PRESETS[L][0].text;
     $('#arch-in').placeholder = T('Опишите вашу задачу или вставьте текст заказа с биржи…', 'Describe your workflow or paste your job post…', 'Décrivez votre besoin ou collez votre annonce…');
+    if (activeCustomTask && (activeCustomTask.lang === L || (activeCustomTask.lang === 'uk' && L === 'ru'))) {
+      applyCustomTask(activeCustomTask);
+      return;
+    }
+    if (activeCustomTask) {
+      activeCustomTask = null;
+      $('#arch-presets').hidden = false;
+      $('#task-brief-head').hidden = true;
+      $('#task-foot-callout').hidden = true;
+      $('#arch-eyebrow').innerHTML = defaultArchEyebrowHtml;
+      $('#arch-title').innerHTML = defaultArchTitleHtml;
+      $('#architect').classList.remove('is-task-hero');
+    }
+    $('#arch-in').value = ARCH_PRESETS[L][0].text;
     renderArchPlan(ARCH_DEFAULT_PLAN[L]);
   }
 
@@ -3107,25 +3253,201 @@ async function checkout(cart, discountPercent) {
   $('#arch-btn').onclick = runArchScoper;
   $('#arch-dl').onclick = () => {
     const p = currentArchPlan;
+    const heading = activeCustomTask?.title || T('Архитектурный план и этапы проекта', 'Architecture & Milestone Plan', 'Architecture et jalons du projet');
+    const briefTxt = $('#arch-in').value.trim();
     const md = [
-      `# Architecture & Milestone Plan`,
-      `\n> ${p.summary}\n`,
-      `## Pipeline`,
+      `# ${heading}`,
+      ...(briefTxt ? [`\n## ${T('Исходное ТЗ', 'Task Brief', 'Besoin initial')}\n${briefTxt}`] : []),
+      `\n> ${p.summary || ''}\n`,
+      `## ${T('Конвейер обработки', 'Pipeline', 'Architecture du flux')}`,
       ...(p.nodes || []).map((n, i) => `${i + 1}. **${n.title}** (${n.tech}) — \`${n.kind}\``),
-      `\n## Deterministic Code vs AI`,
-      `### Plain Code / SQL`,
+      `\n## ${T('Обычный код vs ИИ', 'Deterministic Code vs AI', 'Code déterministe vs IA')}`,
+      `### ${T('Детерминированный код / SQL', 'Plain Code / SQL', 'Code / SQL')}`,
       ...(p.split?.code || []).map((x) => `- ${x}`),
       `### LLM / Vision`,
       ...(p.split?.ai || []).map((x) => `- ${x}`),
-      `\n## Milestones`,
+      `\n## ${T('Этапы реализации', 'Milestones', 'Étapes')}`,
       ...(p.milestones || []).map((m) => `- **${m.phase}**: ${m.deliverable} (*${m.estimate}*)`),
-      `\n## Monthly Infra & API Estimate\n${p.monthlyOps}`,
-      `\n## Kickoff Questions`,
+      `\n## ${T('Ежемесячные затраты на инфраструктуру', 'Monthly Infra & API Estimate', 'Coût mensuel')}\n${p.monthlyOps || ''}`,
+      `\n## ${T('Вопросы до старта', 'Kickoff Questions', 'Questions de cadrage')}`,
       ...(p.questions || []).map((q) => `- ${q}`),
     ].join('\n');
+    const slugName = activeCustomTask?.slug && /^[a-z0-9_-]+$/i.test(activeCustomTask.slug) ? activeCustomTask.slug : 'architecture';
     const url = URL.createObjectURL(new Blob([md], { type: 'text/markdown;charset=utf-8' }));
-    const a = document.createElement('a'); a.href = url; a.download = 'architecture-plan.md'; document.body.appendChild(a); a.click(); a.remove();
+    const a = document.createElement('a'); a.href = url; a.download = `${slugName}-plan.md`; document.body.appendChild(a); a.click(); a.remove();
   };
+
+  function b64uToBytes(str) {
+    const pad = str.length % 4 ? '='.repeat(4 - (str.length % 4)) : '';
+    const b64 = (str + pad).replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function bytesToB64u(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 8192) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    }
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  async function decodeCompressedTask(rawVal) {
+    if (rawVal.startsWith('b64:')) {
+      const s = rawVal.slice(4);
+      if (s.length > 24000) throw new Error('Payload too large');
+      return JSON.parse(new TextDecoder().decode(b64uToBytes(s)));
+    }
+    if (rawVal.startsWith('z:')) {
+      const s = rawVal.slice(2);
+      if (s.length > 24000) throw new Error('Payload too large');
+      if (typeof DecompressionStream === 'undefined') throw new Error('DecompressionStream unavailable');
+      const stream = new Blob([b64uToBytes(s)]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      const reader = stream.getReader();
+      const chunks = [];
+      let total = 0;
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > 32768) {
+          try { await reader.cancel(); } catch {}
+          throw new Error('Decompressed task exceeds 32 KB limit');
+        }
+        chunks.push(value);
+      }
+      const merged = new Uint8Array(total);
+      let off = 0;
+      for (const c of chunks) { merged.set(c, off); off += c.byteLength; }
+      return JSON.parse(new TextDecoder().decode(merged));
+    }
+    return null;
+  }
+  async function encodeCompressedTask(obj) {
+    const bytes = new TextEncoder().encode(JSON.stringify(obj));
+    if (typeof CompressionStream === 'undefined') return 'b64:' + bytesToB64u(bytes);
+    const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    const buf = await new Response(stream).arrayBuffer();
+    return 'z:' + bytesToB64u(new Uint8Array(buf));
+  }
+
+  async function initTaskFromUrl() {
+    if (!taskParamBoot) return;
+    let task = null;
+    try {
+      if (taskParamBoot.startsWith('z:') || taskParamBoot.startsWith('b64:')) {
+        task = await decodeCompressedTask(taskParamBoot);
+      } else if (/^[a-z0-9][a-z0-9_-]{0,63}$/i.test(taskParamBoot)) {
+        const baseDir = location.pathname
+          .replace(/\/ua(?:\/index\.html)?\/?$/i, '/')
+          .replace(/\/[^/]*\.html$/i, '/')
+          .replace(/\/?$/, '/');
+        const taskPath = `${baseDir}tasks/${encodeURIComponent(taskParamBoot)}.json`;
+        let r;
+        try {
+          r = await fetch(taskPath, { cache: 'no-cache' });
+        } catch (fetchErr) {
+          if (API_BASE) r = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskParamBoot)}.json`, { cache: 'no-cache' });
+          else throw fetchErr;
+        }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        task = await r.json();
+      } else {
+        throw new Error('Invalid task parameter');
+      }
+      if (!task || typeof task !== 'object' || !Array.isArray(task.nodes) || !task.nodes.length) {
+        throw new Error('Invalid task structure');
+      }
+      const targetLang = task.lang === 'uk' ? 'ru' : task.lang;
+      if (!urlParamsBoot.get('lang') && ['ru', 'en', 'fr'].includes(targetLang) && targetLang !== L) {
+        activeCustomTask = task;
+        setLang(targetLang);
+      }
+      applyCustomTask(task);
+    } catch {
+      $('#arch-note').textContent = T(
+        `Разбор «${taskParamBoot.slice(0, 40)}» не найден — вставьте текст ТЗ выше и нажмите «Разобрать задачу».`,
+        `Saved scope "${taskParamBoot.slice(0, 40)}" was not found — paste your brief above and click Scope brief.`,
+        `Cadrage « ${taskParamBoot.slice(0, 40)} » introuvable — collez votre besoin ci-dessus.`
+      );
+    }
+  }
+
+  function initPrivateComposer() {
+    if (!composeModeBoot) return;
+    const archBody = $('#architect .ch-sheet__body');
+    if (!archBody) return;
+    const box = el('div', 'task-compose-box');
+    box.id = 'task-compose-box';
+    box.append(el('span', 'ch-label', 'Composer (?compose=1) · Генератор ссылки под заказ'));
+    const row1 = el('div', 'two');
+    const slugIn = el('input'); slugIn.type = 'text'; slugIn.id = 'cmp-slug';
+    slugIn.placeholder = 'slug заказа (напр. kwork-crm)';
+    slugIn.value = (activeCustomTask?.slug || 'custom-order');
+    const titleIn = el('input'); titleIn.type = 'text'; titleIn.id = 'cmp-title';
+    titleIn.placeholder = 'Заголовок разбора (необязательно)';
+    titleIn.value = activeCustomTask?.title || '';
+    row1.append(slugIn, titleIn);
+
+    const caseSel = el('select'); caseSel.id = 'cmp-case';
+    Object.entries(CASE_TITLES[L] || CASE_TITLES.ru).forEach(([k, lbl]) => {
+      const o = el('option', '', lbl); o.value = k;
+      if ((activeCustomTask?.relatedCase || 'project') === k) o.selected = true;
+      caseSel.append(o);
+    });
+
+    const rowActions = el('div', 'row');
+    const btnJson = el('button', 'btn ghost sm', 'Скачать <slug>.json в tasks/'); btnJson.type = 'button'; btnJson.id = 'cmp-dl-json';
+    const btnCopyZ = el('button', 'btn sm', 'Скопировать мгновенную ссылку (?task=z:…)'); btnCopyZ.type = 'button'; btnCopyZ.id = 'cmp-copy-z';
+    const cmpNote = el('span', 'note'); cmpNote.id = 'cmp-note';
+    const urlOut = el('input'); urlOut.type = 'text'; urlOut.id = 'cmp-url-out'; urlOut.readOnly = true; urlOut.hidden = true;
+
+    const buildTaskPayload = () => {
+      const slug = (slugIn.value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'custom-order').slice(0, 64);
+      const brief = $('#arch-in').value.trim();
+      const firstLine = brief.split(/[.!?\n]/)[0].trim().slice(0, 72);
+      const title = titleIn.value.trim() || (firstLine ? `Разбор задачи: ${firstLine}` : 'Разбор архитектуры под ваше ТЗ');
+      return {
+        slug,
+        lang: L,
+        createdAt: new Date().toISOString().slice(0, 10),
+        title,
+        brief,
+        summary: currentArchPlan.summary || '',
+        nodes: (currentArchPlan.nodes || []).slice(0, 6),
+        split: currentArchPlan.split || { code: [], ai: [] },
+        milestones: currentArchPlan.milestones || [],
+        monthlyOps: currentArchPlan.monthlyOps || '',
+        questions: currentArchPlan.questions || [],
+        relatedCase: caseSel.value || 'project',
+        pitch: `Здравствуйте! Набросал предварительную архитектуру под вашу задачу: https://beelsik.github.io/portfolio/?task=${slug}`,
+      };
+    };
+
+    btnJson.onclick = () => {
+      const obj = buildTaskPayload();
+      const url = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2) + '\n'], { type: 'application/json;charset=utf-8' }));
+      const a = document.createElement('a'); a.href = url; a.download = `${obj.slug}.json`; document.body.appendChild(a); a.click(); a.remove();
+      cmpNote.textContent = `Скачан tasks/${obj.slug}.json`;
+    };
+    btnCopyZ.onclick = async () => {
+      try {
+        const obj = buildTaskPayload();
+        const encoded = await encodeCompressedTask(obj);
+        const link = `${location.origin}${location.pathname}?task=${encoded}`;
+        urlOut.value = link;
+        urlOut.hidden = false;
+        try { await navigator.clipboard.writeText(link); cmpNote.textContent = `Скопировано (${link.length} симв.)`; }
+        catch { urlOut.select(); cmpNote.textContent = `Готово (${link.length} симв.) — скопируйте из поля ниже`; }
+      } catch (err) {
+        cmpNote.textContent = 'Ошибка кодирования: ' + (err?.message || err);
+      }
+    };
+
+    rowActions.append(caseSel, btnJson, btnCopyZ, cmpNote);
+    box.append(row1, rowActions, urlOut);
+    archBody.append(box);
+  }
 
   /* ==================== 10 RED-TEAM ARENA (Dual-Model: Free NIM Naive vs Paid Vertex Guarded) ==================== */
   $('#tab-rt-arena').onclick = () => {
@@ -3371,6 +3693,7 @@ async function checkout(cart, discountPercent) {
 
   let lgSessionId = 'lg_' + Math.random().toString(36).slice(2, 10);
   let lgPresetsCache = {};
+  let lgBootRetried = false;
 
   const lgFmtMinor = (minor, cur) => {
     const syms = { RUB: '₽', UAH: '₴', EUR: '€', USD: '$', GBP: '£' };
@@ -3500,7 +3823,7 @@ async function checkout(cart, discountPercent) {
     }
   }
 
-  async function runLedgerGuard({ rawText = null, file = null, reset = false } = {}) {
+  async function runLedgerGuard({ rawText = null, file = null, reset = false, isBoot = false } = {}) {
     $('#lg-run-btn').disabled = true;
     $('#lg-status').textContent = T('Сверяю через Python…', 'Running Python engine…', 'Contrôle Python en cours…');
     try {
@@ -3533,7 +3856,15 @@ async function checkout(cart, discountPercent) {
       }
       renderLedgerGuardReport(data);
     } catch (err) {
-      $('#lg-status').textContent = T(`Локальный сервер не запущен (${err.message})`, `Engine offline (${err.message})`, `Hors ligne (${err.message})`);
+      if (API_BASE && isBoot && !lgBootRetried) {
+        lgBootRetried = true;
+        $('#lg-status').textContent = T('Прогреваю облачный Python-движок…', 'Warming up cloud Python engine…', 'Démarrage du moteur Python…');
+        setTimeout(() => runLedgerGuard({ rawText: $('#lg-input').value, reset: true, isBoot: false }), 12000);
+      } else {
+        $('#lg-status').textContent = API_BASE
+          ? T(`Сервер API недоступен (${err.message})`, `Engine unavailable (${err.message})`, `Service indisponible (${err.message})`)
+          : T(`Локальный сервер не запущен (${err.message})`, `Engine offline (${err.message})`, `Hors ligne (${err.message})`);
+      }
     } finally {
       $('#lg-run-btn').disabled = false;
     }
@@ -3544,7 +3875,7 @@ async function checkout(cart, discountPercent) {
     const defText = (lgPresetsCache[L]?.traps?.text) || LG_FALLBACK_PRESETS[L].traps;
     $('#lg-input').value = defText;
     $$('#lg-presets [data-lgpreset]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.lgpreset === 'traps'));
-    if (location.protocol === 'http:' || location.protocol === 'https:') {
+    if (location.protocol === 'http:' || location.protocol === 'https:' || API_BASE) {
       try {
         const pr = await fetch(`/api/ledgerguard/presets?lang=${L}`);
         if (pr.ok) {
@@ -3555,7 +3886,7 @@ async function checkout(cart, discountPercent) {
           }
         }
       } catch {}
-      runLedgerGuard({ rawText: $('#lg-input').value, reset: true });
+      runLedgerGuard({ rawText: $('#lg-input').value, reset: true, isBoot: true });
     }
   }
 
@@ -3640,7 +3971,23 @@ async function checkout(cart, discountPercent) {
   }
 
   /* Boot */
+  if (taskParamBoot) {
+    const archSec = $('#architect');
+    const mainList = $('.album-main');
+    if (archSec && mainList) {
+      mainList.prepend(archSec);
+      archSec.classList.add('is-task-hero', 'ch-reveal');
+      window.scrollTo(0, 0);
+    }
+    $('#arch-note').textContent = T('Загружаю разбор задачи…', 'Loading task scope…', 'Chargement du cadrage…');
+  }
   setLang(L);
+  initTaskFromUrl().then(() => {
+    initPrivateComposer();
+    if (composeModeBoot && !taskParamBoot) {
+      $('#architect')?.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  });
   if (document.fonts && document.fonts.load) document.fonts.load('32px Caveat').then(drawHandCanvas, drawHandCanvas);
 
   const loadBootHealth = async (attempt = 0) => {
@@ -3670,7 +4017,7 @@ async function checkout(cart, discountPercent) {
       }
     }
   };
-  if (location.protocol === 'http:' || location.protocol === 'https:') {
+  if (location.protocol === 'http:' || location.protocol === 'https:' || API_BASE) {
     loadBootHealth();
   }
 })();

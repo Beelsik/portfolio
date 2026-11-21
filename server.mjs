@@ -8,7 +8,7 @@ import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT = Number(process.env.PORT || 3000);
+const PORT = process.env.PORT !== undefined && process.env.PORT !== '' ? Number(process.env.PORT) : 3000;
 
 process.on('uncaughtException', (err) => {
   console.error('[uncaughtException]', err?.stack || err);
@@ -732,6 +732,82 @@ function scanInputLayer1(raw, lang = 'en') {
 }
 
 const htmlCache = new Map();
+const TASKS_DIR = path.join(__dirname, 'tasks');
+const taskCache = new Map();
+
+function applyCors(req, res) {
+  const origin = String(req.headers.origin || '').trim();
+  if (!origin) return;
+  const allowed =
+    origin === 'https://beelsik.github.io' ||
+    origin === 'https://beelsik-portfolio.onrender.com' ||
+    origin === 'null' ||
+    /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin) ||
+    /^https:\/\/[a-z0-9-]+\.(?:pages\.dev|netlify\.app)$/i.test(origin);
+  if (allowed) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
+}
+
+async function getCachedTask(slug) {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(slug)) return null;
+  const tasksRoot = path.resolve(TASKS_DIR);
+  const filePath = path.resolve(tasksRoot, `${slug}.json`);
+  if (!filePath.startsWith(tasksRoot + path.sep)) return null;
+  const st = await fs.promises.stat(filePath);
+  const cached = taskCache.get(slug);
+  if (cached && cached.mtimeMs === st.mtimeMs) return cached;
+
+  const raw = await fs.promises.readFile(filePath);
+  const gzip = zlib.gzipSync(raw, { level: 6 });
+  const etag = `"${crypto.createHash('sha1').update(raw).digest('hex').slice(0, 16)}"`;
+  const entry = { mtimeMs: st.mtimeMs, raw, gzip, etag };
+  taskCache.set(slug, entry);
+  return entry;
+}
+
+async function serveStaticTask(req, res, slug) {
+  let entry = null;
+  try {
+    entry = await getCachedTask(slug);
+  } catch {
+    entry = null;
+  }
+  if (!entry) {
+    sendJson(res, 404, { error: 'Task not found' }, req.method === 'HEAD');
+    return;
+  }
+  if (res.headersSent || res.destroyed) return;
+
+  const baseVary = res.getHeader('Vary');
+  const varyVal = baseVary ? `${baseVary}, Accept-Encoding` : 'Accept-Encoding';
+  const ifNoneMatch = String(req.headers['if-none-match'] || '').trim();
+  if (ifNoneMatch && ifNoneMatch === entry.etag) {
+    res.writeHead(304, {
+      ETag: entry.etag,
+      'Cache-Control': 'no-cache',
+      Vary: varyVal,
+    });
+    res.end();
+    return;
+  }
+
+  const acceptsGzip = String(req.headers['accept-encoding'] || '').toLowerCase().includes('gzip');
+  const payload = acceptsGzip ? entry.gzip : entry.raw;
+  const headers = {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': payload.length,
+    'Cache-Control': 'no-cache',
+    ETag: entry.etag,
+    Vary: varyVal,
+  };
+  if (acceptsGzip) headers['Content-Encoding'] = 'gzip';
+  res.writeHead(200, headers);
+  res.end(req.method === 'HEAD' ? undefined : payload);
+}
 
 async function getCachedHtml(filename) {
   const filePath = path.join(__dirname, filename);
@@ -760,12 +836,14 @@ async function serveHtmlPage(req, res, filename) {
   }
   if (res.headersSent || res.destroyed) return;
 
+  const baseVary = res.getHeader('Vary');
+  const varyVal = baseVary ? `${baseVary}, Accept-Encoding` : 'Accept-Encoding';
   const ifNoneMatch = String(req.headers['if-none-match'] || '').trim();
   if (ifNoneMatch && ifNoneMatch === entry.etag) {
     res.writeHead(304, {
       ETag: entry.etag,
       'Cache-Control': 'no-cache',
-      Vary: 'Accept-Encoding',
+      Vary: varyVal,
     });
     res.end();
     return;
@@ -778,7 +856,7 @@ async function serveHtmlPage(req, res, filename) {
     'Content-Length': payload.length,
     'Cache-Control': 'no-cache',
     ETag: entry.etag,
-    Vary: 'Accept-Encoding',
+    Vary: varyVal,
   };
   if (acceptsGzip) headers['Content-Encoding'] = 'gzip';
   res.writeHead(200, headers);
@@ -794,6 +872,14 @@ function safeParseUrl(rawUrl) {
 }
 
 const server = http.createServer(async (req, res) => {
+  applyCors(req, res);
+  if (req.method === 'OPTIONS') {
+    if (!res.headersSent && !res.destroyed) {
+      res.writeHead(204, { 'Content-Length': '0' });
+      res.end();
+    }
+    return;
+  }
   const headOnly = req.method === 'HEAD';
   const isGetOrHead = req.method === 'GET' || headOnly;
   try {
@@ -803,6 +889,23 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     const urlPath = parsedUrl.pathname;
+
+    if (isGetOrHead && /^\/(?:ua\/)?tasks\/.+\.json$/i.test(urlPath)) {
+      const m = urlPath.match(/^\/(?:ua\/)?tasks\/(.+)\.json$/i);
+      let decoded = '';
+      try {
+        decoded = decodeURIComponent(m ? m[1] : '');
+      } catch {
+        sendJson(res, 400, { error: 'Invalid task slug' }, headOnly);
+        return;
+      }
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(decoded)) {
+        sendJson(res, 400, { error: 'Invalid task slug' }, headOnly);
+        return;
+      }
+      await serveStaticTask(req, res, decoded);
+      return;
+    }
 
     if (isGetOrHead && (urlPath === '/ua' || urlPath === '/ua/' || urlPath === '/ua.html')) {
       await serveHtmlPage(req, res, 'ua.html');
@@ -1511,8 +1614,9 @@ process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
 process.on('SIGINT', () => shutdownGracefully('SIGINT'));
 
 server.listen(PORT, '0.0.0.0', () => {
+  const actualPort = server.address()?.port ?? PORT;
   Promise.all([getCachedHtml('index.html'), getCachedHtml('ua.html')]).catch(() => {});
   console.log(
-    `Portfolio server listening on http://0.0.0.0:${PORT} | Fast: ${LLM_ENABLED ? `${LLM_PROVIDER}/${LLM_MODEL}` : 'off'} | Heavy Vertex AI: ${VERTEX_ENABLED ? `${VERTEX_MODEL} (cap $${DAILY_BUDGET_USD}/day)` : 'off (fallback to Fast)'}`
+    `Portfolio server listening on http://0.0.0.0:${actualPort} | Fast: ${LLM_ENABLED ? `${LLM_PROVIDER}/${LLM_MODEL}` : 'off'} | Heavy Vertex AI: ${VERTEX_ENABLED ? `${VERTEX_MODEL} (cap $${DAILY_BUDGET_USD}/day)` : 'off (fallback to Fast)'}`
   );
 });

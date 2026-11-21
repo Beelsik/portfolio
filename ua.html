@@ -464,6 +464,14 @@ footer {
 .foot-links { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font: 400 13.5px/1.4 var(--font-sans); }
 .foot-links .icon-btn { font-size: 13px; padding: 5px 10px; color: var(--ink-muted); }
 
+/* Task hero promotion (?task=...) & private composer (?compose=1) */
+#architect.is-task-hero .ch-sheet__frame { border-top: 0; padding-top: 8px; }
+.album-main > #architect + #cover .ch-sheet__frame { border-top: 1px solid var(--line); padding-top: 48px; }
+.task-brief-head { display: flex; justify-content: space-between; align-items: center; gap: 10px 16px; flex-wrap: wrap; }
+.task-brief-head .ch-label { margin: 0; }
+.task-foot-callout { margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+.task-compose-box { margin-top: 8px; padding: 14px 16px; background: var(--panel); border: 1px dashed var(--line-strong); border-radius: 8px; display: grid; gap: 10px; }
+
 @media (prefers-reduced-motion: no-preference) {
   .btn[disabled], .ch-btn[disabled] { position: relative; opacity: 0.65; }
   ::view-transition-old(root) { animation: none; }
@@ -720,13 +728,17 @@ footer {
         <div class="ch-sheet__body">
           <div class="brief">
             <div class="case-head">
-              <span><span class="case-idx">00</span> Оцінка архітектури · Gemini 4 Neon</span>
+              <span id="arch-eyebrow"><span class="case-idx">00</span> Оцінка архітектури · Gemini 4 Neon</span>
               <button class="btn ghost sm" id="arch-dl" type="button">Завантажити план .md</button>
             </div>
-            <h2 class="ch-sheet__title">Вставте опис задачі — зберу схему конвеєра, поділ «код / LLM» та оцінку за етапами</h2>
+            <h2 class="ch-sheet__title" id="arch-title">Вставте опис задачі — зберу схему конвеєра, поділ «код / LLM» та оцінку за етапами</h2>
           </div>
 
           <div class="chips" id="arch-presets"></div>
+          <div class="task-brief-head" id="task-brief-head" hidden>
+            <span class="ch-label">Вихідне ТЗ замовлення</span>
+            <button class="btn ghost sm" id="task-show-presets" type="button">Інші приклади</button>
+          </div>
           <textarea id="arch-in" rows="3" placeholder="Опишіть вашу задачу або вставте текст замовлення…"></textarea>
           <div class="between">
             <button class="btn" id="arch-btn" type="button">Розібрати задачу</button>
@@ -765,6 +777,7 @@ footer {
               </div>
             </div>
           </div>
+          <div class="callout-note task-foot-callout" id="task-foot-callout" hidden></div>
         </div>
         <table class="ch-stamp-block" data-sheet-stamp="architect">
           <tr>
@@ -1502,6 +1515,16 @@ async function checkout(cart, discountPercent) {
 
 <script>
 (() => {
+  const API_BASE = (location.hostname.endsWith('.github.io') || location.hostname.endsWith('.pages.dev') || location.hostname.endsWith('.netlify.app') || location.protocol === 'file:')
+    ? 'https://beelsik-portfolio.onrender.com'
+    : '';
+  if (API_BASE) {
+    const _baseFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      if (typeof input === 'string' && input.startsWith('/api/')) return _baseFetch(API_BASE + input, init);
+      return _baseFetch(input, init);
+    };
+  }
   const LANG = 'uk';
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -2286,7 +2309,7 @@ async function checkout(cart, discountPercent) {
     { label: 'Вхідні рахунки та специфікації → KeyCRM / ERP', text: 'Щодня на пошту та в Telegram надходить ~70 заявок від клієнтів із фото реквізитів і таблицями замовлень. Треба автоматично звіряти ЄДРПОУ, ціни за прайсом і створювати замовлення в CRM.' },
   ];
 
-  let currentArchPlan = {
+  const ARCH_DEFAULT_PLAN_UA = {
     summary: 'Оптимальна гібридна схема: індексація за розкладом, перевірка прав RBAC та підрахунок цифр виконуються детермінованим кодом і SQL, а LLM підключається лише для синтезу відповіді з відібраних фрагментів із цитуванням.',
     nodes: [
       { title: 'Jira / Confluence Sync', tech: 'Python Cron Worker', kind: 'io' },
@@ -2307,8 +2330,30 @@ async function checkout(cart, discountPercent) {
     monthlyOps: 'Хмарний VPS у ЄС (~600–900 ₴/міс) + витрати на API ембедингів і LLM при 300 запитах/день: близько 700–1 400 ₴/міс (або локальна модель Qwen без передачі даних назовні).',
     questions: ['Чи можна використовувати зовнішні хмарні LLM API (із вимкненим навчанням на даних), чи потрібен повністю локальний контур на вашому сервері?', 'Де наразі зберігаються ролі співробітників (Active Directory / SSO / групи Jira)?', 'Які типи файлів переважають у вкладеннях (текстові PDF, скани, великі таблиці Excel)?'],
   };
+  let currentArchPlan = ARCH_DEFAULT_PLAN_UA;
+  let activeCustomTask = null;
+  const defaultArchEyebrowHtml = $('#arch-eyebrow').innerHTML;
+  const defaultArchTitleHtml = $('#arch-title').innerHTML;
+  const urlParamsBoot = new URLSearchParams(window.location.search);
+  const taskParamBoot = (urlParamsBoot.get('task') || '').trim();
+  const composeModeBoot = urlParamsBoot.get('compose') === '1';
+
+  const CASE_TITLES_UA = {
+    project: '★ LedgerGuard — перевірка рахунків перед записом в ERP',
+    sales: '01 · Чат-агент продажів + CRM та вільні вікна',
+    rag: '02 · Корпоративний пошук (RAG) із правами доступу RBAC',
+    docs: '03 · Звірка договору й рахунку + експорт у .docx',
+    parser: '04 · Парсинг і матчинг прайсів у CSV',
+    listing: '05 · Генератор карток для маркетплейсів',
+    hand: '06 · Живий Vision OCR сканів і рукописів',
+    cc: '07 · Claude Code Kit (хуки безпеки та тести)',
+    spec: '08 · Техзавдання, матриця трасування та ПМІ',
+    audit: '09 · Аудит і доопрацювання SaaS після ШІ',
+    redteam: '10 · Захист промпту та Red-Team контур',
+  };
 
   function svgEsc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function clipSvg(s, max) { const t = String(s || '').trim(); return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + '…'; }
   function renderArchPlan(plan) {
     currentArchPlan = plan;
     $('#arch-summary').textContent = plan.summary || '';
@@ -2328,8 +2373,8 @@ async function checkout(cart, discountPercent) {
       parts.push(`<g><rect class="ln ${kind} box" x="${x}" y="${boxY}" width="${boxW}" height="${boxH}"/>`);
       if (kind === 'db') parts.push(`<rect class="ln db" x="${x + 4}" y="${boxY + 4}" width="${boxW - 8}" height="${boxH - 8}"/>`);
       parts.push(`<text class="tag" x="${x}" y="${boxY - 7}">${kind.toUpperCase()}</text>`);
-      parts.push(`<text class="t" x="${x + 10}" y="${boxY + 25}">${svgEsc(String(n.title || '').slice(0, 19))}</text>`);
-      parts.push(`<text class="s" x="${x + 10}" y="${boxY + 45}">${svgEsc(String(n.tech || '').slice(0, 22))}</text></g>`);
+      parts.push(`<text class="t" x="${x + 10}" y="${boxY + 25}">${svgEsc(clipSvg(n.title, 19))}</text>`);
+      parts.push(`<text class="s" x="${x + 10}" y="${boxY + 45}">${svgEsc(clipSvg(n.tech, 22))}</text></g>`);
     });
     parts.push(`<g transform="translate(8 118)">
       <path class="ln code" d="M0 0 H32"/><text class="s" x="40" y="4">CODE — суцільна основна</text>
@@ -2345,6 +2390,60 @@ async function checkout(cart, discountPercent) {
     $('#arch-ops').textContent = plan.monthlyOps || '';
     const ql = $('#arch-qs'); ql.replaceChildren(); (plan.questions || []).forEach((q) => ql.append(el('li', '', q)));
   }
+
+  function renderTaskFootCallout(task) {
+    const box = $('#task-foot-callout');
+    box.replaceChildren();
+    let rc = String(task?.relatedCase || '').trim();
+    if (rc === 'gost') rc = 'spec';
+    const label = CASE_TITLES_UA[rc];
+    if (label && document.getElementById(rc)) {
+      const row = el('div');
+      row.append(document.createTextNode('Схожий робочий стенд нижче: '));
+      const a = el('a', '', label + ' ↓');
+      a.href = '#' + rc;
+      row.append(a);
+      box.append(row);
+    }
+    box.append(el('div', '', 'Нижче — відкритий проєкт LedgerGuard та 11 інтерактивних стендів, які можна перевірити наживо ↓'));
+    box.hidden = false;
+  }
+
+  function applyCustomTask(task) {
+    activeCustomTask = task;
+    const archSec = $('#architect');
+    const mainList = $('.album-main');
+    if (archSec && mainList && mainList.firstElementChild !== archSec) {
+      mainList.prepend(archSec);
+    }
+    archSec.classList.add('is-task-hero', 'ch-reveal');
+    $('#arch-eyebrow').textContent = 'Попередній розбір вашого ТЗ';
+    if (task.title) {
+      $('#arch-title').textContent = task.title;
+      document.title = `${task.title} — Beelsik`;
+    }
+    $('#arch-presets').hidden = true;
+    $('#task-brief-head').hidden = false;
+    $('#arch-in').value = task.brief || '';
+    renderArchPlan(task);
+    $('#arch-note').textContent = 'Готовий розбір під ваше ТЗ · можна уточнити текст вище та перебудувати';
+    renderTaskFootCallout(task);
+  }
+
+  $('#task-show-presets').onclick = () => {
+    activeCustomTask = null;
+    $('#arch-presets').hidden = false;
+    $('#task-brief-head').hidden = true;
+    $('#task-foot-callout').hidden = true;
+    $('#arch-eyebrow').innerHTML = defaultArchEyebrowHtml;
+    $('#arch-title').innerHTML = defaultArchTitleHtml;
+    $('#architect').classList.remove('is-task-hero');
+    document.title = 'Beelsik — ШІ-агенти, RAG, Vision OCR та автоматизація процесів';
+    $('#arch-in').value = ARCH_PRESETS_UA[0].text;
+    $$('#arch-presets .chip').forEach((x, idx) => x.setAttribute('aria-pressed', idx === 0));
+    renderArchPlan(ARCH_DEFAULT_PLAN_UA);
+    $('#arch-note').textContent = '';
+  };
 
   ARCH_PRESETS_UA.forEach((p, idx) => {
     const b = el('button', 'chip', p.label); b.type = 'button'; if (idx === 0) b.setAttribute('aria-pressed', 'true');
@@ -2369,9 +2468,12 @@ async function checkout(cart, discountPercent) {
   $('#arch-btn').onclick = runArchScoper;
   $('#arch-dl').onclick = () => {
     const p = currentArchPlan;
+    const heading = activeCustomTask?.title || 'Архітектурний план та етапи проєкту';
+    const briefTxt = $('#arch-in').value.trim();
     const md = [
-      `# Архітектурний план та етапи проєкту`,
-      `\n> ${p.summary}\n`,
+      `# ${heading}`,
+      ...(briefTxt ? [`\n## Вихідне ТЗ\n${briefTxt}`] : []),
+      `\n> ${p.summary || ''}\n`,
       `## Конвеєр обробки`,
       ...(p.nodes || []).map((n, i) => `${i + 1}. **${n.title}** (${n.tech}) — \`${n.kind}\``),
       `\n## Звичайний код vs ШІ`,
@@ -2381,13 +2483,177 @@ async function checkout(cart, discountPercent) {
       ...(p.split?.ai || []).map((x) => `- ${x}`),
       `\n## Етапи реалізації`,
       ...(p.milestones || []).map((m) => `- **${m.phase}**: ${m.deliverable} (*${m.estimate}*)`),
-      `\n## Щомісячні витрати на інфраструктуру\n${p.monthlyOps}`,
+      `\n## Щомісячні витрати на інфраструктуру\n${p.monthlyOps || ''}`,
       `\n## Питання на старті`,
       ...(p.questions || []).map((q) => `- ${q}`),
     ].join('\n');
+    const slugName = activeCustomTask?.slug && /^[a-z0-9_-]+$/i.test(activeCustomTask.slug) ? activeCustomTask.slug : 'architecture';
     const url = URL.createObjectURL(new Blob([md], { type: 'text/markdown;charset=utf-8' }));
-    const a = document.createElement('a'); a.href = url; a.download = 'architecture-plan-ua.md'; document.body.appendChild(a); a.click(); a.remove();
+    const a = document.createElement('a'); a.href = url; a.download = `${slugName}-plan-ua.md`; document.body.appendChild(a); a.click(); a.remove();
   };
+
+  function b64uToBytes(str) {
+    const pad = str.length % 4 ? '='.repeat(4 - (str.length % 4)) : '';
+    const b64 = (str + pad).replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function bytesToB64u(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 8192) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    }
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  async function decodeCompressedTask(rawVal) {
+    if (rawVal.startsWith('b64:')) {
+      const s = rawVal.slice(4);
+      if (s.length > 24000) throw new Error('Payload too large');
+      return JSON.parse(new TextDecoder().decode(b64uToBytes(s)));
+    }
+    if (rawVal.startsWith('z:')) {
+      const s = rawVal.slice(2);
+      if (s.length > 24000) throw new Error('Payload too large');
+      if (typeof DecompressionStream === 'undefined') throw new Error('DecompressionStream unavailable');
+      const stream = new Blob([b64uToBytes(s)]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      const reader = stream.getReader();
+      const chunks = [];
+      let total = 0;
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > 32768) {
+          try { await reader.cancel(); } catch {}
+          throw new Error('Decompressed task exceeds 32 KB limit');
+        }
+        chunks.push(value);
+      }
+      const merged = new Uint8Array(total);
+      let off = 0;
+      for (const c of chunks) { merged.set(c, off); off += c.byteLength; }
+      return JSON.parse(new TextDecoder().decode(merged));
+    }
+    return null;
+  }
+  async function encodeCompressedTask(obj) {
+    const bytes = new TextEncoder().encode(JSON.stringify(obj));
+    if (typeof CompressionStream === 'undefined') return 'b64:' + bytesToB64u(bytes);
+    const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    const buf = await new Response(stream).arrayBuffer();
+    return 'z:' + bytesToB64u(new Uint8Array(buf));
+  }
+
+  async function initTaskFromUrl() {
+    if (!taskParamBoot) return;
+    let task = null;
+    try {
+      if (taskParamBoot.startsWith('z:') || taskParamBoot.startsWith('b64:')) {
+        task = await decodeCompressedTask(taskParamBoot);
+      } else if (/^[a-z0-9][a-z0-9_-]{0,63}$/i.test(taskParamBoot)) {
+        const baseDir = location.pathname
+          .replace(/\/ua(?:\/index\.html)?\/?$/i, '/')
+          .replace(/\/[^/]*\.html$/i, '/')
+          .replace(/\/?$/, '/');
+        const taskPath = `${baseDir}tasks/${encodeURIComponent(taskParamBoot)}.json`;
+        let r;
+        try {
+          r = await fetch(taskPath, { cache: 'no-cache' });
+        } catch (fetchErr) {
+          if (API_BASE) r = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskParamBoot)}.json`, { cache: 'no-cache' });
+          else throw fetchErr;
+        }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        task = await r.json();
+      } else {
+        throw new Error('Invalid task parameter');
+      }
+      if (!task || typeof task !== 'object' || !Array.isArray(task.nodes) || !task.nodes.length) {
+        throw new Error('Invalid task structure');
+      }
+      applyCustomTask(task);
+    } catch {
+      $('#arch-note').textContent = `Розбір «${taskParamBoot.slice(0, 40)}» не знайдено — вставте текст ТЗ вище та натисніть «Розібрати задачу».`;
+    }
+  }
+
+  function initPrivateComposer() {
+    if (!composeModeBoot) return;
+    const archBody = $('#architect .ch-sheet__body');
+    if (!archBody) return;
+    const box = el('div', 'task-compose-box');
+    box.id = 'task-compose-box';
+    box.append(el('span', 'ch-label', 'Composer (?compose=1) · Генератор посилання під замовлення'));
+    const row1 = el('div', 'two');
+    const slugIn = el('input'); slugIn.type = 'text'; slugIn.id = 'cmp-slug';
+    slugIn.placeholder = 'slug замовлення (напр. keycrm-bot)';
+    slugIn.value = (activeCustomTask?.slug || 'custom-order');
+    const titleIn = el('input'); titleIn.type = 'text'; titleIn.id = 'cmp-title';
+    titleIn.placeholder = 'Заголовок розбору (необов’язково)';
+    titleIn.value = activeCustomTask?.title || '';
+    row1.append(slugIn, titleIn);
+
+    const caseSel = el('select'); caseSel.id = 'cmp-case';
+    Object.entries(CASE_TITLES_UA).forEach(([k, lbl]) => {
+      const o = el('option', '', lbl); o.value = k;
+      if ((activeCustomTask?.relatedCase || 'project') === k) o.selected = true;
+      caseSel.append(o);
+    });
+
+    const rowActions = el('div', 'row');
+    const btnJson = el('button', 'btn ghost sm', 'Завантажити <slug>.json у tasks/'); btnJson.type = 'button'; btnJson.id = 'cmp-dl-json';
+    const btnCopyZ = el('button', 'btn sm', 'Скопіювати миттєве посилання (?task=z:…)'); btnCopyZ.type = 'button'; btnCopyZ.id = 'cmp-copy-z';
+    const cmpNote = el('span', 'note'); cmpNote.id = 'cmp-note';
+    const urlOut = el('input'); urlOut.type = 'text'; urlOut.id = 'cmp-url-out'; urlOut.readOnly = true; urlOut.hidden = true;
+
+    const buildTaskPayload = () => {
+      const slug = (slugIn.value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'custom-order').slice(0, 64);
+      const brief = $('#arch-in').value.trim();
+      const firstLine = brief.split(/[.!?\n]/)[0].trim().slice(0, 72);
+      const title = titleIn.value.trim() || (firstLine ? `Розбір задачі: ${firstLine}` : 'Розбір архітектури під ваше ТЗ');
+      return {
+        slug,
+        lang: LANG,
+        createdAt: new Date().toISOString().slice(0, 10),
+        title,
+        brief,
+        summary: currentArchPlan.summary || '',
+        nodes: (currentArchPlan.nodes || []).slice(0, 6),
+        split: currentArchPlan.split || { code: [], ai: [] },
+        milestones: currentArchPlan.milestones || [],
+        monthlyOps: currentArchPlan.monthlyOps || '',
+        questions: currentArchPlan.questions || [],
+        relatedCase: caseSel.value || 'project',
+        pitch: `Вітаю! Підготував попередню архітектуру під вашу задачу: https://beelsik.github.io/portfolio/ua/?task=${slug}`,
+      };
+    };
+
+    btnJson.onclick = () => {
+      const obj = buildTaskPayload();
+      const url = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2) + '\n'], { type: 'application/json;charset=utf-8' }));
+      const a = document.createElement('a'); a.href = url; a.download = `${obj.slug}.json`; document.body.appendChild(a); a.click(); a.remove();
+      cmpNote.textContent = `Завантажено tasks/${obj.slug}.json`;
+    };
+    btnCopyZ.onclick = async () => {
+      try {
+        const obj = buildTaskPayload();
+        const encoded = await encodeCompressedTask(obj);
+        const link = `${location.origin}${location.pathname}?task=${encoded}`;
+        urlOut.value = link;
+        urlOut.hidden = false;
+        try { await navigator.clipboard.writeText(link); cmpNote.textContent = `Скопійовано (${link.length} симв.)`; }
+        catch { urlOut.select(); cmpNote.textContent = `Готово (${link.length} симв.) — скопіюйте з поля нижче`; }
+      } catch (err) {
+        cmpNote.textContent = 'Помилка кодування: ' + (err?.message || err);
+      }
+    };
+
+    rowActions.append(caseSel, btnJson, btnCopyZ, cmpNote);
+    box.append(row1, rowActions, urlOut);
+    archBody.append(box);
+  }
 
   /* ==================== 10 RED-TEAM ARENA ==================== */
   $('#tab-rt-arena').onclick = () => {
@@ -2523,6 +2789,7 @@ async function checkout(cart, discountPercent) {
 
   let lgSessionId = 'lg_ua_' + Math.random().toString(36).slice(2, 10);
   let lgPresetsCache = null;
+  let lgBootRetried = false;
 
   const lgFmtMinor = (minor, cur) => {
     const syms = { UAH: '₴', EUR: '€', USD: '$', GBP: '£' };
@@ -2638,7 +2905,7 @@ async function checkout(cart, discountPercent) {
     }
   }
 
-  async function runLedgerGuard({ rawText = null, file = null, reset = false } = {}) {
+  async function runLedgerGuard({ rawText = null, file = null, reset = false, isBoot = false } = {}) {
     $('#lg-run-btn').disabled = true;
     $('#lg-status').textContent = 'Звіряю через Python…';
     try {
@@ -2668,7 +2935,13 @@ async function checkout(cart, discountPercent) {
       const data = await r.json();
       renderLedgerGuardReport(data);
     } catch (err) {
-      $('#lg-status').textContent = `Сервер офлайн (${err.message})`;
+      if (API_BASE && isBoot && !lgBootRetried) {
+        lgBootRetried = true;
+        $('#lg-status').textContent = 'Прогріваю хмарний Python-рушій…';
+        setTimeout(() => runLedgerGuard({ rawText: $('#lg-input').value, reset: true, isBoot: false }), 12000);
+      } else {
+        $('#lg-status').textContent = API_BASE ? `Сервер API недоступний (${err.message})` : `Сервер офлайн (${err.message})`;
+      }
     } finally {
       $('#lg-run-btn').disabled = false;
     }
@@ -2676,7 +2949,7 @@ async function checkout(cart, discountPercent) {
 
   async function initLedgerGuard() {
     $('#lg-input').value = LG_FALLBACK_UA.traps;
-    if (location.protocol === 'http:' || location.protocol === 'https:') {
+    if (location.protocol === 'http:' || location.protocol === 'https:' || API_BASE) {
       try {
         const pr = await fetch('/api/ledgerguard/presets?lang=uk');
         if (pr.ok) {
@@ -2687,7 +2960,7 @@ async function checkout(cart, discountPercent) {
           }
         }
       } catch {}
-      runLedgerGuard({ rawText: $('#lg-input').value, reset: true });
+      runLedgerGuard({ rawText: $('#lg-input').value, reset: true, isBoot: true });
     }
   }
 
@@ -2723,6 +2996,22 @@ async function checkout(cart, discountPercent) {
   }
 
   /* Boot */
+  if (taskParamBoot) {
+    const archSec = $('#architect');
+    const mainList = $('.album-main');
+    if (archSec && mainList) {
+      mainList.prepend(archSec);
+      archSec.classList.add('is-task-hero', 'ch-reveal');
+      window.scrollTo(0, 0);
+    }
+    $('#arch-note').textContent = 'Завантажую розбір задачі…';
+  }
+  initTaskFromUrl().then(() => {
+    initPrivateComposer();
+    if (composeModeBoot && !taskParamBoot) {
+      $('#architect')?.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  });
   initLedgerGuard();
   resetChat();
   runRagSearch('Скільки днів безкоштовне зберігання у Варшаві?', false);
@@ -2757,7 +3046,7 @@ async function checkout(cart, discountPercent) {
       }
     }
   };
-  if (location.protocol === 'http:' || location.protocol === 'https:') {
+  if (location.protocol === 'http:' || location.protocol === 'https:' || API_BASE) {
     loadBootHealth();
   }
 })();
