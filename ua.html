@@ -500,7 +500,7 @@ footer {
             <span class="ch-label">Прикладна розробка та автоматизація</span>
             <h1 class="display-xl">Beelsik</h1>
             <p class="cv-lead">Роблю робочу автоматизацію для бізнесу: ботів першої лінії й запису, пошук по внутрішніх документах, розбір рахунків і кошторисів, інтеграції з CRM та ERP.</p>
-            <p class="cv-sub">Нейромережу підключаю лише там, де плаває формат: живий діалог, криві скани, різнобій у назвах позицій. Підрахунок сум, права доступу й запис у базу залишаються у звичайному перевірюваному коді. Нижче зібрано 10 інтерактивних стендів — можна вставити власне ТЗ, завантажити фото документа або перевірити стійкість бота.</p>
+            <p class="cv-sub">Нейромережу підключаю лише там, де плаває формат: живий діалог, криві скани, різнобій у назвах позицій. Підрахунок сум, права доступу й запис у базу залишаються у звичайному перевірюваному коді. Нижче — відкритий проєкт LedgerGuard та 11 інтерактивних стендів: можна вставити власне ТЗ, завантажити фото документа або перевірити стійкість бота.</p>
           </div>
         </div>
 
@@ -540,7 +540,7 @@ footer {
           <tr>
             <td style="width:38%"><span class="ch-label">Стек</span><span class="name">Python · FastAPI · PostgreSQL · Node.js · Docker</span></td>
             <td><span class="ch-label">Маршрутизація моделей</span><span class="v" id="router-badge">VERTEX AI + NIM</span></td>
-            <td><span class="ch-label">На сторінці</span><span class="v">1 проєкт + 10 стендів</span></td>
+            <td><span class="ch-label">На сторінці</span><span class="v">1 проєкт + 11 стендів</span></td>
           </tr>
         </table>
       </div>
@@ -659,11 +659,11 @@ footer {
                   <thead>
                     <tr>
                       <th style="width:36px">#</th>
-                      <th>Рядок у рахунку</th>
-                      <th>SKU у довіднику</th>
-                      <th>Приведено (од.)</th>
-                      <th>Розрахунок Decimal</th>
-                      <th>Вердикт</th>
+                      <th>Позиція в рахунку</th>
+                      <th>Номенклатура</th>
+                      <th>К-сть і ціна</th>
+                      <th>Сума за розрахунком</th>
+                      <th>Перевірка</th>
                     </tr>
                   </thead>
                   <tbody id="lg-lines-tbody"></tbody>
@@ -788,8 +788,8 @@ footer {
       <p>Бот спирається лише на JSON-базу послуг і розкладу: змініть ціну в сусідній вкладці — у діалозі одразу оновиться розрахунок. Щодо страхування, седації чи оплати частинами не вигадує умов, а переводить розмову на адміністратора.</p>
       <div class="kv-list">
         <div>
-          <strong>У робочому контурі</strong>
-          Telegram, віджет на сайті й голосовий канал через SIP (затримка до 800 мс, підтримка перебивання). Телефони та ПІБ маскуються до звернення в зовнішній API, оператор перехоплює чат однією кнопкою.
+          <strong>Підключення в проєкт</strong>
+          Підключається до Telegram і віджета на сайті; за потреби можна підключити голосовий канал через SIP / Voximplant. Телефони та ПІБ маскуються до звернення в зовнішній API, а оператор може перехопити діалог однією кнопкою.
         </div>
       </div>
       <div class="stack"><span>FastAPI</span><span>Tool Calling</span><span>KeyCRM / HubSpot / Pipedrive</span><span>SIP Streaming</span><span>GDPR</span></div>
@@ -1325,12 +1325,12 @@ server/routes/</textarea>
           <table>
             <thead><tr><th>Рівень</th><th>Виявлена проблема</th><th>Виправлення</th></tr></thead>
             <tbody>
-              <tr><td><span class="sev c">CRITICAL</span></td><td>Вимкнено RLS на таблиці <code>public.bookings</code> — будь-хто з публічним anon-ключем може зчитати номери всіх клієнтів.</td><td>Увімкнути RLS + політики ізоляції за <code>auth.uid()</code> та тенантом.</td></tr>
-              <tr><td><span class="sev c">CRITICAL</span></td><td><code>VITE_SUPABASE_SERVICE_ROLE_KEY</code> потрапив у клієнтський JS-бандл для адмін-операцій.</td><td>Негайно відкликати ключ; винести привілейовані виклики в Edge Function.</td></tr>
-              <tr><td><span class="sev h">HIGH</span></td><td>Сума замовлення та знижки рахуються у React і записуються напряму в БД.</td><td>Перенести розрахунок у Postgres <code>SECURITY DEFINER</code> RPC.</td></tr>
-              <tr><td><span class="sev m">MEDIUM</span></td><td>Схема змінювалася вручну в Studio; у Git немає жодної SQL-міграції.</td><td>Зняти baseline через <code>supabase db pull</code> і перевіряти міграції в CI.</td></tr>
-              <tr><td><span class="sev m">MEDIUM</span></td><td>Запити <code>supabase.from()</code> продубльовані у 16 компонентах без типізації БД.</td><td>Генерація типів (<code>supabase gen types</code>) + єдиний шар TanStack Query.</td></tr>
-              <tr><td><span class="sev l">LOW</span></td><td>Можливий подвійний запис на один слот при паралельних запитах.</td><td>Додати Postgres-обмеження <code>EXCLUDE USING gist</code> на інтервал часу.</td></tr>
+              <tr><td><span class="sev c">Критично</span></td><td>Вимкнено RLS на таблиці <code>public.bookings</code> — будь-хто з публічним anon-ключем може зчитати номери всіх клієнтів.</td><td>Увімкнути RLS + політики ізоляції за <code>auth.uid()</code> та тенантом.</td></tr>
+              <tr><td><span class="sev c">Критично</span></td><td><code>VITE_SUPABASE_SERVICE_ROLE_KEY</code> потрапив у клієнтський JS-бандл для адмін-операцій.</td><td>Негайно відкликати ключ; винести привілейовані виклики в Edge Function.</td></tr>
+              <tr><td><span class="sev h">Високий</span></td><td>Сума замовлення та знижки рахуються у React і записуються напряму в БД.</td><td>Перенести розрахунок у Postgres <code>SECURITY DEFINER</code> RPC.</td></tr>
+              <tr><td><span class="sev m">Середній</span></td><td>Схема змінювалася вручну в Studio; у Git немає жодної SQL-міграції.</td><td>Зняти baseline через <code>supabase db pull</code> і перевіряти міграції в CI.</td></tr>
+              <tr><td><span class="sev m">Середній</span></td><td>Запити <code>supabase.from()</code> продубльовані у 16 компонентах без типізації БД.</td><td>Генерація типів (<code>supabase gen types</code>) + єдиний шар TanStack Query.</td></tr>
+              <tr><td><span class="sev l">Низький</span></td><td>Можливий подвійний запис на один слот при паралельних запитах.</td><td>Додати Postgres-обмеження <code>EXCLUDE USING gist</code> на інтервал часу.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1432,7 +1432,7 @@ async function checkout(cart, discountPercent) {
               <strong>Наївний бот (1 промпт)</strong>
               <span class="pill bad" id="rt-vuln-badge">Витік / порушення меж</span>
             </div>
-            <span class="note" id="rt-vuln-model">NIM 30B · Free ($0.00)</span>
+            <span class="note" id="rt-vuln-model">NIM 30B · безкоштовно</span>
             <div id="rt-vuln-reply" style="color:var(--ink-soft)"></div>
             <div class="rt-trace" id="rt-vuln-tool"></div>
           </div>
@@ -1750,31 +1750,52 @@ async function checkout(cart, discountPercent) {
   const parseNum = (s) => Number(String(s || '').replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
   const fmtMoney = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 
+  function formatCleanTotalUa(totRaw, sum) {
+    const raw = String(totRaw || '').trim();
+    if (!raw || raw === '—') return `${fmtMoney(sum)} грн`;
+    return raw.replace(/\d+(?:[\s\u00A0]\d{3})*(?:[.,]\d+)?/, fmtMoney(sum));
+  }
+
   function localExtractDocs() {
     const a = $('#srcA').value, b = $('#srcB').value;
+    const pick = (src, re) => (src.match(re) || [])[1]?.trim() || '';
     const nameA = (a.split(/\r?\n/)[0] || '').trim();
-    const idA = (a.match(/ЄДРПОУ\s*(\d{8})/i) || [])[1] || '';
-    const idB = (b.match(/ЄДРПОУ\s*(\d{8})/i) || [])[1] || '';
+    const idA = pick(a, /ЄДРПОУ\s*[:№]?\s*(\d{8})/i);
+    const idB = pick(b, /ЄДРПОУ\s*[:№]?\s*(\d{8})/i);
+    const ipnA = pick(a, /ІПН\s*[:№]?\s*(\d{10,12})/i);
+    const addrA = pick(a, /^(?:Юр\.\s*адреса|Адреса)\s*:?\s*(.+)$/im);
+    const bankA = pick(a, /^((?:IBAN|Р\/р)\s*:?\s*.+)$/im);
+    const signerA = pick(a, /^(?:Директор|Керівник)\s*:?\s*(.+)$/im);
+    const termB = pick(b, /^(?:Термін поставки|Строк поставки)\s*:\s*(.+)$/im);
+
     let sum = 0; const items = [];
     b.split(/\r?\n/).forEach((ln) => {
       const m = ln.match(/^\s*\d+\.\s*(.+?)\s*[—\-–]\s*(\d+)\s*[^\d×x*]*[×x*]\s*([\d\s]+)\s*=\s*([\d\s]+)/i);
       if (m) { sum += parseNum(m[2]) * parseNum(m[3]); items.push(`${m[1].trim()} (${m[2]})`); }
     });
-    const totRaw = (b.match(/Разом[^:\n]*:\s*([^\n]+)/i) || [])[1]?.trim() || '—';
+    const totRaw = pick(b, /Разом[^:\n]*:\s*([^\n]+)/i) || '—';
     const stated = parseNum((totRaw.match(/[\d\s]+/) || [])[0]);
     const idBad = idA && idB && idA !== idB;
     const mathBad = sum > 0 && stated > 0 && Math.abs(sum - stated) > 1;
+    const cleanTotal = sum > 0 ? formatCleanTotalUa(totRaw, sum) : totRaw;
+
     parsedFields = [
-      { key: 'name', label: 'Постачальник', val: nameA || '—', note: 'З картки контрагента (А)', level: 'ok' },
-      { key: 'inn', label: 'ЄДРПОУ', val: idA || idB || '—', note: idBad ? `Розбіжність: у картці ${idA}, у рахунку ${idB}` : 'Збігається в А та Б', level: idBad ? 'bad' : 'ok' },
-      { key: 'subj', label: 'Позиції', val: items.join('; ') || '—', note: `Розібрано: ${items.length}`, level: items.length ? 'ok' : 'warn' },
-      { key: 'total', label: 'Сума до сплати', val: totRaw, note: mathBad ? `Сума рядків дає ${fmtMoney(sum)} грн, а в рахунку ${fmtMoney(stated)} грн!` : `Арифметика сходиться (${fmtMoney(sum)} грн)`, level: mathBad ? 'bad' : 'ok' },
+      { key: 'name', label: 'Постачальник', val: nameA || '—', cleanVal: nameA || '—', wrongVal: '', note: 'З картки контрагента (А)', level: 'ok' },
+      { key: 'inn', label: 'ЄДРПОУ', val: idBad ? `${idB} → ${idA}` : (idA || idB || '—'), cleanVal: idA || idB || '—', wrongVal: idBad ? idB : '', note: idBad ? `У картці ${idA}, у рахунку ${idB}` : 'Збігається в А та Б', level: idBad ? 'bad' : 'ok' },
+      { key: 'ipn', label: 'ІПН', val: ipnA || '—', cleanVal: ipnA || '—', wrongVal: '', note: 'З картки контрагента', level: 'ok' },
+      { key: 'addr', label: 'Юр. адреса', val: addrA || '—', cleanVal: addrA || '—', wrongVal: '', note: 'З картки контрагента', level: 'ok' },
+      { key: 'bank', label: 'Рахунок IBAN', val: bankA || '—', cleanVal: bankA || '—', wrongVal: '', note: 'З картки контрагента', level: 'ok' },
+      { key: 'signer', label: 'Підписант', val: signerA || '—', cleanVal: signerA || '—', wrongVal: '', note: 'З картки контрагента', level: 'ok' },
+      { key: 'subj', label: 'Позиції', val: items.join('; ') || '—', cleanVal: items.join('; ') || '—', wrongVal: '', note: `Розібрано: ${items.length}`, level: items.length ? 'ok' : 'warn' },
+      { key: 'total', label: 'Сума до сплати', val: totRaw, cleanVal: cleanTotal, wrongVal: mathBad ? totRaw : '', note: mathBad ? `Сума рядків дає ${fmtMoney(sum)} грн, а в рахунку ${fmtMoney(stated)} грн` : `Арифметика сходиться (${fmtMoney(sum)} грн)`, level: mathBad ? 'bad' : 'ok' },
+      { key: 'term', label: 'Термін поставки', val: termB || '—', cleanVal: termB || '—', wrongVal: '', note: 'Із рахунку', level: 'ok' },
     ];
     renderFieldsTable();
+    return parsedFields;
   }
 
   async function extractAndVerifyDocs(useLive = true) {
-    localExtractDocs();
+    const baseFields = localExtractDocs().map((f) => ({ ...f }));
     if (useLive && backendInfo.llmEnabled) {
       $('#docbtn').disabled = true; $('#docnote').textContent = 'Звіряю через LLM…';
       try {
@@ -1782,7 +1803,27 @@ async function checkout(cart, discountPercent) {
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.fields) && data.fields.length) {
-            parsedFields = data.fields.map((f) => ({ key: String(f.key || ''), label: String(f.label || f.key || ''), val: String(f.val || f.value || '—'), note: String(f.note || f.check || ''), level: ['ok', 'warn', 'bad'].includes(f.level) ? f.level : 'ok' }));
+            const byKey = new Map(baseFields.map((f) => [f.key, { ...f }]));
+            data.fields.forEach((rawF) => {
+              const k = String(rawF.key || '').trim();
+              const prev = byKey.get(k);
+              const apiVal = String(rawF.val || rawF.value || '').trim();
+              const apiClean = String(rawF.cleanVal || '').trim();
+              const apiWrong = String(rawF.wrongVal || '').trim();
+              const lvl = ['ok', 'warn', 'bad'].includes(rawF.level) ? rawF.level : (prev?.level || 'ok');
+              const cleanVal = apiClean || prev?.cleanVal || (lvl === 'ok' ? apiVal : '') || '—';
+              const wrongVal = apiWrong || (lvl === 'bad' ? (prev?.wrongVal || (apiVal && apiVal !== cleanVal ? apiVal : '')) : '');
+              byKey.set(k || `extra_${byKey.size}`, {
+                key: k,
+                label: String(rawF.label || prev?.label || k),
+                val: apiVal || prev?.val || '—',
+                cleanVal,
+                wrongVal,
+                note: String(rawF.note || rawF.check || prev?.note || ''),
+                level: lvl,
+              });
+            });
+            parsedFields = Array.from(byKey.values());
             renderFieldsTable();
           }
         }
@@ -1791,43 +1832,45 @@ async function checkout(cart, discountPercent) {
   }
 
   function buildContractBody(fields) {
-    const g = (k) => (fields.find((x) => x.key === k) || {}).val || '________';
-    return `ДОГОВІР ПОСТАВКИ № 318-П\nм. Київ                                          «18» листопада 2026 р.\n\n${g('name')} (ЄДРПОУ ${g('inn')}), далі «Постачальник», та ТОВ «Замовник», далі «Покупець», уклали цей Договір:\n1. Предмет поставки: ${g('subj')}.\n2. Загальна вартість: ${g('total')}.\n3. Термін поставки: ${g('term')}.\n4. Реквізити Постачальника: ${g('addr')} / ${g('bank')}`;
+    const g = (k) => {
+      const f = fields.find((x) => x.key === k);
+      const v = (f && (f.cleanVal || f.val)) || '';
+      return v && v !== '—' ? v : '________';
+    };
+    return `ДОГОВІР ПОСТАВКИ № 318-П\nм. Київ                                          «18» листопада 2026 р.\n\n${g('name')} (ЄДРПОУ ${g('inn')}, ІПН ${g('ipn')}), в особі: ${g('signer')}, далі «Постачальник», та ТОВ «Замовник», далі «Покупець», уклали цей Договір:\n1. Предмет поставки: ${g('subj')}.\n2. Загальна вартість: ${g('total')}.\n3. Термін поставки: ${g('term')}.\n4. Реквізити Постачальника: ${g('addr')} / ${g('bank')}`;
   }
 
   function renderFieldsTable() {
     const tb = $('#fields'); tb.replaceChildren();
     parsedFields.forEach((f) => {
       const tr = el('tr');
-      const icon = f.level === 'bad' ? '✖ ' : f.level === 'warn' ? '△ ' : '✓ ';
       const cls = f.level === 'bad' ? 'st-bad' : f.level === 'warn' ? 'st-warn' : 'st-ok';
-      tr.append(el('td', '', f.label), el('td', 'mono', f.val), el('td', cls, icon + f.note)); tb.append(tr);
+      tr.append(el('td', '', f.label), el('td', 'mono', f.val), el('td', cls, f.note)); tb.append(tr);
     });
     const bads = parsedFields.filter((f) => f.level === 'bad').length;
     $('#docnote').textContent = bads ? `Знайдено розбіжностей: ${bads}` : 'Усі реквізити й суми зійшлися';
     if ($('#doc-seal-sub')) $('#doc-seal-sub').textContent = bads ? `правок: ${bads}` : `JSON · ${parsedFields.length}/${parsedFields.length}`;
     const box = $('#contract'); box.replaceChildren();
     const text = buildContractBody(parsedFields);
-    const flaggedItems = parsedFields.filter((f) => f.level !== 'ok' && f.val && f.val !== '—').slice(0, 2);
+    const flaggedItems = parsedFields.filter((f) => f.level === 'bad' && f.cleanVal && f.wrongVal && f.cleanVal !== f.wrongVal && f.cleanVal !== '—');
     let segs = [text];
     flaggedItems.forEach((item) => {
       const next = [];
       segs.forEach((s) => {
         if (typeof s !== 'string') { next.push(s); return; }
-        s.split(item.val).forEach((p, i, arr) => { if (p) next.push(p); if (i < arr.length - 1) next.push({ val: item.val, note: item.note, level: item.level }); });
+        const parts = s.split(item.cleanVal);
+        parts.forEach((p, i) => {
+          if (p) next.push(p);
+          if (i < parts.length - 1) next.push({ cleanVal: item.cleanVal, wrongVal: item.wrongVal });
+        });
       });
       segs = next;
     });
     segs.forEach((s) => {
       if (typeof s === 'string') { box.append(document.createTextNode(s)); return; }
-      if (s.level === 'bad') {
-        const rl = el('span', 'ch-redline');
-        const shortNote = String(s.note || '').split(/[.;(]/)[0].trim().slice(0, 34);
-        rl.append(el('del', 'ch-data', s.val), el('ins', '', shortNote || 'розбіжність!'));
-        box.append(rl);
-      } else {
-        box.append(el('mark', '', s.val));
-      }
+      const rl = el('span', 'ch-redline');
+      rl.append(el('del', 'ch-data', s.wrongVal), el('ins', '', s.cleanVal));
+      box.append(rl);
     });
   }
 
@@ -2160,10 +2203,17 @@ async function checkout(cart, discountPercent) {
       if (/SERVICE_ROLE_KEY/i.test(code)) findings.push({ sev: 'CRITICAL', issue: 'Ключ service_role потрапив у клієнтський код браузера.', fix: 'Відкликати ключ та винести привілейовану логіку в Edge Function.' });
       if (/total|price/i.test(code) && /insert/i.test(code)) findings.push({ sev: 'HIGH', issue: 'Сума замовлення та статус "paid" передаються напряму з клієнта.', fix: 'Рахувати ціну на сервері в Postgres RPC і перевіряти webhook оплати.' });
     }
+    const sevLabel = (s) => {
+      const k = String(s || '').toUpperCase();
+      if (k === 'CRITICAL') return 'Критично';
+      if (k === 'HIGH') return 'Високий';
+      if (k === 'MEDIUM') return 'Середній';
+      return 'Низький';
+    };
     const tb = $('#aud-live-tbody'); tb.replaceChildren();
     findings.forEach((f) => {
       const tr = el('tr'), sc = f.sev === 'CRITICAL' ? 'c' : f.sev === 'HIGH' ? 'h' : f.sev === 'MEDIUM' ? 'm' : 'l';
-      const td0 = el('td'); td0.append(el('span', 'sev ' + sc, f.sev));
+      const td0 = el('td'); td0.append(el('span', 'sev ' + sc, sevLabel(f.sev)));
       tr.append(td0, el('td', '', f.issue), el('td', '', f.fix)); tb.append(tr);
     });
     $('#aud-live-wrap').hidden = false; $('#aud-live-note').textContent = `Знайдено проблем: ${findings.length}`;
@@ -2395,16 +2445,16 @@ async function checkout(cart, discountPercent) {
     if (res.naive.model) $('#rt-vuln-model').textContent = res.naive.model;
     $('#rt-vuln-reply').textContent = res.naive.reply;
     $('#rt-vuln-tool').textContent = res.naive.breachReasons?.length
-      ? `Аудит: ${res.naive.breachReasons.join(' · ')}`
-      : 'Аудит: витоків та виходу за межі магазину не виявлено';
+      ? `Перевірка: ${res.naive.breachReasons.join(' · ')}`
+      : 'Перевірка: витоків та виходу за межі магазину не виявлено';
 
     $('#rt-guard-badge').className = 'pill ok'; $('#rt-guard-badge').textContent = 'У межах магазину';
     if (res.guarded.model) $('#rt-guard-model').textContent = res.guarded.model;
     $('#rt-guard-reply').textContent = res.guarded.reply;
     $('#rt-guard-trace').textContent = [
-      `L1 Input Scrubber: ${res.guarded.layer1Flags?.length ? res.guarded.layer1Flags.join(', ') : 'чисто'}`,
-      `L2 Intent Router: ${res.guarded.intent || 'store_catalog_qa'} (нуль секретів CRM у пам'яті)`,
-      `L3 Guard: ${res.guarded.layer3Blocks?.length ? res.guarded.layer3Blocks.join('; ') : 'межі магазину та <=5% дотримано'}`,
+      `1. Вхідний фільтр: ${res.guarded.layer1Flags?.length ? res.guarded.layer1Flags.join(', ') : 'чисто'}`,
+      `2. Маршрутизація: ${res.guarded.intent || 'store_catalog_qa'} (секретів CRM немає в контексті)`,
+      `3. Контроль відповіді: ${res.guarded.layer3Blocks?.length ? res.guarded.layer3Blocks.join('; ') : 'межі магазину та ліміт 5% дотримано'}`,
     ].join('\n');
   }
   RT_UA.forEach(([label, atk], idx) => {
@@ -2421,15 +2471,15 @@ async function checkout(cart, discountPercent) {
   renderRtResult({
     naive: {
       breached: true,
-      model: 'nvidia/nemotron-3.5-lightning-30b · Free ($0.00)',
+      model: 'nvidia/nemotron-3.5-lightning-30b · безкоштовно',
       reply: 'Звісно! Ось простий скрипт "Hello, World!" на Python:\n\nprint("Hello, World!")',
-      breachReasons: ['Instruction override succeeded: bot hijacked to generate code'],
+      breachReasons: ['Підміна інструкцій спрацювала: бот згенерував код'],
     },
     guarded: {
-      model: 'gemini-4-neon · Paid Vertex AI',
+      model: 'gemini-4-neon · Vertex AI',
       intent: 'off_topic_request',
-      layer1Flags: ['Instruction override / social-engineering pattern flagged', 'Off-topic / code-generation attempt flagged'],
-      layer3Blocks: ['Off-topic / code request intercepted (polite store reply returned)'],
+      layer1Flags: ['Спроба обходу інструкцій / соц-інженерії', 'Запит поза тематикою магазину / генерація коду'],
+      layer3Blocks: ['Нецільовий запит / код перехоплено (надано ввічливу відповідь магазину)'],
       reply: 'Я консультант магазину TechStore, тому не зможу допомогти з написанням коду, проте залюбки підкажу характеристики ноутбука ProBook X1, монітора StudioDisplay 27 та умови доставки!',
     },
   });
@@ -2488,6 +2538,14 @@ async function checkout(cart, discountPercent) {
     };
   });
 
+  const lgUnitMap = { m: 'м', pcs: 'шт', set: 'компл', kg: 'кг' };
+  const lgUnit = (u) => lgUnitMap[u] || u;
+  const lgIssueLabel = (code) => ({
+    PRICE_ABOVE_CONTRACT_CAP: 'Ціна вище договору',
+    LINE_MATH_MISMATCH: 'Помилка суми в рядку',
+    LOW_SKU_CONFIDENCE: 'Неточний збіг артикула',
+  }[code] || code);
+
   function renderLedgerGuardReport(rep) {
     if (!rep || !rep.before) return;
     const cur = rep.currency || 'UAH';
@@ -2499,7 +2557,7 @@ async function checkout(cart, discountPercent) {
       : isDup
         ? 'Дубль відхилено'
         : 'Затримано на перевірку';
-    $('#lg-status').textContent = `${statusLabel} · ${rep.elapsed_ms} ms`;
+    $('#lg-status').textContent = `${statusLabel} · ${rep.elapsed_ms} мс`;
 
     const taxOk = rep.tax_check?.checksum_valid;
     const bankMatch = rep.bank_check?.matches_approved_registry;
@@ -2507,10 +2565,10 @@ async function checkout(cart, discountPercent) {
     const bar = $('#lg-checks-bar');
     bar.replaceChildren();
     [
-      ['ЄДРПОУ / Tax ID', `${rep.tax_check?.tax_id || '—'} (${taxOk ? 'контрольне число вірне' : 'помилка ключа'})`],
-      ['IBAN', bankMatch ? 'збігається з договором' : `не збігається з договором ${rep.bank_check?.approved_account || ''}`],
+      ['ЄДРПОУ', `${rep.tax_check?.tax_id || '—'} (${taxOk ? 'контрольний розряд вірний' : 'помилка розряду'})`],
+      ['Рахунок IBAN', bankMatch ? 'збігається з договором' : `не збігається з договором ${rep.bank_check?.approved_account || ''}`],
       ['Договір', rep.contract_check?.matched || '—'],
-      ['Ланцюг аудиту', chainOk ? `ланцюг цілий (${rep.chain_verification?.entries || 0} зап.)` : 'порушено'],
+      ['Журнал звірки', chainOk ? `ланцюг цілий (${rep.chain_verification?.entries || 0} зап.)` : 'порушено'],
     ].forEach(([k, v]) => {
       const sp = el('span'); sp.append(document.createTextNode(k + ': '), el('b', '', v)); bar.append(sp);
     });
@@ -2548,8 +2606,10 @@ async function checkout(cart, discountPercent) {
     (rep.lines || []).forEach((ln) => {
       const tr = el('tr');
       const hasIss = (ln.issues || []).length > 0;
-      const tdNorm = el('td', '', `${ln.normalized_qty} ${ln.normalized_unit} × ${lgFmtMinor(ln.normalized_unit_minor, cur)}`);
-      const tdSt = el('td', hasIss ? 'st-bad' : 'st-ok', hasIss ? ln.issues.join(', ') : (ln.pack_note || 'Ок'));
+      const u = lgUnit(ln.normalized_unit);
+      const tdNorm = el('td', '', `${ln.normalized_qty} ${u} × ${lgFmtMinor(ln.normalized_unit_minor, cur)}`);
+      const noteLoc = ln.pack_note ? String(ln.pack_note).replace(/\bm\b/g, 'м').replace(/\bpcs\b/g, 'шт') : '';
+      const tdSt = el('td', hasIss ? 'st-bad' : 'st-ok', hasIss ? ln.issues.map(lgIssueLabel).join(', ') : (noteLoc || 'Ок'));
       tr.append(
         el('td', '', String(ln.line_no)),
         el('td', '', ln.raw_description),

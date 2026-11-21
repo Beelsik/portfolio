@@ -22,8 +22,8 @@ _TEXTS = {
     "ru": {
         "dup": "Повторный документ (совпадает SHA-256 / номер счёта) заблокирован ключом идемпотентности.",
         "empty": "Не удалось распознать ни одной товарной строки — требуется проверка формата.",
-        "tax_bad": "Контрольное число налогового ID ({id}) не сходится ({reason}).",
-        "bank_bad": "Контрольный ключ/формат счёта ({acc}) некорректен ({reason}).",
+        "tax_bad": "Контрольное число ИНН ({id}) не сходится ({reason}).",
+        "bank_bad": "Контрольный ключ/формат расчётного счёта ({acc}) некорректен ({reason}).",
         "bank_swap": "Подмена расчётного счёта! В документе указан {actual}, по реестру/договору утверждён {expected}.",
         "line_math": "Строка {ln}: сумма в документе ({actual}) ≠ «кол-во × цена» ({expected}).",
         "low_sku": "Строка {ln}: неоднозначное совпадение со справочником ({desc}, уверенность {conf:.0%}).",
@@ -34,7 +34,7 @@ _TEXTS = {
     "uk": {
         "dup": "Повторний документ (збігається SHA-256 / номер рахунку) заблоковано ключем ідемпотентності.",
         "empty": "Не вдалося розпізнати жодного товарного рядка — потрібна ручна перевірка.",
-        "tax_bad": "Контрольна сума податкового ID ({id}) не збігається ({reason}).",
+        "tax_bad": "Контрольний розряд ЄДРПОУ ({id}) не збігається ({reason}).",
         "bank_bad": "Контрольний ключ/формат рахунку ({acc}) некоректний ({reason}).",
         "bank_swap": "Підміна банківського рахунку! У документі {actual}, за реєстром/договором затверджено {expected}.",
         "line_math": "Рядок {ln}: сума в документі ({actual}) ≠ «к-сть × ціна» ({expected}).",
@@ -136,7 +136,7 @@ class LedgerGuardEngine:
             computed_lines_sum_minor += exact_line_total
 
             pack = expand_pack_conversion(
-                line.description, line.qty, line.unit, line.unit_price_minor
+                line.description, line.qty, line.unit, line.unit_price_minor, lang=ui_lang
             )
             match = self.matcher.match(line.raw_code, line.description, naive_mode=False)
 

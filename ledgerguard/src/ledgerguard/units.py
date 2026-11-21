@@ -54,6 +54,20 @@ _PACK_PCS_RE = re.compile(
 )
 
 
+UNIT_LABELS: dict[str, dict[str, str]] = {
+    "ru": {"m": "м", "pcs": "шт", "set": "компл", "kg": "кг"},
+    "uk": {"m": "м", "pcs": "шт", "set": "компл", "kg": "кг"},
+    "fr": {"m": "m", "pcs": "u", "set": "lot", "kg": "kg"},
+    "en": {"m": "m", "pcs": "pcs", "set": "set", "kg": "kg"},
+}
+
+
+def format_unit(unit_code: str, lang: str = "en") -> str:
+    """Format canonical unit code into localized display label."""
+    table = UNIT_LABELS.get((lang or "en").lower(), UNIT_LABELS["en"])
+    return table.get(unit_code, unit_code)
+
+
 def normalize_unit_code(raw_unit: str) -> str:
     """Normalize multilingual unit strings into canonical base units ('m', 'pcs', 'set', 'kg')."""
     cleaned = str(raw_unit or "").strip().lower().rstrip(".")
@@ -65,6 +79,7 @@ def expand_pack_conversion(
     raw_qty: str,
     raw_unit: str,
     unit_price_minor: int,
+    lang: str = "en",
 ) -> dict[str, object]:
     """Expand coil/box/pack quantities into canonical base units and divide unit price."""
     text = f"{description or ''} {raw_unit or ''}"
@@ -103,13 +118,14 @@ def expand_pack_conversion(
             qty_fmt = str(norm_qty.normalize()) if "." in str(norm_qty) else str(norm_qty)
             if qty_fmt.endswith(".0"):
                 qty_fmt = qty_fmt[:-2]
+            disp_u = format_unit(target_unit, lang)
             return {
                 "converted": True,
                 "pack_factor": factor,
                 "normalized_qty": qty_fmt,
                 "normalized_unit": target_unit,
                 "normalized_unit_minor": norm_unit_minor,
-                "note": f"{raw_qty} × {factor} {target_unit} = {qty_fmt} {target_unit}",
+                "note": f"{raw_qty} × {factor} {disp_u} = {qty_fmt} {disp_u}",
             }
 
     return {

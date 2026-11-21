@@ -96,7 +96,7 @@ def run_legacy_baseline(
     for line in doc.lines:
         strict_match = matcher.match(line.raw_code, line.description, naive_mode=False)
         naive_match = matcher.match(line.raw_code, line.description, naive_mode=True)
-        pack = expand_pack_conversion(line.description, line.qty, line.unit, line.unit_price_minor)
+        pack = expand_pack_conversion(line.description, line.qty, line.unit, line.unit_price_minor, lang=lang)
 
         if pack["converted"]:
             silent_errors.append(

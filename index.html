@@ -518,9 +518,9 @@ footer {
               <span class="fr">Je développe des automatisations concrètes pour les équipes métier : bots d'accueil et de prise de rendez-vous, recherche documentaire interne, lecture de factures/devis et intégrations CRM/ERP.</span>
             </p>
             <p class="cv-sub">
-              <span class="ru">Нейросеть подключаю только там, где плывёт формат: живой диалог, кривые сканы, разнобой в названиях позиций. Расчёты сумм, права доступа и запись в базу остаются в обычном проверяемом коде. Ниже собраны 10 интерактивных стендов — можно подставить своё ТЗ, загрузить фото документа или проверить устойчивость бота.</span>
-              <span class="en">LLMs handle the messy inputs — free-text chat, skewed scans, inconsistent supplier naming — while totals, permissions, and database writes stay in plain, testable code. Below are 10 live sandboxes where you can paste your own brief, upload an invoice photo, or stress-test prompt defenses.</span>
-              <span class="fr">Le LLM n'intervient que là où le format varie — dialogue libre, scans imparfaits, libellés fournisseurs hétérogènes — tandis que les montants, les droits d'accès et l'écriture en base restent en code classique testé. Ci-dessous, 10 démonstrateurs actifs à tester avec vos propres textes ou photos.</span>
+              <span class="ru">Нейросеть подключаю только там, где плывёт формат: живой диалог, кривые сканы, разнобой в названиях позиций. Расчёты сумм, права доступа и запись в базу остаются в обычном проверяемом коде. Ниже — открытый проект LedgerGuard и 11 интерактивных стендов: можно подставить своё ТЗ, загрузить фото документа или проверить устойчивость бота.</span>
+              <span class="en">LLMs handle the messy inputs — free-text chat, skewed scans, inconsistent supplier naming — while totals, permissions, and database writes stay in plain, testable code. Below are the open-source LedgerGuard project and 11 live sandboxes where you can paste your own brief, upload an invoice photo, or stress-test prompt defenses.</span>
+              <span class="fr">Le LLM n'intervient que là où le format varie — dialogue libre, scans imparfaits, libellés fournisseurs hétérogènes — tandis que les montants, les droits d'accès et l'écriture en base restent en code classique testé. Ci-dessous, le projet open-source LedgerGuard et 11 démonstrateurs actifs à tester avec vos propres textes ou photos.</span>
             </p>
           </div>
         </div>
@@ -573,7 +573,7 @@ footer {
           <tr>
             <td style="width:38%"><span class="ch-label"><span class="ru">Стек</span><span class="en">Stack</span><span class="fr">Stack</span></span><span class="name">Python · FastAPI · PostgreSQL · Node.js · Docker</span></td>
             <td><span class="ch-label"><span class="ru">Маршрутизация моделей</span><span class="en">Model router</span><span class="fr">Routeur LLM</span></span><span class="v" id="router-badge">VERTEX AI + NIM</span></td>
-            <td><span class="ch-label"><span class="ru">На странице</span><span class="en">Included</span><span class="fr">Inclus</span></span><span class="v"><span class="ru">1 проект + 10 стендов</span><span class="en">1 flagship case + 10 demos</span><span class="fr">1 cas phare + 10 démos</span></span></td>
+            <td><span class="ch-label"><span class="ru">На странице</span><span class="en">Included</span><span class="fr">Inclus</span></span><span class="v"><span class="ru">1 проект + 11 стендов</span><span class="en">1 flagship case + 11 demos</span><span class="fr">1 cas phare + 11 démos</span></span></td>
           </tr>
         </table>
       </div>
@@ -710,11 +710,11 @@ footer {
                   <thead>
                     <tr>
                       <th style="width:36px">#</th>
-                      <th><span class="ru">Строка в счёте</span><span class="en">Input line</span><span class="fr">Ligne source</span></th>
-                      <th><span class="ru">SKU в справочнике</span><span class="en">Matched SKU</span><span class="fr">Référence</span></th>
-                      <th><span class="ru">Приведено (ед.)</span><span class="en">Normalized</span><span class="fr">Normalisé</span></th>
-                      <th><span class="ru">Расчёт Decimal</span><span class="en">Decimal total</span><span class="fr">Calcul exact</span></th>
-                      <th><span class="ru">Вердикт</span><span class="en">Verdict</span><span class="fr">Statut</span></th>
+                      <th><span class="ru">Позиция в счёте</span><span class="en">Invoice line</span><span class="fr">Ligne facture</span></th>
+                      <th><span class="ru">Номенклатура</span><span class="en">Catalog SKU</span><span class="fr">Référence</span></th>
+                      <th><span class="ru">Кол-во и цена</span><span class="en">Normalized qty × price</span><span class="fr">Qté × prix normalisé</span></th>
+                      <th><span class="ru">Сумма по расчёту</span><span class="en">Computed total</span><span class="fr">Total calculé</span></th>
+                      <th><span class="ru">Проверка</span><span class="en">Check</span><span class="fr">Contrôle</span></th>
                     </tr>
                   </thead>
                   <tbody id="lg-lines-tbody"></tbody>
@@ -863,10 +863,10 @@ footer {
       </p>
       <div class="kv-list">
         <div>
-          <strong><span class="ru">В боевом контуре</span><span class="en">In production</span><span class="fr">En production</span></strong>
-          <span class="ru">Telegram, виджет на сайте и голосовой канал через SIP/Voximplant (задержка до 800 мс, поддержка перебивания). Телефоны и ФИО маскируются до отправки во внешний API, оператор перехватывает чат одной кнопкой.</span>
-          <span class="en">Telegram, website widget, and SIP/Voximplant voice channel (sub-800 ms latency with barge-in). PII is masked before external API calls, and staff can take over any thread in one click.</span>
-          <span class="fr">Telegram, widget web et canal vocal SIP/Voximplant (latence sous 800 ms, interruption naturelle). Les données personnelles sont masquées avant l'API et l'équipe reprend la main en un clic.</span>
+          <strong><span class="ru">Подключение в проект</span><span class="en">Integration options</span><span class="fr">Options d'intégration</span></strong>
+          <span class="ru">Подключается к Telegram и виджету на сайте; при необходимости можно подключить голосовой канал через SIP / Voximplant. Телефоны и ФИО маскируются до отправки во внешний API, а оператор может перехватить диалог одной кнопкой.</span>
+          <span class="en">Connects to Telegram and website widgets, and a voice channel via SIP / Voximplant can be connected if needed. Phone numbers and names are masked before external API calls, and staff can take over a thread in one click.</span>
+          <span class="fr">Se connecte à Telegram et au widget web ; un canal vocal via SIP / Voximplant peut être ajouté si besoin. Les données personnelles sont masquées avant l'API et un conseiller reprend la main en un clic.</span>
         </div>
       </div>
       <div class="stack">
@@ -907,7 +907,7 @@ footer {
             </div>
           </div>
           <aside class="crm" aria-label="CRM Webhook Log">
-            <div class="crm-head"><span>CRM Webhook</span><span id="crm-count">0 events</span></div>
+            <div class="crm-head"><span>CRM</span><span id="crm-count">0</span></div>
             <div id="crm" style="display:grid;gap:7px"></div>
           </aside>
         </div>
@@ -1198,7 +1198,7 @@ footer {
           </select>
           <div class="tabs" role="tablist">
             <button class="tab" id="tab-ebay-preview" aria-selected="true"><span class="ru">Карточка</span><span class="en">Preview</span><span class="fr">Aperçu</span></button>
-            <button class="tab" id="tab-ebay-json" aria-selected="false">API JSON</button>
+            <button class="tab" id="tab-ebay-json" aria-selected="false"><span class="ru">JSON для API</span><span class="en">API JSON</span><span class="fr">JSON API</span></button>
           </div>
         </div>
       </div>
@@ -1453,7 +1453,7 @@ server/routes/</textarea>
 
     <div class="bench">
       <div class="benchbar">
-        <span class="bench-title"><span class="dot-live"></span><span>SaaS Security &amp; Architecture Audit</span></span>
+        <span class="bench-title"><span class="dot-live"></span><span class="ru">Аудит безопасности и архитектуры SaaS</span><span class="en">SaaS security &amp; architecture audit</span><span class="fr">Audit de sécurité et d'architecture SaaS</span></span>
         <div class="tabs" role="tablist">
           <button class="tab" id="tab-aud-table" aria-selected="true"><span class="ru">Пример отчёта (6)</span><span class="en">Sample Audit (6)</span><span class="fr">Exemple d'audit (6)</span></button>
           <button class="tab" id="tab-aud-fix" aria-selected="false"><span class="ru">Патч SQL (RLS + RPC)</span><span class="en">SQL Fix (RLS + RPC)</span><span class="fr">Correctif SQL</span></button>
@@ -1464,14 +1464,42 @@ server/routes/</textarea>
       <div class="benchbody" id="pane-aud-table">
         <div class="tbl">
           <table>
-            <thead><tr><th>Severity</th><th>Finding</th><th>Fix</th></tr></thead>
+            <thead><tr>
+              <th><span class="ru">Уровень</span><span class="en">Severity</span><span class="fr">Gravité</span></th>
+              <th><span class="ru">Проблема</span><span class="en">Finding</span><span class="fr">Constat</span></th>
+              <th><span class="ru">Решение</span><span class="en">Fix</span><span class="fr">Correctif</span></th>
+            </tr></thead>
             <tbody>
-              <tr><td><span class="sev c">CRITICAL</span></td><td>RLS off on <code>public.bookings</code> — anyone with the public anon key can read all customer phone numbers.</td><td>Enable RLS + tenant &amp; <code>auth.uid()</code> policies.</td></tr>
-              <tr><td><span class="sev c">CRITICAL</span></td><td><code>VITE_SUPABASE_SERVICE_ROLE_KEY</code> bundled into client JS for admin actions.</td><td>Rotate key immediately; move privileged actions to an Edge Function.</td></tr>
-              <tr><td><span class="sev h">HIGH</span></td><td>Checkout prices &amp; coupon discounts calculated in browser state and written straight to DB.</td><td>Compute totals inside a Postgres <code>SECURITY DEFINER</code> RPC.</td></tr>
-              <tr><td><span class="sev m">MEDIUM</span></td><td>Schema edited manually in Supabase Studio; zero SQL migrations in Git.</td><td>Baseline via <code>supabase db pull</code>; enforce migration checks in CI.</td></tr>
-              <tr><td><span class="sev m">MEDIUM</span></td><td>Duplicated <code>supabase.from()</code> queries across 16 components without generated types.</td><td><code>supabase gen types typescript</code> + unified TanStack Query hooks.</td></tr>
-              <tr><td><span class="sev l">LOW</span></td><td>Double-booking race condition + missing PWA manifest/service worker for mobile install.</td><td>Postgres <code>EXCLUDE USING gist</code> slot constraint + Vite PWA setup.</td></tr>
+              <tr>
+                <td><span class="sev c"><span class="ru">Критично</span><span class="en">Critical</span><span class="fr">Critique</span></span></td>
+                <td><span class="ru">В таблице <code>public.bookings</code> отключён RLS — с публичным anon-ключом можно прочитать телефоны всех клиентов.</span><span class="en">RLS is off on <code>public.bookings</code> — anyone with the public anon key can read all customer phone numbers.</span><span class="fr">RLS désactivé sur <code>public.bookings</code> — la clé publique permet de lire tous les téléphones clients.</span></td>
+                <td><span class="ru">Включить RLS и добавить политики изоляции по <code>auth.uid()</code> и тенанту.</span><span class="en">Enable RLS with tenant and <code>auth.uid()</code> policies.</span><span class="fr">Activer RLS avec des règles par locataire et <code>auth.uid()</code>.</span></td>
+              </tr>
+              <tr>
+                <td><span class="sev c"><span class="ru">Критично</span><span class="en">Critical</span><span class="fr">Critique</span></span></td>
+                <td><span class="ru">Секретный <code>VITE_SUPABASE_SERVICE_ROLE_KEY</code> попал в клиентский JS-бандл ради админ-действий.</span><span class="en"><code>VITE_SUPABASE_SERVICE_ROLE_KEY</code> bundled into client JS for admin actions.</span><span class="fr"><code>VITE_SUPABASE_SERVICE_ROLE_KEY</code> embarqué dans le JS navigateur pour les actions admin.</span></td>
+                <td><span class="ru">Немедленно перевыпустить ключ и вынести привилегированные вызовы в Edge Function.</span><span class="en">Rotate the key immediately and move privileged calls to an Edge Function.</span><span class="fr">Révoquer la clé et déplacer la logique sensible vers une Edge Function.</span></td>
+              </tr>
+              <tr>
+                <td><span class="sev h"><span class="ru">Высокий</span><span class="en">High</span><span class="fr">Élevé</span></span></td>
+                <td><span class="ru">Стоимость заказа и скидки по промокоду считаются в браузере и пишутся в БД напрямую.</span><span class="en">Checkout totals and coupon discounts are calculated in browser state and written straight to DB.</span><span class="fr">Les montants et remises sont calculés côté navigateur puis enregistrés tels quels en base.</span></td>
+                <td><span class="ru">Вычислять итоговую сумму на сервере внутри Postgres-функции <code>SECURITY DEFINER</code>.</span><span class="en">Compute totals inside a server-side Postgres <code>SECURITY DEFINER</code> RPC.</span><span class="fr">Calculer les totaux côté serveur dans une RPC Postgres <code>SECURITY DEFINER</code>.</span></td>
+              </tr>
+              <tr>
+                <td><span class="sev m"><span class="ru">Средний</span><span class="en">Medium</span><span class="fr">Moyen</span></span></td>
+                <td><span class="ru">Схема БД правится вручную в Supabase Studio, в Git нет SQL-миграций.</span><span class="en">Schema edited manually in Supabase Studio; zero SQL migrations in Git.</span><span class="fr">Schéma modifié manuellement dans Studio, aucune migration SQL versionnée dans Git.</span></td>
+                <td><span class="ru">Снять снимок через <code>supabase db pull</code> и проверять миграции в CI.</span><span class="en">Baseline via <code>supabase db pull</code> and enforce migration checks in CI.</span><span class="fr">Initialiser via <code>supabase db pull</code> et vérifier les migrations en CI.</span></td>
+              </tr>
+              <tr>
+                <td><span class="sev m"><span class="ru">Средний</span><span class="en">Medium</span><span class="fr">Moyen</span></span></td>
+                <td><span class="ru">Одинаковые запросы <code>supabase.from()</code> продублированы в 16 компонентах без сгенерированных типов.</span><span class="en">Duplicated <code>supabase.from()</code> queries across 16 components without generated types.</span><span class="fr">Requêtes <code>supabase.from()</code> dupliquées dans 16 composants sans typage généré.</span></td>
+                <td><span class="ru">Сгенерировать типы (<code>supabase gen types typescript</code>) и вынести запросы в единый слой хуков.</span><span class="en">Use <code>supabase gen types typescript</code> with unified TanStack Query hooks.</span><span class="fr">Utiliser <code>supabase gen types typescript</code> et centraliser les hooks de requête.</span></td>
+              </tr>
+              <tr>
+                <td><span class="sev l"><span class="ru">Низкий</span><span class="en">Low</span><span class="fr">Faible</span></span></td>
+                <td><span class="ru">При одновременных запросах возможна двойная запись на один слот; нет манифеста PWA для установки на телефон.</span><span class="en">Double-booking race condition and missing PWA manifest/service worker for mobile install.</span><span class="fr">Risque de double réservation simultanée et absence de manifeste PWA pour mobile.</span></td>
+                <td><span class="ru">Поставить ограничение <code>EXCLUDE USING gist</code> на пересечение слотов и подключить PWA.</span><span class="en">Add a Postgres <code>EXCLUDE USING gist</code> constraint and Vite PWA setup.</span><span class="fr">Ajouter une contrainte Postgres <code>EXCLUDE USING gist</code> et configurer la PWA.</span></td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1518,7 +1546,11 @@ async function checkout(cart, discountPercent) {
           <span class="note" id="aud-live-note"></span>
         </div>
         <div class="tbl" id="aud-live-wrap" hidden>
-          <table><thead><tr><th>Severity</th><th>Issue</th><th>Fix</th></tr></thead><tbody id="aud-live-tbody"></tbody></table>
+          <table><thead><tr>
+            <th><span class="ru">Уровень</span><span class="en">Severity</span><span class="fr">Gravité</span></th>
+            <th><span class="ru">Проблема</span><span class="en">Issue</span><span class="fr">Constat</span></th>
+            <th><span class="ru">Решение</span><span class="en">Fix</span><span class="fr">Correctif</span></th>
+          </tr></thead><tbody id="aud-live-tbody"></tbody></table>
         </div>
       </div>
     </div>
@@ -1583,7 +1615,7 @@ async function checkout(cart, discountPercent) {
               <strong><span class="ru">Наивный бот (1 промпт)</span><span class="en">Naive single-prompt bot</span><span class="fr">Bot naïf (1 seul prompt)</span></strong>
               <span class="pill bad" id="rt-vuln-badge">Утечка / сбой рамок</span>
             </div>
-            <span class="note" id="rt-vuln-model">NIM 30B · Free ($0.00)</span>
+            <span class="note" id="rt-vuln-model">NIM 30B · бесплатно</span>
             <div id="rt-vuln-reply" style="color:var(--ink-soft)"></div>
             <div class="rt-trace" id="rt-vuln-tool"></div>
           </div>
@@ -1844,10 +1876,10 @@ async function checkout(cart, discountPercent) {
   }
   function pushCrmEvent(ev) {
     chatState.events += 1;
-    $('#crm-count').textContent = `${chatState.events} ${chatState.events === 1 ? 'event' : 'events'}`;
+    $('#crm-count').textContent = `${chatState.events} ${T('соб.', 'ev.', 'év.')}`;
     const card = el('div', 'lead');
     if (ev.type === 'lead') {
-      card.append(el('span', 'pill ok', 'POST /crm/leads · 201'), el('strong', '', `${ev.name} (${ev.phone})`), el('span', '', ev.service), el('span', 'mono', `Slot: ${ev.slot}`));
+      card.append(el('span', 'pill ok', 'POST /crm/leads · 201'), el('strong', '', `${ev.name} (${ev.phone})`), el('span', '', ev.service), el('span', 'mono', `${T('Время: ', 'Slot: ', 'Créneau : ')}${ev.slot}`));
     } else {
       card.append(el('span', 'pill warn', 'POST /crm/handoff · 200'), el('span', '', ev.reason));
     }
@@ -1857,7 +1889,7 @@ async function checkout(cart, discountPercent) {
   function localChatFallback(clean) {
     const q = clean.toLowerCase();
     if (/(дмс|страхов|insur|mutuelle|рассроч|finance|3x|наркоз|седац|sedat)/i.test(q)) {
-      pushCrmEvent({ type: 'handoff', reason: `Out-of-KB: "${clean.slice(0, 50)}"` });
+      pushCrmEvent({ type: 'handoff', reason: `${T('Вне базы: ', 'Out-of-KB: ', 'Hors base : ')}«${clean.slice(0, 50)}»` });
       return T('Условия по страховке/рассрочке и седации уточняет администратор — передал ваш вопрос, ответят за 15 минут.', 'Insurance, finance, and sedation require a coordinator — I have handed your inquiry over.', 'Mutuelle, paiement échelonné et sédation sont traités par un conseiller — demande transmise.');
     }
     const phone = clean.match(/(\+?\d[\d\s\-()]{7,}\d)/);
@@ -1902,7 +1934,7 @@ async function checkout(cart, discountPercent) {
           if (data.action.slot) chatState.bookedSlots.add(data.action.slot);
           pushCrmEvent({ type: 'lead', name: data.action.name || 'Client', phone: data.action.phone || '—', service: data.action.service || 'Consultation', slot: data.action.slot || '—' });
         } else if (data.action?.type === 'handoff') {
-          pushCrmEvent({ type: 'handoff', reason: data.action.reason || 'Escalated by AI agent' });
+          pushCrmEvent({ type: 'handoff', reason: data.action.reason || T('Передано администратору', 'Escalated to staff', 'Transféré au conseiller') });
         }
         return;
       } catch { wait.remove(); } finally { $('#chatsend').disabled = false; }
@@ -1915,7 +1947,7 @@ async function checkout(cart, discountPercent) {
   function resetChat() {
     $('#chat').replaceChildren(); $('#crm').replaceChildren();
     chatState = { bookedSlots: new Set(), events: 0 }; chatHistory = [];
-    $('#crm-count').textContent = '0 events';
+    $('#crm-count').textContent = T('0 событий', '0 events', '0 évén.');
     const g = T('Здравствуйте! Я ИИ-администратор клиники «Апрель». Подскажу цены из актуальной базы, свободные окна и запишу на приём.', 'Hello! I am the April Dental AI assistant. Ask about verified prices, open slots, or booking.', 'Bonjour ! Je suis l’assistant IA de la Clinique Avril. Tarifs vérifiés, créneaux et prise de RDV.');
     addChatBubble('a', g); chatHistory.push({ role: 'assistant', content: g });
   }
@@ -1970,6 +2002,13 @@ async function checkout(cart, discountPercent) {
 
   function loadRagForLang() {
     ragDocs = structuredClone(RAG_SETS[L]);
+    $('#rag-new-src').placeholder = T('Источник (напр.: Регламент 2026)', 'Source / Title (e.g. HR Policy 2026)', 'Source (ex. Procédure RH 2026)');
+    $('#rag-new-text').placeholder = T('Вставьте текст документа для индексации…', 'Paste policy text to index…', 'Collez le texte du document…');
+    const accSel = $('#rag-new-acc');
+    if (accSel?.options?.length >= 2) {
+      accSel.options[0].textContent = T('Все сотрудники (логист + директор)', 'All staff (Staff + Director)', 'Tout le personnel');
+      accSel.options[1].textContent = T('Закрытый доступ (только директор)', 'Restricted (Director only)', 'Direction uniquement');
+    }
     updateRagCounts();
     renderRagChips();
   }
@@ -2034,7 +2073,10 @@ async function checkout(cart, discountPercent) {
     if (!res.hits.length) frags.append(el('p', 'note', T('Совпадений нет.', 'No matching chunks.', 'Aucun extrait trouvé.')));
     res.hits.forEach(({ d, score, matched }) => {
       const c = el('div', 'frag'), h = el('div', 'frag-h');
-      h.append(el('span', '', `[${d.id}] ${d.src}${d.acc === 'mgmt' ? ' [mgmt-only]' : ''}`), el('span', '', `score ${score.toFixed(2)}`));
+      h.append(
+        el('span', '', `[${d.id}] ${d.src}${d.acc === 'mgmt' ? T(' · только директор', ' · director only', ' · direction') : ''}`),
+        el('span', '', `${T('совпадение ', 'score ', 'score ')}${score.toFixed(2)}`)
+      );
       const body = el('div', '');
       d.text.split(/([\p{L}\d-]+)/gu).forEach((tok) => body.append(tok.length > 2 && matched.includes(tok.toLowerCase().slice(0, 5)) ? el('mark', '', tok) : document.createTextNode(tok)));
       c.append(h, body); frags.append(c);
@@ -2101,32 +2143,78 @@ async function checkout(cart, discountPercent) {
   const parseNum = (s) => Number(String(s || '').replace(/[^\d.,]/g, '').replace(/,(?=\d{3}\b)/g, '').replace(',', '.')) || 0;
   const fmtMoney = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 
+  function formatCleanTotalLike(totRaw, sum) {
+    const raw = String(totRaw || '').trim();
+    if (!raw || raw === '—') return `${fmtMoney(sum)} ${T('руб.', '£', '€')}`;
+    if (/^[£$]/.test(raw) || /\d,\d{3}/.test(raw)) {
+      const sym = (raw.match(/^[£$]/) || [''])[0];
+      const decimals = /\.\d{2}\b/.test(raw) ? 2 : 0;
+      const formatted = Number(sum).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+      return raw.replace(/^[£$]?\s*[\d,]+(?:\.\d+)?/, `${sym}${formatted}`);
+    }
+    return raw.replace(/\d+(?:[\s\u00A0]\d{3})*(?:[.,]\d+)?/, fmtMoney(sum));
+  }
+
   function localExtractDocs() {
     const a = $('#srcA').value, b = $('#srcB').value;
-    const line1A = (a.split(/\r?\n/)[0] || '').trim();
-    const idA = (a.match(/(?:КПП|VAT|SIRET)\s*:?\s*([A-Z0-9 ]{6,20})/i) || [])[1]?.trim() || '';
-    const idB = (b.match(/(?:КПП|VAT|SIRET)\s*:?\s*([A-Z0-9 ]{6,20})/i) || [])[1]?.trim() || '';
-    let calcSum = 0; const items = [];
+    const linesA = a.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const nameA = linesA[0] || '';
+    const pick = (src, re) => (src.match(re) || [])[1]?.trim() || '';
+
+    const addrA = pick(a, /^(?:Юр\.\s*адрес|Адрес|Address|Siège)\s*:?\s*(.+)$/im);
+    const bankA = pick(a, /^((?:Р\/с|IBAN|Bank)\s*:?\s*.+)$/im);
+    const signerA = pick(a, /^(?:Генеральный директор|Директор|Director|Président)\s*:?\s*(.+)$/im);
+    const termB = pick(b, /^(?:Срок поставки|Lead time|Délai[^:\n]*)\s*:\s*(.+)$/im);
+
+    let innA = '', innB = '', idA = '', idB = '';
+    if (L === 'en') {
+      innA = pick(a, /Company Reg\s*:\s*([A-Z0-9-]+)/i);
+      innB = pick(b, /Company Reg\s*:\s*([A-Z0-9-]+)/i);
+      idA = pick(a, /VAT\s*:\s*([A-Z0-9]+)/i);
+      idB = pick(b, /VAT\s*:\s*([A-Z0-9]+)/i);
+    } else if (L === 'fr') {
+      innA = pick(a, /SIRET\s*:\s*([0-9 ]{9,20})/i);
+      innB = pick(b, /SIRET\s*:\s*([0-9 ]{9,20})/i);
+      idA = pick(a, /TVA\s*:\s*([A-Z0-9]+)/i);
+      idB = pick(b, /TVA\s*:\s*([A-Z0-9]+)/i);
+    } else {
+      innA = pick(a, /ИНН\s*[:№]?\s*(\d{10,12})/i);
+      innB = pick(b, /ИНН\s*[:№]?\s*(\d{10,12})/i);
+      idA = pick(a, /КПП\s*[:№]?\s*(\d{9})/i);
+      idB = pick(b, /КПП\s*[:№]?\s*(\d{9})/i);
+    }
+
+    let calcSum = 0;
+    const items = [];
     b.split(/\r?\n/).forEach((ln) => {
       const m = ln.match(/^\s*\d+\.\s*(.+?)\s*[—\-–]\s*(\d+)\s*[^\d×x*]*[×x*]\s*[£€$]?\s*([\d\s,.]+)\s*=\s*[£€$]?\s*([\d\s,.]+)/i);
       if (m) { calcSum += parseNum(m[2]) * parseNum(m[3]); items.push(`${m[1].trim()} (${m[2]})`); }
     });
-    const totRaw = (b.match(/(?:Итого|Total)[^:\n]*:\s*([^\n]+)/i) || [])[1]?.trim() || '—';
+    const totRaw = pick(b, /(?:Итого|Total)[^:\n]*:\s*([^\n]+)/i) || '—';
     const stated = parseNum((totRaw.match(/[£€$]?\s*[\d\s,.]+/) || [])[0]);
     const mathBad = calcSum > 0 && stated > 0 && Math.abs(calcSum - stated) > 1;
+    const cleanTotal = calcSum > 0 ? formatCleanTotalLike(totRaw, calcSum) : totRaw;
+
+    const innBad = innA && innB && innA.replace(/\s+/g, '') !== innB.replace(/\s+/g, '');
     const idBad = idA && idB && idA.replace(/\s+/g, '') !== idB.replace(/\s+/g, '');
 
     parsedFields = [
-      { key: 'name', label: T('Поставщик', 'Supplier', 'Fournisseur'), val: line1A || '—', note: T('Из источника А', 'From Source A', 'Source A'), level: 'ok' },
-      { key: 'id', label: T('КПП / Идентификатор', 'VAT / Tax ID', 'SIRET / TVA'), val: idA || idB || '—', note: idBad ? T(`Расхождение: в А «${idA}», в Б «${idB}»`, `Mismatch: A="${idA}" vs B="${idB}"`, `Écart : A=« ${idA} » vs B=« ${idB} »`) : T('Совпадает', 'Verified match', 'Conforme'), level: idBad ? 'bad' : 'ok' },
-      { key: 'subj', label: T('Позиции', 'Line items', 'Postes'), val: items.join('; ') || '—', note: `${items.length} поз.`, level: items.length ? 'ok' : 'warn' },
-      { key: 'total', label: T('Итого', 'Total', 'Total TTC'), val: totRaw, note: mathBad ? T(`Сумма строк = ${fmtMoney(calcSum)}, а в счёте ${fmtMoney(stated)}!`, `Lines sum to ${fmtMoney(calcSum)}, invoice states ${fmtMoney(stated)}!`, `Somme des lignes = ${fmtMoney(calcSum)}, total affiché = ${fmtMoney(stated)} !`) : T(`Сходится (${fmtMoney(calcSum)})`, `Matches (${fmtMoney(calcSum)})`, `Conforme (${fmtMoney(calcSum)})`), level: mathBad ? 'bad' : 'ok' },
+      { key: 'name', label: T('Поставщик', 'Supplier', 'Fournisseur'), val: nameA || '—', cleanVal: nameA || '—', wrongVal: '', note: T('Из карточки компании', 'From company record', 'Fiche société'), level: 'ok' },
+      { key: 'inn', label: T('ИНН', 'Company Reg', 'SIRET'), val: innBad ? `${innB} → ${innA}` : (innA || innB || '—'), cleanVal: innA || innB || '—', wrongVal: innBad ? innB : '', note: innBad ? T(`В карточке ${innA}, в счёте ${innB}`, `Record: ${innA}, invoice: ${innB}`, `Fiche : ${innA}, facture : ${innB}`) : T('Совпадает', 'Verified match', 'Conforme'), level: innBad ? 'bad' : 'ok' },
+      { key: 'kpp', label: T('КПП', 'VAT ID', 'TVA'), val: idBad ? `${idB} → ${idA}` : (idA || idB || '—'), cleanVal: idA || idB || '—', wrongVal: idBad ? idB : '', note: idBad ? T(`В карточке ${idA}, в счёте ${idB}`, `Record: ${idA}, invoice: ${idB}`, `Fiche : ${idA}, devis : ${idB}`) : T('Совпадает', 'Verified match', 'Conforme'), level: idBad ? 'bad' : 'ok' },
+      { key: 'addr', label: T('Юр. адрес', 'Address', 'Adresse'), val: addrA || '—', cleanVal: addrA || '—', wrongVal: '', note: T('Из карточки компании', 'From company record', 'Fiche société'), level: 'ok' },
+      { key: 'bank', label: T('Расчётный счёт и БИК', 'Bank details', 'RIB / IBAN'), val: bankA || '—', cleanVal: bankA || '—', wrongVal: '', note: T('Из карточки компании', 'From company record', 'Fiche société'), level: 'ok' },
+      { key: 'signer', label: T('Подписант', 'Signatory', 'Signataire'), val: signerA || '—', cleanVal: signerA || '—', wrongVal: '', note: T('Из карточки компании', 'From company record', 'Fiche société'), level: 'ok' },
+      { key: 'subj', label: T('Позиции', 'Line items', 'Postes'), val: items.join('; ') || '—', cleanVal: items.join('; ') || '—', wrongVal: '', note: `${items.length} ${T('поз.', 'items', 'postes')}`, level: items.length ? 'ok' : 'warn' },
+      { key: 'total', label: T('Итого', 'Total', 'Total TTC'), val: totRaw, cleanVal: cleanTotal, wrongVal: mathBad ? totRaw : '', note: mathBad ? T(`Сумма строк = ${fmtMoney(calcSum)}, а в счёте ${fmtMoney(stated)}`, `Lines sum to ${fmtMoney(calcSum)}, invoice states ${fmtMoney(stated)}`, `Somme des lignes = ${fmtMoney(calcSum)}, total affiché = ${fmtMoney(stated)}`) : T(`Сходится (${fmtMoney(calcSum)})`, `Matches (${fmtMoney(calcSum)})`, `Conforme (${fmtMoney(calcSum)})`), level: mathBad ? 'bad' : 'ok' },
+      { key: 'term', label: T('Срок поставки', 'Lead time', 'Délai'), val: termB || '—', cleanVal: termB || '—', wrongVal: '', note: T('Из счёта', 'From invoice', 'Devis'), level: 'ok' },
     ];
     renderFieldsTable();
+    return parsedFields;
   }
 
   async function extractAndVerifyDocs(useLive = true) {
-    localExtractDocs();
+    const baseFields = localExtractDocs().map((f) => ({ ...f }));
     if (useLive && backendInfo.llmEnabled) {
       $('#docbtn').disabled = true;
       $('#docnote').textContent = T('Сверяю через LLM…', 'Validating with live LLM…', 'Contrôle par LLM en cours…');
@@ -2138,10 +2226,28 @@ async function checkout(cart, discountPercent) {
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.fields) && data.fields.length) {
-            parsedFields = data.fields.map((f) => ({
-              key: String(f.key || ''), label: String(f.label || f.key || ''), val: String(f.val || f.value || '—'),
-              note: String(f.note || f.check || ''), level: ['ok', 'warn', 'bad'].includes(f.level) ? f.level : 'ok',
-            }));
+            const byKey = new Map(baseFields.map((f) => [f.key, { ...f }]));
+            data.fields.forEach((rawF) => {
+              let k = String(rawF.key || '').trim();
+              if (k === 'id') k = L === 'fr' ? 'inn' : 'kpp';
+              const prev = byKey.get(k);
+              const apiVal = String(rawF.val || rawF.value || '').trim();
+              const apiClean = String(rawF.cleanVal || '').trim();
+              const apiWrong = String(rawF.wrongVal || '').trim();
+              const lvl = ['ok', 'warn', 'bad'].includes(rawF.level) ? rawF.level : (prev?.level || 'ok');
+              const cleanVal = apiClean || prev?.cleanVal || (lvl === 'ok' ? apiVal : '') || '—';
+              const wrongVal = apiWrong || (lvl === 'bad' ? (prev?.wrongVal || (apiVal && apiVal !== cleanVal ? apiVal : '')) : '');
+              byKey.set(k || `extra_${byKey.size}`, {
+                key: k,
+                label: String(rawF.label || prev?.label || k),
+                val: apiVal || prev?.val || '—',
+                cleanVal,
+                wrongVal,
+                note: String(rawF.note || rawF.check || prev?.note || ''),
+                level: lvl,
+              });
+            });
+            parsedFields = Array.from(byKey.values());
             renderFieldsTable();
           }
         }
@@ -2150,23 +2256,26 @@ async function checkout(cart, discountPercent) {
   }
 
   function buildContractBody(fields) {
-    const g = (k) => (fields.find((x) => x.key === k) || {}).val || '________';
+    const g = (k) => {
+      const f = fields.find((x) => x.key === k);
+      const v = (f && (f.cleanVal || f.val)) || '';
+      return v && v !== '—' ? v : '________';
+    };
     if (L === 'en') {
-      return `SUPPLY AGREEMENT #318\n\nBetween ${g('name')} (ID: ${g('inn') || g('id')}), Supplier, and Client.\n1. Scope: ${g('subj')}.\n2. Total Contract Value: ${g('total')}.\n3. Lead Time: ${g('term')}.\n4. Vendor Address & Bank: ${g('addr')} / ${g('bank')}`;
+      return `SUPPLY AGREEMENT #318\n\nBetween ${g('name')} (Reg: ${g('inn')}, VAT: ${g('kpp')}), represented by ${g('signer')} (“Supplier”), and Client:\n1. Scope: ${g('subj')}.\n2. Total Contract Value: ${g('total')}.\n3. Lead Time: ${g('term')}.\n4. Vendor Address & Bank: ${g('addr')} / ${g('bank')}`;
     }
     if (L === 'fr') {
-      return `CONTRAT DE FOURNITURE N° 318\n\nEntre ${g('name')} (SIRET/TVA : ${g('inn') || g('id')}), ci-après « le Fournisseur », et le Client.\n1. Objet : ${g('subj')}.\n2. Montant total TTC : ${g('total')}.\n3. Délai : ${g('term')}.\n4. Coordonnées : ${g('addr')} / ${g('bank')}`;
+      return `CONTRAT DE FOURNITURE N° 318\n\nEntre ${g('name')} (SIRET : ${g('inn')}, TVA : ${g('kpp')}), représentée par ${g('signer')}, ci-après « le Fournisseur », et le Client :\n1. Objet : ${g('subj')}.\n2. Montant total TTC : ${g('total')}.\n3. Délai : ${g('term')}.\n4. Coordonnées : ${g('addr')} / ${g('bank')}`;
     }
-    return `ДОГОВОР ПОСТАВКИ № 318-П\n\n${g('name')} (ИНН ${g('inn')}, КПП ${g('kpp') || g('id')}), именуемое «Поставщик», и Покупатель заключили настоящий Договор:\n1. Предмет: ${g('subj')}.\n2. Стоимость: ${g('total')}.\n3. Срок поставки: ${g('term')}.\n4. Реквизиты: ${g('addr')} / ${g('bank')}`;
+    return `ДОГОВОР ПОСТАВКИ № 318-П\n\n${g('name')} (ИНН ${g('inn')}, КПП ${g('kpp')}), в лице: ${g('signer')}, именуемое «Поставщик», и Покупатель заключили настоящий Договор:\n1. Предмет: ${g('subj')}.\n2. Стоимость: ${g('total')}.\n3. Срок поставки: ${g('term')}.\n4. Реквизиты: ${g('addr')} / ${g('bank')}`;
   }
 
   function renderFieldsTable() {
     const tb = $('#fields'); tb.replaceChildren();
     parsedFields.forEach((f) => {
       const tr = el('tr');
-      const icon = f.level === 'bad' ? '✖ ' : f.level === 'warn' ? '△ ' : '✓ ';
       const cls = f.level === 'bad' ? 'st-bad' : f.level === 'warn' ? 'st-warn' : 'st-ok';
-      tr.append(el('td', '', f.label), el('td', 'mono', f.val), el('td', cls, icon + f.note));
+      tr.append(el('td', '', f.label), el('td', 'mono', f.val), el('td', cls, f.note));
       tb.append(tr);
     });
     const bads = parsedFields.filter((f) => f.level === 'bad').length;
@@ -2175,29 +2284,25 @@ async function checkout(cart, discountPercent) {
 
     const box = $('#contract'); box.replaceChildren();
     const text = buildContractBody(parsedFields);
-    const flaggedItems = parsedFields.filter((f) => f.level !== 'ok' && f.val && f.val !== '—').slice(0, 2);
+    const flaggedItems = parsedFields.filter((f) => f.level === 'bad' && f.cleanVal && f.wrongVal && f.cleanVal !== f.wrongVal && f.cleanVal !== '—');
     let segs = [text];
     flaggedItems.forEach((item) => {
       const next = [];
       segs.forEach((s) => {
         if (typeof s !== 'string') { next.push(s); return; }
-        s.split(item.val).forEach((p, i, arr) => {
+        const parts = s.split(item.cleanVal);
+        parts.forEach((p, i) => {
           if (p) next.push(p);
-          if (i < arr.length - 1) next.push({ val: item.val, note: item.note, level: item.level });
+          if (i < parts.length - 1) next.push({ cleanVal: item.cleanVal, wrongVal: item.wrongVal });
         });
       });
       segs = next;
     });
     segs.forEach((s) => {
       if (typeof s === 'string') { box.append(document.createTextNode(s)); return; }
-      if (s.level === 'bad') {
-        const rl = el('span', 'ch-redline');
-        const shortNote = String(s.note || '').split(/[.;(]/)[0].trim().slice(0, 34);
-        rl.append(el('del', 'ch-data', s.val), el('ins', '', shortNote || T('проверить!', 'mismatch!', 'écart !')));
-        box.append(rl);
-      } else {
-        box.append(el('mark', '', s.val));
-      }
+      const rl = el('span', 'ch-redline');
+      rl.append(el('del', 'ch-data', s.wrongVal), el('ins', '', s.cleanVal));
+      box.append(rl);
     });
   }
 
@@ -2386,7 +2491,14 @@ async function checkout(cart, discountPercent) {
     const limit = mpVal === 'wb' ? 60 : mpVal === 'vinted' ? 70 : 80;
     const clauses = raw.split(/[,;.]+/).map((c) => c.trim()).filter(Boolean);
     const title = fitTitleLimit(clauses.slice(0, 3).join(' · '), limit);
-    return { title, category: $('#ebay-mp').selectedOptions[0].textContent, conditionEnum: 'USED_GOOD', specifics: { Summary: clauses[0] || 'Item', Details: clauses.slice(1, 3).join('; ') || '—' }, paragraphs: [raw] };
+    const isRu = mpVal === 'wb' || L === 'ru';
+    const isFr = mpVal === 'vinted' || L === 'fr';
+    const specifics = isRu
+      ? { 'Товар': clauses[0] || 'Товар', 'Характеристики': clauses.slice(1, 3).join('; ') || '—' }
+      : isFr
+        ? { 'Article': clauses[0] || 'Article', 'Détails': clauses.slice(1, 3).join('; ') || '—' }
+        : { 'Summary': clauses[0] || 'Item', 'Details': clauses.slice(1, 3).join('; ') || '—' };
+    return { title, category: $('#ebay-mp').selectedOptions[0].textContent, conditionEnum: 'USED_GOOD', specifics, paragraphs: [raw] };
   }
 
   async function generateEbayListing(useLive = false) {
@@ -2406,7 +2518,7 @@ async function checkout(cart, discountPercent) {
     const subLabel = data.category && data.category !== mpLabel ? `${mpLabel} · ${data.category}` : mpLabel;
 
     const pane = $('#pane-ebay-preview'); pane.replaceChildren();
-    const head = el('div', 'between'); head.append(el('span', 'lbl', `Title (<= ${limit} chars)`));
+    const head = el('div', 'between'); head.append(el('span', 'lbl', T(`Заголовок (до ${limit} знаков)`, `Title (max ${limit} chars)`, `Titre (max ${limit} car.)`)));
     const gauge = el('span', 'counter' + (data.title.length > limit ? ' over' : ''), `${data.title.length} / ${limit}`); head.append(gauge);
     const inp = el('input', ''); inp.type = 'text'; inp.value = data.title;
     inp.oninput = () => { gauge.textContent = `${inp.value.length} / ${limit}`; gauge.className = 'counter' + (inp.value.length > limit ? ' over' : ''); currentEbayPayload.product.title = inp.value; $('#pane-ebay-json').textContent = JSON.stringify(currentEbayPayload, null, 2); };
@@ -2724,15 +2836,22 @@ async function checkout(cart, discountPercent) {
     } catch {} finally { $('#aud-run-btn').disabled = false; }
 
     if (!findings.length) {
-      if (/SERVICE_ROLE_KEY/i.test(code)) findings.push({ sev: 'CRITICAL', issue: 'Service role key exposed in browser client.', fix: 'Revoke key and move privileged queries into an Edge Function.' });
-      if (/total|price/i.test(code) && /insert/i.test(code)) findings.push({ sev: 'HIGH', issue: 'Client computes payment total and writes status="paid" directly.', fix: 'Calculate totals in a server-side Postgres RPC and verify Stripe webhook.' });
-      if (!findings.length) findings.push({ sev: 'MEDIUM', issue: 'Ensure RLS policies and input validation are enforced on the DB/server.', fix: 'Enable RLS and validate payloads with Zod/Postgres constraints.' });
+      if (/SERVICE_ROLE_KEY/i.test(code)) findings.push({ sev: 'CRITICAL', issue: T('Сервисный ключ Supabase попал в браузерный код.', 'Service role key exposed in browser client.', 'Clé service_role exposée côté navigateur.'), fix: T('Отозвать ключ и перенести привилегированные вызовы в Edge Function.', 'Revoke key and move privileged queries into an Edge Function.', 'Révoquer la clé et déplacer les appels vers une Edge Function.') });
+      if (/total|price/i.test(code) && /insert/i.test(code)) findings.push({ sev: 'HIGH', issue: T('Сумма оплаты считается в браузере и пишется напрямую со статусом "paid".', 'Client computes payment total and writes status="paid" directly.', 'Le montant est calculé côté client puis enregistré directement en base.'), fix: T('Рассчитывать сумму на сервере в Postgres RPC и проверять webhook оплаты.', 'Calculate totals in a server-side Postgres RPC and verify payment webhook.', 'Calculer les totaux dans une RPC Postgres serveur et vérifier le webhook.') });
+      if (!findings.length) findings.push({ sev: 'MEDIUM', issue: T('Проверить наличие политик RLS и валидации входных данных на сервере.', 'Ensure RLS policies and input validation are enforced on the DB/server.', 'Vérifier les politiques RLS et la validation serveur.'), fix: T('Включить RLS и проверять входные данные схемой / ограничениями Postgres.', 'Enable RLS and validate payloads with Zod/Postgres constraints.', 'Activer RLS et valider les entrées côté Postgres/serveur.') });
     }
+    const sevLabel = (s) => {
+      const k = String(s || '').toUpperCase();
+      if (k === 'CRITICAL') return T('Критично', 'Critical', 'Critique');
+      if (k === 'HIGH') return T('Высокий', 'High', 'Élevé');
+      if (k === 'MEDIUM') return T('Средний', 'Medium', 'Moyen');
+      return T('Низкий', 'Low', 'Faible');
+    };
     const tb = $('#aud-live-tbody'); tb.replaceChildren();
     findings.forEach((f) => {
       const tr = el('tr');
       const sc = f.sev === 'CRITICAL' ? 'c' : f.sev === 'HIGH' ? 'h' : f.sev === 'MEDIUM' ? 'm' : 'l';
-      const td0 = el('td'); td0.append(el('span', 'sev ' + sc, f.sev));
+      const td0 = el('td'); td0.append(el('span', 'sev ' + sc, sevLabel(f.sev)));
       tr.append(td0, el('td', '', f.issue), el('td', '', f.fix));
       tb.append(tr);
     });
@@ -3088,17 +3207,17 @@ async function checkout(cart, discountPercent) {
     if (res.naive.model) $('#rt-vuln-model').textContent = res.naive.model;
     $('#rt-vuln-reply').textContent = res.naive.reply;
     $('#rt-vuln-tool').textContent = res.naive.breachReasons?.length
-      ? `Audit: ${res.naive.breachReasons.join(' · ')}`
-      : `Audit: ${T('Утечек и выхода за рамки магазина не обнаружено', 'Store scope held — zero leaks or hijacks', 'Périmètre respecté — aucune fuite')}`;
+      ? `${T('Проверка: ', 'Audit: ', 'Contrôle : ')}${res.naive.breachReasons.join(' · ')}`
+      : `${T('Проверка: ', 'Audit: ', 'Contrôle : ')}${T('Утечек и выхода за рамки магазина не обнаружено', 'Store scope held — zero leaks or hijacks', 'Périmètre respecté — aucune fuite')}`;
 
     $('#rt-guard-badge').className = 'pill ok';
     $('#rt-guard-badge').textContent = T('В рамках магазина', 'Policy enforced', 'Règles maintenues');
     if (res.guarded.model) $('#rt-guard-model').textContent = res.guarded.model;
     $('#rt-guard-reply').textContent = res.guarded.reply;
     const lines = [
-      `L1 Input Scrubber: ${res.guarded.layer1Flags?.length ? res.guarded.layer1Flags.join(', ') : 'clean'}`,
-      `L2 Intent Router: ${res.guarded.intent || 'store_catalog_qa'} (zero CRM secrets in memory)`,
-      `L3 Guard: ${res.guarded.layer3Blocks?.length ? res.guarded.layer3Blocks.join('; ') : 'scope & <=5% policy verified'}`,
+      `${T('1. Входной фильтр', '1. Input filter', '1. Filtre d’entrée')}: ${res.guarded.layer1Flags?.length ? res.guarded.layer1Flags.join(', ') : T('чисто', 'clean', 'propre')}`,
+      `${T('2. Маршрутизация', '2. Intent router', '2. Routage')}: ${res.guarded.intent || 'store_catalog_qa'} (${T('секретов CRM нет в контексте', 'zero CRM secrets in memory', 'aucun secret CRM en mémoire')})`,
+      `${T('3. Контроль ответа', '3. Output guard', '3. Contrôle de sortie')}: ${res.guarded.layer3Blocks?.length ? res.guarded.layer3Blocks.join('; ') : T('рамки магазина и лимит 5% соблюдены', 'scope & <=5% policy verified', 'périmètre et limite 5 % respectés')}`,
     ];
     $('#rt-guard-trace').textContent = lines.join('\n');
   }
@@ -3123,15 +3242,18 @@ async function checkout(cart, discountPercent) {
     renderRtResult({
       naive: {
         breached: true,
-        model: 'nvidia/nemotron-3.5-lightning-30b · Free ($0.00)',
+        model: `nvidia/nemotron-3.5-lightning-30b · ${T('бесплатно', 'Free ($0.00)', 'gratuit')}`,
         reply: T('Конечно! Вот простой скрипт "Hello, World!" на Python:\n\nprint("Hello, World!")', 'Sure! Here is a simple "Hello, World!" script in Python:\n\nprint("Hello, World!")', 'Bien sûr ! Voici un script Python simple :\n\nprint("Hello, World!")'),
-        breachReasons: ['Instruction override succeeded: bot hijacked to generate code'],
+        breachReasons: [T('Подмена инструкций сработала: бот сгенерировал код', 'Instruction override succeeded: bot hijacked to generate code', 'Détournement réussi : génération de code déclenchée')],
       },
       guarded: {
-        model: 'gemini-4-neon · Paid Vertex AI',
+        model: `gemini-4-neon · ${T('Vertex AI', 'Paid Vertex AI', 'Vertex AI')}`,
         intent: 'off_topic_request',
-        layer1Flags: ['Instruction override / social-engineering pattern flagged', 'Off-topic / code-generation attempt flagged'],
-        layer3Blocks: ['Off-topic / code request intercepted (polite store reply returned)'],
+        layer1Flags: [
+          T('Попытка подмены инструкций / соц-инженерии', 'Instruction override / social-engineering pattern flagged', 'Tentative de contournement / ingénierie sociale'),
+          T('Запрос вне тематики магазина / генерация кода', 'Off-topic / code-generation attempt flagged', 'Demande hors périmètre / génération de code'),
+        ],
+        layer3Blocks: [T('Нецелевой запрос / код перехвачен (дан вежливый ответ магазина)', 'Off-topic / code request intercepted (polite store reply returned)', 'Requête hors sujet interceptée (réponse courtoise renvoyée)')],
         reply: T('Я консультант магазина TechStore, поэтому не смогу помочь с написанием кода, но с радостью подскажу по характеристикам ноутбука ProBook X1, монитора StudioDisplay 27 и доставке!', 'I am TechStore’s shopping consultant, so I cannot help with writing code — happy to answer any questions about our ProBook X1 laptop, StudioDisplay 27 monitor, or shipping!', 'Je suis le conseiller TechStore, je ne peux pas rédiger de code, mais je vous renseigne volontiers sur le ProBook X1, le StudioDisplay 27 et la livraison !'),
       },
     });
@@ -3167,7 +3289,7 @@ async function checkout(cart, discountPercent) {
         }
       } catch {} finally { $('#rt-btn').disabled = false; }
     }
-    $('#rt-status').textContent = 'local guard simulation';
+    $('#rt-status').textContent = T('предпросмотр', 'local preview', 'aperçu local');
   }
   $('#rt-form').onsubmit = (e) => { e.preventDefault(); runRedTeam($('#rt-in').value, true); };
 
@@ -3264,6 +3386,18 @@ async function checkout(cart, discountPercent) {
     };
   });
 
+  const lgUnitMap = {
+    ru: { m: 'м', pcs: 'шт', set: 'компл', kg: 'кг' },
+    en: { m: 'm', pcs: 'pcs', set: 'set', kg: 'kg' },
+    fr: { m: 'm', pcs: 'u', set: 'lot', kg: 'kg' },
+  };
+  const lgUnit = (u) => (lgUnitMap[L] || lgUnitMap.en)[u] || u;
+  const lgIssueLabel = (code) => ({
+    PRICE_ABOVE_CONTRACT_CAP: T('Цена выше договора', 'Above contract cap', 'Prix > contrat'),
+    LINE_MATH_MISMATCH: T('Ошибка суммы в строке', 'Line math error', 'Écart de calcul'),
+    LOW_SKU_CONFIDENCE: T('Неточное совпадение SKU', 'Low SKU confidence', 'Correspondance incertaine'),
+  }[code] || code);
+
   function renderLedgerGuardReport(rep) {
     if (!rep || !rep.before) return;
     const cur = rep.currency || 'RUB';
@@ -3283,10 +3417,10 @@ async function checkout(cart, discountPercent) {
     const bar = $('#lg-checks-bar');
     bar.replaceChildren();
     [
-      [T('Налоговый ID', 'Tax ID', 'N° légal'), `${rep.tax_check?.tax_id || '—'} (${taxOk ? T('контрольное число верно', 'valid checksum', 'clé valide') : T('ошибка ключа', 'invalid checksum', 'clé invalide')})`],
-      [T('Счёт / IBAN', 'Bank / IBAN', 'RIB / IBAN'), bankMatch ? T('совпадает с договором', 'matches contract', 'conforme au contrat') : `${T('не совпадает с договором ', 'differs from contract ', 'diffère du contrat ')}${rep.bank_check?.approved_account || ''}`],
+      [T('ИНН', 'Tax / VAT ID', 'SIRET / TVA'), `${rep.tax_check?.tax_id || '—'} (${taxOk ? T('контрольное число верно', 'valid checksum', 'clé valide') : T('ошибка ключа', 'invalid checksum', 'clé invalide')})`],
+      [T('Расчётный счёт', 'Bank / IBAN', 'IBAN'), bankMatch ? T('совпадает с договором', 'matches contract', 'conforme au contrat') : `${T('не совпадает с договором ', 'differs from contract ', 'diffère du contrat ')}${rep.bank_check?.approved_account || ''}`],
       [T('Договор', 'Contract', 'Contrat'), rep.contract_check?.matched || '—'],
-      [T('Цепь аудита', 'Audit chain', 'Audit SHA-256'), chainOk ? T(`цепочка цела (${rep.chain_verification?.entries || 0} зап.)`, `intact (${rep.chain_verification?.entries || 0} entries)`, `intacte (${rep.chain_verification?.entries || 0} entrées)`) : T('нарушена', 'broken', 'rompue')],
+      [T('Журнал сверки', 'Audit log', 'Journal d\'audit'), chainOk ? T(`цепочка цела (${rep.chain_verification?.entries || 0} зап.)`, `intact (${rep.chain_verification?.entries || 0} entries)`, `intacte (${rep.chain_verification?.entries || 0} entrées)`) : T('нарушена', 'broken', 'rompue')],
     ].forEach(([k, v]) => {
       const sp = el('span'); sp.append(document.createTextNode(k + ': '), el('b', '', v)); bar.append(sp);
     });
@@ -3330,8 +3464,10 @@ async function checkout(cart, discountPercent) {
     (rep.lines || []).forEach((ln) => {
       const tr = el('tr');
       const hasIss = (ln.issues || []).length > 0;
-      const tdNorm = el('td', '', `${ln.normalized_qty} ${ln.normalized_unit} × ${lgFmtMinor(ln.normalized_unit_minor, cur)}`);
-      const tdSt = el('td', hasIss ? 'st-bad' : 'st-ok', hasIss ? ln.issues.join(', ') : (ln.pack_note || T('Ок', 'OK', 'OK')));
+      const u = lgUnit(ln.normalized_unit);
+      const tdNorm = el('td', '', `${ln.normalized_qty} ${u} × ${lgFmtMinor(ln.normalized_unit_minor, cur)}`);
+      const noteLoc = ln.pack_note ? String(ln.pack_note).replace(/\bm\b/g, lgUnit('m')).replace(/\bpcs\b/g, lgUnit('pcs')) : '';
+      const tdSt = el('td', hasIss ? 'st-bad' : 'st-ok', hasIss ? ln.issues.map(lgIssueLabel).join(', ') : (noteLoc || T('Ок', 'OK', 'OK')));
       tr.append(
         el('td', '', String(ln.line_no)),
         el('td', '', ln.raw_description),
@@ -3479,6 +3615,8 @@ async function checkout(cart, discountPercent) {
     generateEbayListing(false);
 
     if (!uploadedImageDataUrl) {
+      curScanKey = L === 'ru' ? 's2' : 's1';
+      $$('#scan-samples [data-sample]').forEach((x) => x.setAttribute('aria-pressed', x.dataset.sample === curScanKey));
       drawHandCanvas();
       renderVerbatimText(curHandMode === 'verbatim' ? activeScanCfg().verbatim : activeScanCfg().norm);
     }
