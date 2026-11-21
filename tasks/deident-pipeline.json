@@ -1,0 +1,51 @@
+{
+  "slug": "deident-pipeline",
+  "lang": "en",
+  "createdAt": "2026-11-21",
+  "title": "Architecture: Repeatable De-Identification Pipeline Across 5 Datasets",
+  "brief": "Strip direct and indirect identifiers across 5 datasets (internal Gmail logs, code repository, CRM lead records, email engagement metrics, and creator analytics) before partner sharing. Preserve analytical value via deterministic tokenization/hashing and k-anonymity rules, plus a validation report confirming re-identification checks return zero PII.",
+  "summary": "Deterministic Python rules and HMAC-SHA256 tokenization scrub emails, phones, names, and company metadata across all 5 sources; NER/LLM assistance only flags free-text edge cases before a final automated re-identification test suite runs.",
+  "nodes": [
+    { "title": "5 Raw Sources", "tech": "Gmail/Git/CRM/CSV", "kind": "io" },
+    { "title": "Entity Scanner", "tech": "Regex + Presidio NER", "kind": "ai" },
+    { "title": "Hash & Mask Core", "tech": "Python + HMAC-SHA256", "kind": "code" },
+    { "title": "Risk & Edge QA", "tech": "K-Anon Validator", "kind": "human" },
+    { "title": "Clean Outputs", "tech": "JSON/CSV + Re-ID Test", "kind": "db" }
+  ],
+  "split": {
+    "code": [
+      "Deterministic regex + keyed HMAC-SHA256 pseudonymization per join key so CRM/email/creator analytics remain joinable without exposing names or emails",
+      "AST/comment & secret scrubbing pass on the code repository (git-filter/author rewriting + regex entropy checks)",
+      "Automated validation test suite checking direct PII patterns, rare quasi-identifier k-threshold, and schema integrity"
+    ],
+    "ai": [
+      "NER pass on unstructured Gmail thread bodies and CRM notes to surface contextual person/company mentions missed by regex",
+      "Residual-risk spot audit helper flagging indirect company references in free text before final export"
+    ]
+  },
+  "milestones": [
+    {
+      "phase": "1. Schema Discovery & 1-Source Pilot",
+      "deliverable": "Audit all 5 input schemas, agree on join-key salt strategy, and run deterministic scrubber on a small sample drop",
+      "estimate": "1 day · ₹4,000 INR"
+    },
+    {
+      "phase": "2. Full 5-Dataset Pipeline & Scripts",
+      "deliverable": "Repeatable Python + SQL scripts covering Gmail, code repo, CRM, email engagement, and creator metrics",
+      "estimate": "2–3 days · ₹11,000 INR"
+    },
+    {
+      "phase": "3. Re-ID Validation & Tech Brief",
+      "deliverable": "Clean share-ready outputs, automated re-identification validation report, and rerun documentation",
+      "estimate": "1 day · ₹5,000 INR"
+    }
+  ],
+  "monthlyOps": "Runs 100% offline/locally in Python on your own machine or VPC ($0 API cost required if using local NER + deterministic HMAC rules).",
+  "questions": [
+    "Do datasets need consistent cross-table join keys (e.g., salted HMAC per creator/lead ID across CRM and email logs)?",
+    "What format is the Gmail export (MBOX, JSON, or API dump) and does the code repo need git commit history scrubbed too?",
+    "Are there minimum k-anonymity thresholds or specific regulatory rules (GDPR/DPDP) expected in the technical brief?"
+  ],
+  "relatedCase": "project",
+  "pitch": "Hi! I mapped out a repeatable Python de-identification pipeline across your 5 sources (HMAC join preservation + offline NER + re-ID validation checks): https://beelsik.github.io/portfolio/?src=freelancer&task=deident-pipeline"
+}

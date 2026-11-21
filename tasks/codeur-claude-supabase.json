@@ -1,0 +1,51 @@
+{
+  "slug": "codeur-claude-supabase",
+  "lang": "fr",
+  "createdAt": "2026-11-21",
+  "title": "Audit sécurité pré-lancement : Netlify, Supabase RLS, Stripe & sessions",
+  "brief": "Audit de sécurité complet avant mise en production (et suivi post-lancement) pour une plateforme générée avec Claude IA : hébergement statique et fonctions Netlify, base Supabase avec RLS, paiement Stripe Checkout via webhook signé, cookie de session signé et limite de 2 appareils par compte.",
+  "summary": "Vérification ciblée des règles RLS Supabase, des fonctions Netlify exposées, de l'idempotence et signature du webhook Stripe, des cookies de session et du verrouillage multi-appareils, livrée avec correctifs SQL/JS prêts à fusionner avant début décembre.",
+  "nodes": [
+    { "title": "Repo & Env Test", "tech": "Netlify + GitHub", "kind": "io" },
+    { "title": "Audit RLS & Auth", "tech": "Supabase + JWT", "kind": "code" },
+    { "title": "Webhooks Stripe", "tech": "HMAC + Replay Guard", "kind": "code" },
+    { "title": "Revue IA & PDF", "tech": "Assisté + Vérif Code", "kind": "ai" },
+    { "title": "Correctifs SQL", "tech": "Rapport + Retest", "kind": "db" }
+  ],
+  "split": {
+    "code": [
+      "Audit complet des politiques RLS (anon vs authenticated vs service_role), vues exposées et fuites éventuelles de clés admin côté bundle statique",
+      "Revue des fonctions Netlify : validation de la signature Stripe (constructEvent), prévention des doublons d'accès, et contrôle des cookies signés (HttpOnly/SameSite/rotation)",
+      "Test du verrouillage à 2 appareils (contournement User-Agent, révocation de session, accès direct aux URLs du lecteur PDF protégé)"
+    ],
+    "ai": [
+      "Analyse systématique des fichiers générés par Claude IA pour repérer la logique métier restée côté client ou les contrôles manquants",
+      "Revue ciblée des futures briques (QCM, import de données, rôle admin) pour cadrer l'architecture sécurisée dès maintenant"
+    ]
+  },
+  "milestones": [
+    {
+      "phase": "1. Audit code & RLS Supabase",
+      "deliverable": "Revue du dépôt GitHub, des variables Netlify, des tables/RLS Supabase et des clés exposées",
+      "estimate": "1 jour · 140 €"
+    },
+    {
+      "phase": "2. Tests Stripe, sessions & PDF",
+      "deliverable": "Tests d'intrusion ciblés (webhook Stripe, cookies signés, contournement 2 appareils, accès PDF) sur votre env de test",
+      "estimate": "1 jour · 150 €"
+    },
+    {
+      "phase": "3. Correctifs + Retest pré-prod",
+      "deliverable": "Rapport priorisé + migrations SQL / patchs Netlify + contre-vérification avant lancement début décembre",
+      "estimate": "1 jour · 110 €"
+    }
+  ],
+  "monthlyOps": "Audit ponctuel (0 € de coût récurrent ajouté) ; vérifications automatisées légères possibles dans GitHub Actions avant chaque déploiement Netlify.",
+  "questions": [
+    "Le lecteur PDF protégé génère-t-il des URLs signées éphémères Supabase Storage ou passe-t-il par une fonction Netlify intermédiaire ?",
+    "Comment est vérifiée la limite de 2 appareils (empreinte côté client, table de sessions actives en base ou token révocable) ?",
+    "Souhaitez-vous uniquement un rapport avec patchs SQL/PR ou que j'applique directement les correctifs sur une branche dédiée ?"
+  ],
+  "relatedCase": "audit",
+  "pitch": "Bonjour ! J'ai préparé un plan d'audit adapté à votre architecture (Netlify + Supabase RLS + Stripe + limite 2 appareils) : https://beelsik.github.io/portfolio/?lang=fr&src=codeur&task=codeur-claude-supabase"
+}

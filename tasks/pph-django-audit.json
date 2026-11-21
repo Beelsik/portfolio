@@ -1,0 +1,51 @@
+{
+  "slug": "pph-django-audit",
+  "lang": "en",
+  "createdAt": "2026-11-21",
+  "title": "Scope: Pre-Launch Django & PostgreSQL Multi-Tenant Security Review",
+  "brief": "Pre-launch security review and authorised testing against a dedicated test environment for a multi-tenant Django and PostgreSQL SaaS handling customers, invoices, files, and roles. Deliver an initial risk assessment, severity-rated findings, practical developer fixes in plain English, and a follow-up re-test.",
+  "summary": "Systematic manual + script-assisted audit of Django views/serializers, PostgreSQL tenant scoping, session/MFA flows, invoice calculations, and file upload handling on your test environment, ending with plain-English fixes and a verification re-test.",
+  "nodes": [
+    { "title": "Test Env & Repo", "tech": "Django + Postgres", "kind": "io" },
+    { "title": "Static & Config", "tech": "Bandit / Env Audit", "kind": "code" },
+    { "title": "Tenant & RBAC", "tech": "IDOR / Auth Checks", "kind": "code" },
+    { "title": "Invoice Flows", "tech": "Tamper & Upload QA", "kind": "ai" },
+    { "title": "Report & Retest", "tech": "Severity + Dev Guide", "kind": "db" }
+  ],
+  "split": {
+    "code": [
+      "Automated Django security settings, dependency CVE scan, Bandit static rules, and PostgreSQL/ORM raw-SQL review",
+      "Cross-tenant IDOR & RBAC matrix tests verifying Tenant A cannot read/write Tenant B records, invoices, or uploaded files",
+      "Invoice/payment server-side tampering, password reset/MFA token expiry, and file upload MIME/path-traversal verification"
+    ],
+    "ai": [
+      "Plain-English translation and prioritized remediation walkthrough tailored for a non-developer founder + engineering backlog",
+      "Triage helper correlating endpoint routes against Django permissions decorators to spot unprotected views quickly"
+    ]
+  },
+  "milestones": [
+    {
+      "phase": "1. Scoping & Initial Risk Check",
+      "deliverable": "Confirm isolated test environment rules of engagement, review Django settings/deployment config, and deliver risk snapshot",
+      "estimate": "0.5 day · £28"
+    },
+    {
+      "phase": "2. Multi-Tenant, Auth & Workflow Testing",
+      "deliverable": "Test RBAC/IDOR tenant boundaries, MFA/reset flows, invoice math integrity, uploads, and SQL/XSS/CSRF controls",
+      "estimate": "1.5 days · £40"
+    },
+    {
+      "phase": "3. Report + Dev Recommendations + Retest",
+      "deliverable": "Severity-ranked report with plain-English summary, exact code patches, and follow-up verification re-test",
+      "estimate": "0.5 day · £20"
+    }
+  ],
+  "monthlyOps": "One-off pre-launch test engagement ($0 recurring runtime cost; optional CI security checks via GitHub Actions free tier).",
+  "questions": [
+    "Will test accounts for at least 2 separate tenant businesses and each user role (admin, staff, customer) be available on the test env?",
+    "Is the payment/invoice workflow using Stripe/GoCardless webhooks or internal invoice state transitions on the test site?",
+    "Would read-only source access to the Django repo be shared for faster code-level verification alongside black-box endpoint testing?"
+  ],
+  "relatedCase": "audit",
+  "pitch": "Hi Gemma! I put together a clear step-by-step security review plan for your Django + PostgreSQL multi-tenant app: https://beelsik.github.io/portfolio/?src=pph&task=pph-django-audit"
+}
