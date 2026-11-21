@@ -73,6 +73,22 @@ test('portfolio.html and index.html are identical and ua.html has zero RU leaks'
   assert.doesNotMatch(ua, /[ыэъёЫЭЪЁ₽]|ru-RU/, 'ua.html must have zero Russian characters or ru-RU locale');
 });
 
+test('both index.html and ua.html expose 3 fixed-price starter packages in #packages', () => {
+  for (const fname of ['index.html', 'ua.html']) {
+    const html = fs.readFileSync(path.join(ROOT, fname), 'utf8');
+    assert.match(html, /id="packages"/, `${fname}: missing #packages section`);
+    const secMatch = html.match(/id="packages"[\s\S]*?<table class="ch-spec pkg-table">[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/);
+    assert.ok(secMatch, `${fname}: missing .pkg-table tbody inside #packages`);
+    const tbody = secMatch[1];
+    const rows = tbody.match(/<tr\b/g) || [];
+    const amts = tbody.match(/class="pkg-amt"/g) || [];
+    const days = tbody.match(/class="pkg-days"/g) || [];
+    assert.equal(rows.length, 3, `${fname}: expected 3 starter package rows`);
+    assert.equal(amts.length, 3, `${fname}: expected 3 .pkg-amt prices`);
+    assert.equal(days.length, 3, `${fname}: expected 3 .pkg-days timelines`);
+  }
+});
+
 test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, and sets static-CDN CORS', async () => {
   const proc = spawn(process.execPath, [path.join(ROOT, 'server.mjs')], {
     cwd: ROOT,

@@ -472,6 +472,24 @@ footer {
 .task-foot-callout { margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
 .task-compose-box { margin-top: 8px; padding: 14px 16px; background: var(--panel); border: 1px dashed var(--line-strong); border-radius: 8px; display: grid; gap: 10px; }
 
+/* Fixed-price starter packages (#packages) */
+#packages { scroll-margin-top: 84px; }
+.pkg-demo-link { display: inline-block; margin-top: 4px; font-size: 12.5px; color: var(--ink-muted); text-decoration-color: var(--line-strong); }
+.pkg-demo-link:hover { color: var(--ink); }
+.pkg-table th.pkg-col-price, .pkg-table td.pkg-price { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pkg-amt { display: block; font-weight: 600; color: var(--ink); font-size: 14.5px; }
+.pkg-days { display: block; font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
+@media (max-width: 680px) {
+  .pkg-table thead { display: none; }
+  .pkg-table, .pkg-table tbody { display: block; width: 100%; }
+  .pkg-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .pkg-table tr:first-child { border-top: 1px solid var(--line-strong); }
+  .pkg-table td { border: 0; padding: 0; }
+  .pkg-table td.pkg-name { grid-column: 1; grid-row: 1; }
+  .pkg-table td.pkg-price { grid-column: 2; grid-row: 1; }
+  .pkg-table td.pkg-desc { grid-column: 1 / -1; grid-row: 2; padding-top: 2px; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .btn[disabled], .ch-btn[disabled] { position: relative; opacity: 0.65; }
   ::view-transition-old(root) { animation: none; }
@@ -542,6 +560,61 @@ footer {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div class="ch-sheet__body" id="packages">
+          <span class="ch-label">Невеликі задачі з фіксованою ціною</span>
+          <div class="tbl">
+            <table class="ch-spec pkg-table">
+              <thead>
+                <tr>
+                  <th style="width:52px">№</th>
+                  <th style="width:240px">Пакет</th>
+                  <th>Що входить на виході</th>
+                  <th class="pkg-col-price" style="width:150px">Термін і ціна</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="pos">01</td>
+                  <td class="pkg-name">
+                    <strong>Telegram-бот за вашим прайсом і частими питаннями</strong>
+                    <a class="pkg-demo-link" href="#sales">стенд 01 ↓</a>
+                  </td>
+                  <td class="pkg-desc">Підключаю ваш прайс і правила (до 150 позицій із Excel або Google Таблиць): бот відповідає строго за цінами без вигадок, збирає контакти в заявку та передає нестандартні звернення менеджеру. Готовий Docker-контейнер та інструкція.</td>
+                  <td class="pkg-price">
+                    <span class="pkg-amt">5 500 ₴</span>
+                    <span class="pkg-days">3 дні</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="pos">02</td>
+                  <td class="pkg-name">
+                    <strong>Звірка рахунків і накладних на 50 ваших файлах</strong>
+                    <a class="pkg-demo-link" href="#project">LedgerGuard ↓</a>
+                  </td>
+                  <td class="pkg-desc">Налаштовую перевірку під ваш прайс і договори (PDF, XLSX, скани): ловлю помилки арифметики, ПДВ, цін вище договору, перерахунок бухт/метрів і підміну ЄДРПОУ або IBAN. На виході — таблиця розбіжностей і готовий Python-скрипт.</td>
+                  <td class="pkg-price">
+                    <span class="pkg-amt">4 200 ₴</span>
+                    <span class="pkg-days">2 дні</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="pos">03</td>
+                  <td class="pkg-name">
+                    <strong>Аудит Supabase і безпеки після Lovable / Cursor</strong>
+                    <a class="pkg-demo-link" href="#audit">стенд 09 ↓</a>
+                  </td>
+                  <td class="pkg-desc">Перевіряю політики RLS, витоки сервісних ключів у фронтенд, підміну сум замовлення на клієнті та Edge Functions. Ви отримуєте звіт за критичністю і готові SQL-міграції з патчами для закриття критичних дір.</td>
+                  <td class="pkg-price">
+                    <span class="pkg-amt">4 800 ₴</span>
+                    <span class="pkg-days">2 дні</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Обсяг і ціна фіксуються до старту — достатньо написати назву пакета й додати приклад файлу або посилання на репозиторій. Якщо після малого пакета перейдемо до повного впровадження, його вартість зарахується в основний проєкт.</p>
         </div>
 
         <table class="ch-stamp-block">
@@ -1487,7 +1560,7 @@ async function checkout(cart, discountPercent) {
   <footer>
     <div>
       <strong style="color:var(--ink)">Обговорити задачу</strong>
-      <p style="margin:5px 0 0;max-width:64ch">Напишіть у переписці на майданчику, де ви відкрили це посилання, і додайте приклад файлу або короткий опис процесу — відповім із термінами, архітектурою та пропозицією щодо пілоту.</p>
+      <p style="margin:5px 0 0;max-width:64ch">Напишіть у переписці на майданчику, де ви відкрили це посилання, і додайте приклад файлу або короткий опис процесу — відповім із термінами, архітектурою та пропозицією щодо пілоту. Або почніть з одного з <a href="#packages">3 фіксованих пакетів (4 200 – 5 500 ₴) ↑</a>.</p>
       <p class="note" style="margin-top:12px;max-width:74ch;opacity:0.85">Усі стенди — демонстрація на вигаданих даних (клініка «Квітень», «ЄвроТранс», «БудІнвест» тощо): реквізити, прайси й замовлення синтетичні, реальні дані клієнтів під NDA не публікуються.</p>
     </div>
     <div class="foot-links" id="foot-links">
@@ -1574,6 +1647,12 @@ async function checkout(cart, discountPercent) {
       $$('.fbtn').forEach((b) => b.setAttribute('aria-pressed', b === btn));
       $$('.case').forEach((sec) => { sec.hidden = cat !== 'all' && sec.dataset.cat !== cat; });
     };
+  });
+  $$('.pkg-demo-link').forEach((link) => {
+    link.addEventListener('click', () => {
+      $$('.fbtn').forEach((b) => b.setAttribute('aria-pressed', b.dataset.cat === 'all'));
+      $$('.case').forEach((sec) => { sec.hidden = false; });
+    });
   });
 
   /* ==================== 01 SALES BOT ==================== */
