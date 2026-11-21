@@ -15,15 +15,16 @@ const ALLOWED_KINDS = ['io', 'code', 'ai', 'db', 'human'];
 
 function printHelp() {
   console.log(`Usage:
-  node scripts/make-task.mjs <slug> --brief "..." [--lang ru|uk|en|fr] [--case <id>] [--title "..."] [--push]
-  node scripts/make-task.mjs <slug> --file brief.txt [--lang ...] [--push]
-  cat brief.txt | node scripts/make-task.mjs <slug> [--push]
+  node scripts/make-task.mjs <slug> --brief "..." [--lang ru|uk|en|fr] [--src kwork|fl|codeur] [--case <id>] [--title "..."] [--push]
+  node scripts/make-task.mjs <slug> --file brief.txt [--lang ...] [--src ...] [--push]
+  cat brief.txt | node scripts/make-task.mjs <slug> [--src ...] [--push]
 
 Options:
   <slug>        Task ID matching /^[a-z0-9][a-z0-9_-]{0,63}$/i (saved to tasks/<slug>.json)
   --brief       Task brief text inline
   --file        Path to UTF-8 text file containing task brief
   --lang        Target language: ru | uk | en | fr (auto-detected if omitted)
+  --src         Source tag for attribution (e.g. kwork, fl, codeur, freelancehunt)
   --case        Related portfolio stand: ${ALLOWED_CASES.join(' | ')}
   --title       Optional override for heading title
   --push        Stage tasks/<slug>.json, commit, and push to origin
@@ -103,6 +104,7 @@ function parseArgs(argv) {
     else if (a === '--brief' && i + 1 < argv.length) opts.brief = argv[++i];
     else if (a === '--file' && i + 1 < argv.length) opts.file = argv[++i];
     else if (a === '--lang' && i + 1 < argv.length) opts.lang = argv[++i];
+    else if (a === '--src' && i + 1 < argv.length) opts.src = argv[++i];
     else if (a === '--case' && i + 1 < argv.length) opts.case = argv[++i];
     else if (a === '--title' && i + 1 < argv.length) opts.title = argv[++i];
     else if (a.startsWith('-')) throw new Error(`Unknown flag: ${a}`);
@@ -230,10 +232,22 @@ async function callFastDirect(env, system, brief) {
   return String(msg.content || msg.reasoning_content || '').trim();
 }
 
-async function generatePlanWithLlm(env, brief, lang, slug) {
+function sanitizeSrc(s) {
+  return String(s || '').trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+}
+
+function buildTaskLink(lang, taskVal, src = '') {
+  const s = sanitizeSrc(src);
+  const srcQ = s ? `src=${encodeURIComponent(s)}&` : '';
+  return lang === 'uk'
+    ? `https://beelsik.github.io/portfolio/ua/?${srcQ}task=${taskVal}`
+    : `https://beelsik.github.io/portfolio/?${srcQ}task=${taskVal}`;
+}
+
+async function generatePlanWithLlm(env, brief, lang, slug, src = '') {
   const langMap = { ru: 'Russian', uk: 'Ukrainian (strictly pure Ukrainian, zero Russian letters ы/э/ъ/ё/₽)', en: 'English', fr: 'French' };
   const currMap = { ru: 'RUB (₽)', uk: 'UAH (₴)', en: 'USD ($) or GBP (£)', fr: 'EUR (€)' };
-  const pageUrl = lang === 'uk' ? `https://beelsik.github.io/portfolio/ua/?task=${slug}` : `https://beelsik.github.io/portfolio/?task=${slug}`;
+  const pageUrl = buildTaskLink(lang, slug, src);
   const system = [
     'You are a pragmatic senior backend & AI automation engineer writing a tailored proposal for a client brief.',
     `Write ALL fields strictly in ${langMap[lang] || 'English'}. Realistic freelance pricing in ${currMap[lang] || 'USD ($)'}.`,
@@ -283,8 +297,8 @@ async function generatePlanWithLlm(env, brief, lang, slug) {
   return await r.json();
 }
 
-function buildDryRunPlan(brief, lang, slug) {
-  const link = lang === 'uk' ? `https://beelsik.github.io/portfolio/ua/?task=${slug}` : `https://beelsik.github.io/portfolio/?task=${slug}`;
+function buildDryRunPlan(brief, lang, slug, src = '') {
+  const link = buildTaskLink(lang, slug, src);
   const templates = {
     ru: {
       title: `Разбор задачи: ${clipLabel(brief, 56)}`,
@@ -374,7 +388,7 @@ function sanitizePilotEstimate(est, lang) {
   return s;
 }
 
-function normalizeTaskObject({ rawPlan, slug, brief, lang, titleOverride, caseOverride }) {
+function normalizeTaskObject({ rawPlan, slug, brief, lang, titleOverride, caseOverride, src = '' }) {
   const rawNodes = Array.isArray(rawPlan.nodes) ? rawPlan.nodes.slice(0, 6) : [];
   while (rawNodes.length < 4) {
     rawNodes.push({ title: 'Python Check', tech: 'FastAPI / SQL', kind: 'code' });
@@ -402,11 +416,14 @@ function normalizeTaskObject({ rawPlan, slug, brief, lang, titleOverride, caseOv
   if (lang === 'uk' && rc === 'gost') rc = 'spec';
   if (lang !== 'uk' && rc === 'spec') rc = 'gost';
 
-  const link = lang === 'uk'
-    ? `https://beelsik.github.io/portfolio/ua/?task=${slug}`
-    : `https://beelsik.github.io/portfolio/?task=${slug}`;
+  const cleanSrc = sanitizeSrc(src);
+  const srcQ = cleanSrc ? `src=${encodeURIComponent(cleanSrc)}&` : '';
+  const link = buildTaskLink(lang, slug, cleanSrc);
   const defaultTitle = lang === 'uk' ? `Розбір задачі: ${clipLabel(brief, 56)}` : lang === 'ru' ? `Разбор задачи: ${clipLabel(brief, 56)}` : `Architecture Plan: ${clipLabel(brief, 52)}`;
-  const pitchRaw = String(rawPlan.pitch || '').trim();
+  let pitchRaw = String(rawPlan.pitch || '').trim();
+  if (cleanSrc && pitchRaw && !pitchRaw.includes(`src=${cleanSrc}`)) {
+    pitchRaw = pitchRaw.replace(new RegExp(`\\?task=${slug}\\b`, 'g'), `?${srcQ}task=${slug}`);
+  }
   const pitch = pitchRaw ? (pitchRaw.includes(slug) ? pitchRaw : `${pitchRaw} ${link}`) : `${link}`;
 
   const task = {
@@ -455,11 +472,12 @@ async function main() {
   if (!brief) throw new Error('Task brief is required via --brief, --file, or stdin.');
 
   const lang = ['ru', 'uk', 'en', 'fr'].includes(opts.lang) ? opts.lang : detectLang(brief);
+  const src = sanitizeSrc(opts.src);
   const env = parseDotEnv(path.join(ROOT, '.env'));
 
   const rawPlan = opts.dryRun
-    ? buildDryRunPlan(brief, lang, slug)
-    : await generatePlanWithLlm(env, brief, lang, slug);
+    ? buildDryRunPlan(brief, lang, slug, src)
+    : await generatePlanWithLlm(env, brief, lang, slug, src);
 
   const task = normalizeTaskObject({
     rawPlan,
@@ -468,17 +486,18 @@ async function main() {
     lang,
     titleOverride: opts.title,
     caseOverride: opts.case,
+    src,
   });
 
   fs.mkdirSync(TASKS_DIR, { recursive: true });
   const outPath = path.join(TASKS_DIR, `${slug}.json`);
   fs.writeFileSync(outPath, JSON.stringify(task, null, 2) + '\n', 'utf8');
 
-  const pathSuffix = lang === 'uk' ? `/ua/?task=${slug}` : `/?task=${slug}`;
-  const ghUrl = `https://beelsik.github.io/portfolio${pathSuffix}`;
-  const renderUrl = `https://beelsik-portfolio.onrender.com${lang === 'uk' ? `/ua?task=${slug}` : `/?task=${slug}`}`;
+  const srcQ = src ? `src=${encodeURIComponent(src)}&` : '';
+  const ghUrl = buildTaskLink(lang, slug, src);
+  const renderUrl = `https://beelsik-portfolio.onrender.com${lang === 'uk' ? `/ua?${srcQ}task=${slug}` : `/?${srcQ}task=${slug}`}`;
   const zPayload = encodeTaskZ(task);
-  const zUrl = `https://beelsik.github.io/portfolio${lang === 'uk' ? `/ua/?task=${zPayload}` : `/?task=${zPayload}`}`;
+  const zUrl = buildTaskLink(lang, zPayload, src);
 
   if (opts.push) {
     execFileSync('git', ['add', `tasks/${slug}.json`], { cwd: ROOT, stdio: 'inherit' });

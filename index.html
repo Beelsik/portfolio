@@ -3006,7 +3006,7 @@ async function checkout(cart, discountPercent) {
   const origFetch = window.fetch.bind(window);
   window.fetch = async (input, init) => {
     const url = typeof input === 'string' ? input : input?.url || '';
-    if (!url.startsWith('/api/') || url === '/api/health') return origFetch(input, init);
+    if (!url.startsWith('/api/') || url === '/api/health' || url === '/api/event' || url.startsWith('/api/stats')) return origFetch(input, init);
     const t0 = performance.now();
     const res = await origFetch(input, init);
     const wallMs = Math.round(performance.now() - t0);
@@ -3514,6 +3514,10 @@ async function checkout(cart, discountPercent) {
       if ((activeCustomTask?.relatedCase || 'project') === k) o.selected = true;
       caseSel.append(o);
     });
+    const srcIn = el('input'); srcIn.type = 'text'; srcIn.id = 'cmp-src';
+    srcIn.placeholder = 'площадка (kwork, fl, codeur…)';
+    srcIn.value = urlParamsBoot.get('src') || '';
+    srcIn.style.maxWidth = '230px';
 
     const rowActions = el('div', 'row');
     const btnJson = el('button', 'btn ghost sm', 'Скачать <slug>.json в tasks/'); btnJson.type = 'button'; btnJson.id = 'cmp-dl-json';
@@ -3521,8 +3525,12 @@ async function checkout(cart, discountPercent) {
     const cmpNote = el('span', 'note'); cmpNote.id = 'cmp-note';
     const urlOut = el('input'); urlOut.type = 'text'; urlOut.id = 'cmp-url-out'; urlOut.readOnly = true; urlOut.hidden = true;
 
+    const cleanSrcVal = () => srcIn.value.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+
     const buildTaskPayload = () => {
       const slug = (slugIn.value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'custom-order').slice(0, 64);
+      const src = cleanSrcVal();
+      const srcQ = src ? `src=${encodeURIComponent(src)}&` : '';
       const brief = $('#arch-in').value.trim();
       const firstLine = brief.split(/[.!?\n]/)[0].trim().slice(0, 72);
       const title = titleIn.value.trim() || (firstLine ? `Разбор задачи: ${firstLine}` : 'Разбор архитектуры под ваше ТЗ');
@@ -3539,7 +3547,7 @@ async function checkout(cart, discountPercent) {
         monthlyOps: currentArchPlan.monthlyOps || '',
         questions: currentArchPlan.questions || [],
         relatedCase: caseSel.value || 'project',
-        pitch: `Здравствуйте! Набросал предварительную архитектуру под вашу задачу: https://beelsik.github.io/portfolio/?task=${slug}`,
+        pitch: `Здравствуйте! Набросал предварительную архитектуру под вашу задачу: https://beelsik.github.io/portfolio/?${srcQ}task=${slug}`,
       };
     };
 
@@ -3553,7 +3561,9 @@ async function checkout(cart, discountPercent) {
       try {
         const obj = buildTaskPayload();
         const encoded = await encodeCompressedTask(obj);
-        const link = `${location.origin}${location.pathname}?task=${encoded}`;
+        const src = cleanSrcVal();
+        const srcQ = src ? `src=${encodeURIComponent(src)}&` : '';
+        const link = `${location.origin}${location.pathname}?${srcQ}task=${encoded}`;
         urlOut.value = link;
         urlOut.hidden = false;
         try { await navigator.clipboard.writeText(link); cmpNote.textContent = `Скопировано (${link.length} симв.)`; }
@@ -3563,9 +3573,150 @@ async function checkout(cart, discountPercent) {
       }
     };
 
-    rowActions.append(caseSel, btnJson, btnCopyZ, cmpNote);
+    rowActions.append(caseSel, srcIn, btnJson, btnCopyZ, cmpNote);
     box.append(row1, rowActions, urlOut);
     archBody.append(box);
+  }
+
+  function initVisitTracker() {
+    if (composeModeBoot) return;
+    if (!(location.protocol === 'http:' || location.protocol === 'https:' || API_BASE)) return;
+    let src = '';
+    try {
+      const rawSrc = urlParamsBoot.get('src') || urlParamsBoot.get('utm_source') || '';
+      const clean = rawSrc.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+      if (clean) {
+        src = clean;
+        sessionStorage.setItem('pf-src', clean);
+      } else {
+        src = sessionStorage.getItem('pf-src') || '';
+      }
+      if (!src && document.referrer) {
+        const refHost = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
+        if (refHost && refHost !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|localhost|127\.0\.0\.1)$/i.test(refHost)) {
+          src = ('ref:' + refHost).slice(0, 40);
+          sessionStorage.setItem('pf-src', src);
+        }
+      }
+    } catch {}
+    if (!src) src = 'direct';
+
+    let sid = '';
+    try {
+      sid = sessionStorage.getItem('pf-sid') || '';
+      if (!sid) {
+        sid = Math.random().toString(36).slice(2, 10);
+        sessionStorage.setItem('pf-sid', sid);
+      }
+    } catch { sid = Math.random().toString(36).slice(2, 10); }
+
+    const taskTag = taskParamBoot
+      ? (/^(?:z|b64):/i.test(taskParamBoot) ? 'z-inline' : taskParamBoot.slice(0, 48).toLowerCase().replace(/[^a-z0-9._:-]+/g, '-'))
+      : '';
+
+    const ep = (API_BASE || '') + '/api/event';
+    const sendVisit = (event, stands) => {
+      const bodyStr = JSON.stringify({
+        src,
+        task: taskTag,
+        page: location.pathname,
+        lang: L,
+        dev: window.innerWidth <= 720 ? 'mobile' : 'desktop',
+        sid,
+        event,
+        stands,
+      });
+      try {
+        if (navigator.sendBeacon) {
+          const ok = navigator.sendBeacon(ep, new Blob([bodyStr], { type: 'text/plain;charset=UTF-8' }));
+          if (ok) return;
+        }
+        fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: bodyStr,
+          keepalive: true,
+        }).catch(() => {});
+      } catch {}
+    };
+
+    const initialTarget = taskParamBoot ? 'architect' : (location.hash.replace(/^#/, '') || 'cover');
+    sendVisit('open', [initialTarget]);
+
+    const seenViews = new Set();
+    const dwellTimers = new Map();
+    const pendingViews = [];
+    let viewFlushTimer = null;
+    const flushViews = () => {
+      if (viewFlushTimer) { clearTimeout(viewFlushTimer); viewFlushTimer = null; }
+      if (!pendingViews.length) return;
+      sendVisit('view', pendingViews.splice(0, 20));
+    };
+
+    if ('IntersectionObserver' in window) {
+      const vObs = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          const id = en.target.id;
+          if (!id || seenViews.has(id)) return;
+          if (en.isIntersecting) {
+            if (!dwellTimers.has(id)) {
+              dwellTimers.set(id, setTimeout(() => {
+                dwellTimers.delete(id);
+                if (seenViews.has(id)) return;
+                seenViews.add(id);
+                pendingViews.push(id);
+                if (!viewFlushTimer) viewFlushTimer = setTimeout(flushViews, 2500);
+              }, 1800));
+            }
+          } else if (dwellTimers.has(id)) {
+            clearTimeout(dwellTimers.get(id));
+            dwellTimers.delete(id);
+          }
+        });
+      }, { threshold: 0.1 });
+      $$('#cover, #packages, section.case').forEach((s) => vObs.observe(s));
+    }
+
+    const seenActs = new Set();
+    const pendingActs = [];
+    let actFlushTimer = null;
+    const flushActs = () => {
+      if (actFlushTimer) { clearTimeout(actFlushTimer); actFlushTimer = null; }
+      if (!pendingActs.length) return;
+      sendVisit('act', pendingActs.splice(0, 20));
+    };
+    const mainEl = $('main');
+    if (mainEl) {
+      mainEl.addEventListener('click', (e) => {
+        const ctrl = e.target.closest('button, a.pkg-demo-link, a[href^="#"], label');
+        if (!ctrl) return;
+        const sec = ctrl.closest('#packages, section.ch-sheet');
+        if (!sec || !sec.id) return;
+        let actName = ctrl.id || '';
+        if (!actName) {
+          const href = ctrl.getAttribute('href');
+          if (href && href.startsWith('#')) actName = href.slice(1);
+          else if (ctrl.dataset.preset) actName = ctrl.dataset.preset;
+          else if (ctrl.dataset.lgpreset) actName = ctrl.dataset.lgpreset;
+          else if (ctrl.dataset.sample) actName = ctrl.dataset.sample;
+          else if (ctrl.dataset.hmode) actName = ctrl.dataset.hmode;
+          else if (ctrl.dataset.cat) actName = 'cat-' + ctrl.dataset.cat;
+          else if (ctrl.classList.contains('chip')) actName = 'chip';
+          else actName = ctrl.tagName.toLowerCase();
+        }
+        const tok = `${sec.id}:${actName}`.toLowerCase().replace(/[^a-z0-9._:-]+/g, '-').slice(0, 32);
+        if (seenActs.has(tok) || seenActs.size >= 25) return;
+        seenActs.add(tok);
+        pendingActs.push(tok);
+        if (!actFlushTimer) actFlushTimer = setTimeout(flushActs, 2000);
+      }, { passive: true });
+    }
+
+    const flushAll = () => { flushViews(); flushActs(); };
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushAll();
+    });
+    window.addEventListener('pagehide', flushAll);
   }
 
   /* ==================== 10 RED-TEAM ARENA (Dual-Model: Free NIM Naive vs Paid Vertex Guarded) ==================== */
@@ -4103,6 +4254,7 @@ async function checkout(cart, discountPercent) {
   setLang(L);
   initTaskFromUrl().then(() => {
     initPrivateComposer();
+    initVisitTracker();
     if (composeModeBoot && !taskParamBoot) {
       $('#architect')?.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
@@ -4225,7 +4377,8 @@ async function checkout(cart, discountPercent) {
   };
   window.fetch = async (input, init) => {
     const u = String(input && input.url ? input.url : input || '');
-    const isRetryableApi = typeof input === 'string' && u.startsWith('/api/') && !u.startsWith('/api/health');
+    const isAnalytics = u === '/api/event' || u.startsWith('/api/event?') || u.startsWith('/api/stats');
+    const isRetryableApi = typeof input === 'string' && u.startsWith('/api/') && !u.startsWith('/api/health') && !isAnalytics;
     let res;
     try {
       res = await origFetch(input, init);
@@ -4242,7 +4395,7 @@ async function checkout(cart, discountPercent) {
       }
     }
     try {
-      if (u.includes('/api/') && !u.includes('/api/health')) setTimeout(tick, 400);
+      if (u.includes('/api/') && !u.includes('/api/health') && !isAnalytics) setTimeout(tick, 400);
     } catch {}
     return res;
   };

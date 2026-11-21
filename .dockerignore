@@ -7,3 +7,4 @@ node_modules
 КАК_ИСПОЛЬЗОВАТЬ.md
 **/__pycache__
 **/*.pyc
+visits.jsonl

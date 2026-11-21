@@ -36,8 +36,8 @@ jobs:
           node-version: "22"
       - name: Check server.mjs syntax
         run: node --check server.mjs
-      - name: Check make-task CLI syntax
-        run: node --check scripts/make-task.mjs
+      - name: Check make-task & analytics CLI syntax
+        run: node --check scripts/make-task.mjs && node --check scripts/analyze-visits.mjs
       - name: Run task links & static serving tests
         run: node --test scripts/tasks.test.mjs
       - name: Run claude-code-kit hook tests

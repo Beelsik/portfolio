@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { encodeTaskZ, decodeTaskZ } from './make-task.mjs';
+import { summarizeVisitsText } from './analyze-visits.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -89,31 +91,38 @@ test('both index.html and ua.html expose 3 fixed-price starter packages in #pack
   }
 });
 
-test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, and sets static-CDN CORS', async () => {
+test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, tracks ?src=/api/event & protects /api/stats', async () => {
+  const tmpVisits = path.join(os.tmpdir(), `pf-visits-test-${Date.now()}.jsonl`);
+  let serverStdout = '';
   const proc = spawn(process.execPath, [path.join(ROOT, 'server.mjs')], {
     cwd: ROOT,
-    env: { ...process.env, PORT: '0', DISABLE_KEEPALIVE: '1' },
+    env: { ...process.env, PORT: '0', DISABLE_KEEPALIVE: '1', STATS_KEY: 'test-secret-123', VISITS_LOG_PATH: tmpVisits },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
   try {
     const port = await new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('Timed out waiting for server port')), 8000);
-      let buf = '';
+      let resolved = false;
       proc.stdout.on('data', (chunk) => {
-        buf += chunk.toString('utf8');
-        const m = buf.match(/http:\/\/0\.0\.0\.0:(\d+)/);
-        if (m) {
-          clearTimeout(timer);
-          resolve(Number(m[1]));
+        serverStdout += chunk.toString('utf8');
+        if (!resolved) {
+          const m = serverStdout.match(/http:\/\/0\.0\.0\.0:(\d+)/);
+          if (m) {
+            resolved = true;
+            clearTimeout(timer);
+            resolve(Number(m[1]));
+          }
         }
       });
       proc.stderr.on('data', (chunk) => {
-        buf += chunk.toString('utf8');
+        serverStdout += chunk.toString('utf8');
       });
       proc.on('exit', (code) => {
-        clearTimeout(timer);
-        reject(new Error(`Server exited early (${code}): ${buf}`));
+        if (!resolved) {
+          clearTimeout(timer);
+          reject(new Error(`Server exited early (${code}): ${serverStdout}`));
+        }
       });
     });
 
@@ -144,7 +153,55 @@ test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, and sets 
     });
     assert.equal(rCors.status, 204);
     assert.equal(rCors.headers.get('access-control-allow-origin'), 'https://beelsik.github.io');
+
+    const rGetSrc = await fetch(`${base}/?src=kwork&task=bitrix-invoices`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 Test' },
+    });
+    assert.equal(rGetSrc.status, 200);
+
+    const rEvent = await fetch(`${base}/api/event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8', 'User-Agent': 'Mozilla/5.0 Test' },
+      body: JSON.stringify({
+        src: 'kwork',
+        task: 'bitrix-invoices',
+        page: '/',
+        lang: 'ru',
+        dev: 'desktop',
+        sid: 'ab12cd34',
+        event: 'view',
+        stands: ['architect', 'packages', 'sales'],
+      }),
+    });
+    assert.equal(rEvent.status, 204);
+
+    const rNoKey = await fetch(`${base}/api/stats`);
+    assert.equal(rNoKey.status, 404);
+
+    const rStats = await fetch(`${base}/api/stats?key=test-secret-123`);
+    assert.equal(rStats.status, 200);
+    const statsJson = await rStats.json();
+    assert.equal(statsJson.bySource?.kwork?.sessions, 1);
+    assert.ok(statsJson.bySource?.kwork?.hits >= 1);
+    assert.equal(statsJson.byStand?.packages?.views, 1);
+    assert.match(serverStdout, /\[visit\].*src=kwork.*event=view.*stands=architect,packages,sales/);
   } finally {
     proc.kill('SIGTERM');
+    try { fs.unlinkSync(tmpVisits); } catch {}
   }
+});
+
+test('analyze-visits.mjs summarizes Render [visit] log lines accurately', () => {
+  const sample = [
+    '2026-11-21T03:40:00Z [visit] 2026-11-21T03:40:00.000Z | src=kwork | task=bitrix-invoices | page=/ | lang=ru | dev=desktop | sid=ab12cd34 | event=open | stands=architect',
+    '[visit] 2026-11-21T03:40:05.000Z | src=kwork | task=bitrix-invoices | page=/ | lang=ru | dev=desktop | sid=ab12cd34 | event=view | stands=architect,packages,project',
+    '[visit] 2026-11-21T03:41:00.000Z | src=codeur | task=- | page=/ | lang=fr | dev=mobile | sid=ef56gh78 | event=act | stands=audit:aud-run-btn',
+  ].join('\n');
+  const out = summarizeVisitsText(sample);
+  assert.equal(out.totalEvents, 3);
+  assert.equal(out.totalSessions, 2);
+  assert.equal(out.bySource.kwork.sessions, 1);
+  assert.equal(out.bySource.kwork.tasks['bitrix-invoices'], 2);
+  assert.equal(out.byStand.packages.views, 1);
+  assert.equal(out.byStand.audit.actions, 1);
 });

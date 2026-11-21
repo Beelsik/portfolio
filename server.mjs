@@ -197,7 +197,107 @@ const RATE_MAX = Number(process.env.RATE_LIMIT_MAX || 80);
 
 const hits = new Map();
 const heavyHits = new Map();
+const beaconHits = new Map();
 const MAX_RATE_MAP_KEYS = 2000;
+
+const STATS_KEY = (process.env.STATS_KEY || '').trim();
+const VISITS_LOG_PATH = (process.env.VISITS_LOG_PATH || path.join(__dirname, 'visits.jsonl')).trim();
+const visitStats = {
+  startedAt: new Date().toISOString(),
+  bySource: new Map(),
+  byStand: Object.create(null),
+  recent: [],
+};
+
+function sanitizeTag(val, max = 40) {
+  return String(val || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._:-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, max);
+}
+
+function isBotUa(ua) {
+  return /bot|crawl|spider|slurp|lighthouse|render\/|portfolio-keepalive|uptime|wget|curl|facebookexternalhit|whatsapp|snapchat|preview/i.test(String(ua || ''));
+}
+
+function checkBeaconLimit(ip) {
+  const now = Date.now();
+  if (!beaconHits.has(ip) && beaconHits.size >= MAX_RATE_MAP_KEYS) {
+    pruneSingleRateMap(beaconHits, RATE_WINDOW_MS, now);
+  }
+  const list = (beaconHits.get(ip) || []).filter((ts) => now - ts < RATE_WINDOW_MS);
+  if (list.length >= 60) return false;
+  list.push(now);
+  beaconHits.set(ip, list);
+  return true;
+}
+
+function recordVisitEvent({ src, task, page, lang, dev, sid, event, stands } = {}) {
+  const ts = new Date().toISOString();
+  let sSrc = sanitizeTag(src, 40) || 'direct';
+  const sTask = sanitizeTag(task, 48) || '-';
+  const sPage = String(page || '/').slice(0, 64).replace(/[\r\n|]+/g, '') || '/';
+  const sLang = sanitizeTag(lang, 8) || '-';
+  const sDev = sanitizeTag(dev, 16) || '-';
+  const sSid = sanitizeTag(sid, 16) || '-';
+  const allowedEvents = new Set(['hit', 'open', 'view', 'act']);
+  const sEvent = allowedEvents.has(event) ? event : 'view';
+  const cleanStands = Array.isArray(stands)
+    ? stands.map((x) => sanitizeTag(x, 32)).filter(Boolean).slice(0, 20)
+    : [];
+  const standsStr = cleanStands.length ? cleanStands.join(',') : '-';
+
+  console.log(`[visit] ${ts} | src=${sSrc} | task=${sTask} | page=${sPage} | lang=${sLang} | dev=${sDev} | sid=${sSid} | event=${sEvent} | stands=${standsStr}`);
+
+  if (!visitStats.bySource.has(sSrc) && visitStats.bySource.size >= 100) {
+    sSrc = 'other';
+  }
+  let entry = visitStats.bySource.get(sSrc);
+  if (!entry) {
+    entry = { hits: 0, sessions: new Set(), views: Object.create(null), actions: Object.create(null), tasks: Object.create(null) };
+    visitStats.bySource.set(sSrc, entry);
+  }
+  if (sEvent === 'hit' || sEvent === 'open') {
+    entry.hits += 1;
+  }
+  if (sSid && sSid !== '-' && sSid !== 'http' && entry.sessions.size < 500) {
+    entry.sessions.add(sSid);
+  }
+  if (sTask && sTask !== '-') {
+    entry.tasks[sTask] = (entry.tasks[sTask] || 0) + 1;
+  }
+  for (const st of cleanStands) {
+    const standBase = st.split(':')[0] || st;
+    if (sEvent === 'view') {
+      entry.views[st] = (entry.views[st] || 0) + 1;
+      visitStats.byStand[standBase] = visitStats.byStand[standBase] || { views: 0, actions: 0 };
+      visitStats.byStand[standBase].views += 1;
+    } else if (sEvent === 'act') {
+      entry.actions[st] = (entry.actions[st] || 0) + 1;
+      visitStats.byStand[standBase] = visitStats.byStand[standBase] || { views: 0, actions: 0 };
+      visitStats.byStand[standBase].actions += 1;
+    }
+  }
+
+  const rec = { ts, src: sSrc, task: sTask, page: sPage, lang: sLang, dev: sDev, sid: sSid, event: sEvent, stands: cleanStands };
+  while (visitStats.recent.length >= 100) visitStats.recent.shift();
+  visitStats.recent.push(rec);
+
+  if (VISITS_LOG_PATH) {
+    fs.promises
+      .stat(VISITS_LOG_PATH)
+      .then((st) => st.size < 5 * 1024 * 1024)
+      .catch(() => true)
+      .then((canWrite) => {
+        if (canWrite) {
+          return fs.promises.appendFile(VISITS_LOG_PATH, JSON.stringify(rec) + '\n', 'utf8');
+        }
+      })
+      .catch(() => {});
+  }
+}
 
 function pruneSingleRateMap(map, windowMs, now) {
   for (const [key, timestamps] of map.entries()) {
@@ -216,6 +316,7 @@ function pruneRateMaps() {
   const now = Date.now();
   pruneSingleRateMap(hits, RATE_WINDOW_MS, now);
   pruneSingleRateMap(heavyHits, 60 * 60 * 1000, now);
+  pruneSingleRateMap(beaconHits, RATE_WINDOW_MS, now);
 }
 
 setInterval(pruneRateMaps, 5 * 60 * 1000).unref();
@@ -908,12 +1009,103 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (isGetOrHead && (urlPath === '/ua' || urlPath === '/ua/' || urlPath === '/ua.html')) {
+      if (req.method === 'GET' && !isBotUa(req.headers['user-agent'])) {
+        const rawSrc = parsedUrl.searchParams.get('src') || parsedUrl.searchParams.get('utm_source') || '';
+        const rawTask = parsedUrl.searchParams.get('task') || '';
+        if (rawSrc || rawTask) {
+          const ua = String(req.headers['user-agent'] || '');
+          recordVisitEvent({
+            src: rawSrc || 'direct',
+            task: /^(?:z|b64):/i.test(rawTask) ? 'z-inline' : rawTask,
+            page: urlPath,
+            lang: 'uk',
+            dev: /mobile|android|iphone|ipad/i.test(ua) ? 'mobile' : 'desktop',
+            sid: 'http',
+            event: 'hit',
+            stands: [],
+          });
+        }
+      }
       await serveHtmlPage(req, res, 'ua.html');
       return;
     }
 
     if (isGetOrHead && (urlPath === '/' || urlPath === '/index.html' || urlPath === '/portfolio.html')) {
+      if (req.method === 'GET' && !isBotUa(req.headers['user-agent'])) {
+        const rawSrc = parsedUrl.searchParams.get('src') || parsedUrl.searchParams.get('utm_source') || '';
+        const rawTask = parsedUrl.searchParams.get('task') || '';
+        if (rawSrc || rawTask) {
+          const ua = String(req.headers['user-agent'] || '');
+          recordVisitEvent({
+            src: rawSrc || 'direct',
+            task: /^(?:z|b64):/i.test(rawTask) ? 'z-inline' : rawTask,
+            page: urlPath,
+            lang: parsedUrl.searchParams.get('lang') || '-',
+            dev: /mobile|android|iphone|ipad/i.test(ua) ? 'mobile' : 'desktop',
+            sid: 'http',
+            event: 'hit',
+            stands: [],
+          });
+        }
+      }
       await serveHtmlPage(req, res, 'index.html');
+      return;
+    }
+
+    if (req.method === 'POST' && urlPath === '/api/event') {
+      const ip = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket?.remoteAddress || 'local';
+      if (!isBotUa(req.headers['user-agent']) && checkBeaconLimit(ip)) {
+        try {
+          const body = await readJsonBody(req, 4096);
+          recordVisitEvent(body);
+        } catch {}
+      }
+      if (!res.headersSent && !res.destroyed) {
+        res.writeHead(204, { 'Content-Length': '0', 'Cache-Control': 'no-store' });
+        res.end();
+      }
+      return;
+    }
+
+    if (isGetOrHead && urlPath === '/api/stats') {
+      const supplied = String(parsedUrl.searchParams.get('key') || req.headers['x-stats-key'] || '');
+      let authorized = false;
+      if (STATS_KEY) {
+        const a = Buffer.from(supplied, 'utf8');
+        const b = Buffer.from(STATS_KEY, 'utf8');
+        authorized = a.length === b.length && crypto.timingSafeEqual(a, b);
+      } else if (!process.env.RENDER) {
+        const remote = String(req.socket?.remoteAddress || '');
+        authorized = remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
+      }
+      if (!authorized) {
+        if (!res.headersSent && !res.destroyed) {
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end(headOnly ? undefined : 'Not found');
+        }
+        return;
+      }
+      const bySource = {};
+      for (const [k, v] of visitStats.bySource.entries()) {
+        bySource[k] = {
+          hits: v.hits,
+          sessions: v.sessions.size,
+          views: v.views,
+          actions: v.actions,
+          tasks: v.tasks,
+        };
+      }
+      sendJson(
+        res,
+        200,
+        {
+          startedAt: visitStats.startedAt,
+          bySource,
+          byStand: visitStats.byStand,
+          recent: visitStats.recent,
+        },
+        headOnly
+      );
       return;
     }
 
