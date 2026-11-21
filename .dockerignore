@@ -4,3 +4,6 @@
 node_modules
 *.log
 ЗАМЕЧАНИЯ.md
+КАК_ИСПОЛЬЗОВАТЬ.md
+**/__pycache__
+**/*.pyc

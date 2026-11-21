@@ -852,6 +852,13 @@ footer { border-top: 1px solid var(--ink); }
 .live-meter b { color: var(--ink); font-weight: 500; }
 @media (max-width: 960px) { .live-meter { display: none; } }
 .term-out, #cc-result { max-width: 100%; overflow-x: auto; overflow-wrap: anywhere; }
+.lg-list { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13.5px; line-height: 1.45; }
+.lg-list li strong { font-weight: 600; }
+.lg-meta-row { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 400 12.5px/18px var(--font-mono); color: var(--ink-muted); padding: 8px 10px; background: var(--panel); border-radius: 4px; }
+.lg-meta-row b { color: var(--ink); font-weight: 600; }
+#lg-input { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.45; }
+.rt-card.lg-warn { border-top-color: var(--redline) !important; }
+.rt-card.lg-pass { border-top-color: var(--ok-ink) !important; }
 </style>
 </head>
 <body>
@@ -891,13 +898,14 @@ footer { border-top: 1px solid var(--ink); }
       <span class="ch-label"><span class="ru">Стенды</span><span class="en">Sandboxes</span><span class="fr">Démos</span></span>
     </div>
     <div class="filters" role="group" aria-label="Filter">
-      <button class="fbtn" data-cat="all" aria-pressed="true"><span class="ru">Все · 10</span><span class="en">All · 10</span><span class="fr">Tous · 10</span></button>
+      <button class="fbtn" data-cat="all" aria-pressed="true"><span class="ru">Все · 11</span><span class="en">All · 11</span><span class="fr">Tous · 11</span></button>
       <button class="fbtn" data-cat="agents" aria-pressed="false"><span class="ru">Боты и поиск</span><span class="en">Bots &amp; RAG</span><span class="fr">Bots &amp; RAG</span></button>
       <button class="fbtn" data-cat="docs" aria-pressed="false"><span class="ru">Документы</span><span class="en">Docs &amp; OCR</span><span class="fr">Docs &amp; OCR</span></button>
       <button class="fbtn" data-cat="eng" aria-pressed="false"><span class="ru">Код и ТЗ</span><span class="en">Code &amp; Specs</span><span class="fr">Code &amp; Specs</span></button>
     </div>
     <nav class="toc" aria-label="Cases">
       <a href="#cover" class="is-active"><span class="num">→</span><span class="ru">Обзор</span><span class="en">Overview</span><span class="fr">Présentation</span></a>
+      <a href="#project"><span class="num">★</span><span class="ru">Было → Стало</span><span class="en">Before → After</span><span class="fr">Avant → Après</span></a>
       <a href="#architect"><span class="num">00</span><span class="ru">Оценка ТЗ</span><span class="en">Scoper</span><span class="fr">Cadrage</span></a>
       <a href="#sales"><span class="num">01</span><span class="ru">Чат + CRM</span><span class="en">CRM Bot</span><span class="fr">Agent CRM</span></a>
       <a href="#rag"><span class="num">02</span><span class="ru">Поиск с ролями</span><span class="en">RBAC RAG</span><span class="fr">RAG RBAC</span></a>
@@ -985,7 +993,186 @@ footer { border-top: 1px solid var(--ink); }
           <tr>
             <td style="width:38%"><span class="ch-label"><span class="ru">Стек</span><span class="en">Stack</span><span class="fr">Stack</span></span><span class="name">Python · FastAPI · PostgreSQL · Node.js · Docker</span></td>
             <td><span class="ch-label"><span class="ru">Маршрутизация моделей</span><span class="en">Model router</span><span class="fr">Routeur LLM</span></span><span class="v" id="router-badge">VERTEX AI + NIM</span></td>
-            <td><span class="ch-label"><span class="ru">Стендов</span><span class="en">Sandboxes</span><span class="fr">Démonstrateurs</span></span><span class="v">10 + оценка ТЗ</span></td>
+            <td><span class="ch-label"><span class="ru">На странице</span><span class="en">Included</span><span class="fr">Inclus</span></span><span class="v"><span class="ru">1 проект + 10 стендов</span><span class="en">1 flagship case + 10 demos</span><span class="fr">1 cas phare + 10 démos</span></span></td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==================== ★ FLAGSHIP PROJECT: LEDGERGUARD BEFORE -> AFTER ==================== -->
+    <section class="case ch-sheet" id="project" data-cat="docs">
+      <div class="ch-sheet__frame">
+        <div class="ch-sheet__body">
+          <div class="brief">
+            <div class="case-head">
+              <span><span class="case-idx">★</span>
+                <span class="ru">Open-source проект · Python 3.12 · SQLite WAL · без сторонних зависимостей</span>
+                <span class="en">Open-source project · Python 3.12 · SQLite WAL · zero runtime deps</span>
+                <span class="fr">Projet open-source · Python 3.12 · SQLite WAL · zéro dépendance</span>
+              </span>
+              <a class="btn ghost sm" href="https://github.com/Beelsik/portfolio/tree/main/ledgerguard" target="_blank" rel="noopener">
+                <span class="ru">Код и тесты на GitHub ↗</span>
+                <span class="en">Source &amp; tests on GitHub ↗</span>
+                <span class="fr">Code et tests sur GitHub ↗</span>
+              </a>
+            </div>
+            <h2>
+              <span class="ru">LedgerGuard: шлюз приёмки счетов перед записью в 1С / ERP (Было → Стало)</span>
+              <span class="en">LedgerGuard: deterministic B2B invoice gatekeeper before ERP posting (Before → After)</span>
+              <span class="fr">LedgerGuard : contrôleur de factures B2B avant injection ERP (Avant → Après)</span>
+            </h2>
+            <p>
+              <span class="ru">Частая история у оптовых, строительных и сервисных компаний: менеджеры вручную перебивают заявки и счета из почты в 1С, либо ставят связку «1 промпт в n8n → сразу запись в базу». Обе схемы теряют деньги на одних и тех же мелочах: подмена счёта с формально верным контрольным ключом, цена на 10% выше договора, арифметика в строке, путаница <code>3×1,5</code> и <code>3×2,5</code>, бухты вместо метров и дубли при повторной отправке письма.</span>
+              <span class="en">A recurring bottleneck across wholesale, construction, and engineering teams: staff either re-key email orders into ERP by hand, or pipe invoices straight from a single LLM prompt into PostgreSQL. Both leak money through the same gaps: checksum-valid bank account swaps, silent over-contract unit prices, line arithmetic drift, confused cable gauges (<code>3x1.5</code> vs <code>3x2.5</code>), coil-vs-meter mix-ups, and duplicate bills on email retries.</span>
+              <span class="fr">Un cas fréquent dans le négoce et le BTP : saisie manuelle de dizaines de devis/factures par jour, ou automatisation naive par prompt unique vers l'ERP. Les deux laissent passer les mêmes pertes : RIB substitué mais syntaxiquement valide, prix unitaire supérieur au contrat, écart de calcul, confusion entre <code>3G1,5</code> et <code>3G2,5</code>, couronnes comptées en mètres et doublons lors d'un renvoi d'e-mail.</span>
+            </p>
+            <div class="tbl">
+              <table class="ch-spec">
+                <thead>
+                  <tr>
+                    <th style="width:210px"><span class="ru">Критерий</span><span class="en">Metric</span><span class="fr">Critère</span></th>
+                    <th><span class="ru">Было (ручной ввод / 1 промпт)</span><span class="en">Before (manual / single-prompt LLM)</span><span class="fr">Avant (saisie / prompt unique)</span></th>
+                    <th><span class="ru">Стало (LedgerGuard, Python 3.12)</span><span class="en">After (LedgerGuard, Python 3.12)</span><span class="fr">Après (LedgerGuard, Python 3.12)</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong><span class="ru">Время на документ</span><span class="en">Time per invoice</span><span class="fr">Temps par dossier</span></strong></td>
+                    <td><span class="ru">12–15 мин вручную; на длинных сметных таблицах ошибки усталости</span><span class="en">12–15 min manual re-keying per multi-line bill</span><span class="fr">12–15 min de saisie manuelle par facture multi-lignes</span></td>
+                    <td><span class="ru"><strong>2–4 мс</strong> автопроверка (p95: 3,96 мс), <strong>&lt;1 мин</strong> на разбор спорных в карантине</span><span class="en"><strong>2–4 ms</strong> verification (p95: 3.96 ms), <strong>&lt;1 min</strong> operator sign-off when flagged</span><span class="fr"><strong>2–4 ms</strong> de contrôle (p95 : 3,96 ms), <strong>&lt;1 min</strong> pour valider une alerte</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong><span class="ru">Тихие ошибки в ERP</span><span class="en">Silent ERP leakage</span><span class="fr">Erreurs silencieuses</span></strong></td>
+                    <td><span class="ru"><strong>40,0%</strong> на тесте из 60 документов (24/60 прошли с подменой, переплатой или дублем)</span><span class="en"><strong>40.0%</strong> across a 60-doc corpus (24/60 leaked with swaps, overbilling, or replays)</span><span class="fr"><strong>40,0 %</strong> sur un banc de 60 dossiers (24/60 passés avec anomalies)</span></td>
+                    <td><span class="ru"><strong>0,0%</strong> — все 24/24 проблемных счетов остановлены в <code>quarantine_queue</code></span><span class="en"><strong>0.0%</strong> — all 24/24 adversarial invoices trapped in <code>quarantine_queue</code></span><span class="fr"><strong>0,0 %</strong> — 24/24 dossiers atypiques bloqués en <code>quarantine_queue</code></span></td>
+                  </tr>
+                  <tr>
+                    <td><strong><span class="ru">Единицы и артикулы</span><span class="en">Units &amp; SKU matching</span><span class="fr">Unités et références</span></strong></td>
+                    <td><span class="ru">«3 бухты» уходят как 3 м по цене бухты; путает <code>3×1,5</code> и <code>3×2,5</code></span><span class="en">“3 coils” booked as 3 m at coil price; swaps look-alike <code>3x1.5</code> vs <code>3x2.5</code></span><span class="fr">« 3 couronnes » saisies en 3 m ; confusion entre <code>3G1,5</code> et <code>3G2,5</code></span></td>
+                    <td><span class="ru"><strong>100%</strong> автопроход чистых заявок (36/36): раскрывает упаковки, штрафует чужие сечения</span><span class="en"><strong>100%</strong> clean auto-pass (36/36): expands coils/packs and blocks gauge mismatches</span><span class="fr"><strong>100 %</strong> des dossiers sains validés (36/36) : conversion auto et verrou technique</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong><span class="ru">Дубли и аудит</span><span class="en">Duplicates &amp; audit</span><span class="fr">Doublons et audit</span></strong></td>
+                    <td><span class="ru">Повторное письмо создаёт дубль накладной; нельзя доказать, кто что правил</span><span class="en">Re-sent emails create duplicate bills; no tamper-evident change history</span><span class="fr">Un e-mail renvoyé recrée une facture ; aucune piste d'audit fiable</span></td>
+                    <td><span class="ru">Ключ идемпотентности <code>SHA-256</code> блокирует дубль + связная цепь в <code>audit_log</code></span><span class="en">SQLite idempotency key blocks replays + SHA-256 hash-chained <code>audit_log</code></span><span class="fr">Clé d'idempotence SQLite anti-doublon + journal chaîné <code>SHA-256</code></span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="stack"><span>Python 3.12 (stdlib)</span><span>Decimal Accounting</span><span>OOXML .xlsx / .docx / .eml</span><span>INN / EDRPOU / SIRET / IBAN</span><span>SQLite WAL + SHA-256</span></div>
+          </div>
+
+          <div class="bench">
+            <div class="benchbar">
+              <span class="bench-title"><span class="dot-live"></span><span class="ru">Живой движок LedgerGuard (Python 3.12)</span><span class="en">Live LedgerGuard Engine (Python 3.12)</span><span class="fr">Moteur LedgerGuard en direct (Python 3.12)</span></span>
+              <div class="row">
+                <div class="tabs" role="tablist">
+                  <button class="tab" id="tab-lg-diff" aria-selected="true"><span class="ru">Было → Стало</span><span class="en">Before → After</span><span class="fr">Avant → Après</span></button>
+                  <button class="tab" id="tab-lg-erp" aria-selected="false"><span class="ru">ERP пакет &amp; SHA-256</span><span class="en">ERP Outbox &amp; Audit</span><span class="fr">Flux ERP &amp; Audit</span></button>
+                  <button class="tab" id="tab-lg-arch" aria-selected="false"><span class="ru">Архитектура &amp; бенчмарк</span><span class="en">Architecture &amp; Bench</span><span class="fr">Architecture &amp; Bench</span></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="benchbody" id="pane-lg-diff">
+              <div class="row" style="justify-content:space-between">
+                <div class="chips" id="lg-presets">
+                  <button class="chip" type="button" data-lgpreset="traps" aria-pressed="true"><span class="ru">Счёт № 184 (4 ловушки)</span><span class="en">Invoice #184 (4 traps)</span><span class="fr">Facture #184 (4 pièges)</span></button>
+                  <button class="chip" type="button" data-lgpreset="clean_packs" aria-pressed="false"><span class="ru">Чистый счёт (бухты → автопроход)</span><span class="en">Clean coils → auto-pass</span><span class="fr">Conforme (couronnes → auto)</span></button>
+                </div>
+                <div class="row">
+                  <button class="btn ghost sm" id="lg-replay-btn" type="button"><span class="ru">Отправить повторно (дубль)</span><span class="en">Re-submit (test replay)</span><span class="fr">Renvoyer (test doublon)</span></button>
+                  <label class="btn ghost sm" style="cursor:pointer">
+                    <span class="ru">Загрузить .xlsx / .docx / .eml</span><span class="en">Upload .xlsx / .docx / .eml</span><span class="fr">Importer .xlsx / .docx / .eml</span>
+                    <input type="file" id="lg-file-in" accept=".xlsx,.docx,.eml,.csv,.txt" hidden>
+                  </label>
+                </div>
+              </div>
+
+              <textarea id="lg-input" rows="8"></textarea>
+
+              <div class="between">
+                <button class="btn" id="lg-run-btn" type="button"><span class="ru">Сравнить Было → Стало</span><span class="en">Run Before → After Check</span><span class="fr">Lancer Avant → Après</span></button>
+                <span class="note mono" id="lg-status"></span>
+              </div>
+
+              <div class="lg-meta-row" id="lg-checks-bar"></div>
+
+              <div class="two">
+                <div class="rt-card lg-warn" id="lg-before-card">
+                  <div class="between">
+                    <strong><span class="ru">✕ БЫЛО: ручной ввод / 1 промпт</span><span class="en">✕ BEFORE: naive intake</span><span class="fr">✕ AVANT : flux naïf</span></strong>
+                    <span class="pill bad" id="lg-before-badge">BLINDLY_POSTED</span>
+                  </div>
+                  <p class="note" id="lg-before-summary" style="margin-top:6px"></p>
+                  <ul class="lg-list" id="lg-before-list"></ul>
+                </div>
+
+                <div class="rt-card lg-pass" id="lg-after-card">
+                  <div class="between">
+                    <strong><span class="ru">✓ СТАЛО: LedgerGuard Python</span><span class="en">✓ AFTER: LedgerGuard Python</span><span class="fr">✓ APRÈS : LedgerGuard Python</span></strong>
+                    <span class="pill ok" id="lg-after-badge">QUARANTINED</span>
+                  </div>
+                  <p class="note" id="lg-after-summary" style="margin-top:6px"></p>
+                  <ul class="lg-list" id="lg-after-list"></ul>
+                </div>
+              </div>
+
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:36px">#</th>
+                      <th><span class="ru">Строка в счёте</span><span class="en">Input line</span><span class="fr">Ligne source</span></th>
+                      <th><span class="ru">SKU в справочнике</span><span class="en">Matched SKU</span><span class="fr">Référence</span></th>
+                      <th><span class="ru">Приведено (ед.)</span><span class="en">Normalized</span><span class="fr">Normalisé</span></th>
+                      <th><span class="ru">Расчёт Decimal</span><span class="en">Decimal total</span><span class="fr">Calcul exact</span></th>
+                      <th><span class="ru">Вердикт</span><span class="en">Verdict</span><span class="fr">Statut</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="lg-lines-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="benchbody" id="pane-lg-erp" hidden>
+              <div class="two">
+                <div>
+                  <span class="lbl" id="lg-outbox-lbl">ERP Outbox / Quarantine Ticket</span>
+                  <pre class="code" id="lg-outbox-pre"></pre>
+                </div>
+                <div>
+                  <span class="lbl"><span class="ru">Цепочка аудита SQLite (SHA-256)</span><span class="en">SQLite SHA-256 Audit Chain</span><span class="fr">Chaîne d'audit SQLite (SHA-256)</span></span>
+                  <pre class="code" id="lg-audit-pre"></pre>
+                </div>
+              </div>
+            </div>
+
+            <div class="benchbody" id="pane-lg-arch" hidden>
+              <p class="note" id="lg-bench-summary"></p>
+              <pre class="code">ledgerguard/
+├── pyproject.toml           # Python 3.12 PEP 621 package (zero runtime dependencies)
+├── src/ledgerguard/
+│   ├── parsers.py           # Native OOXML .xlsx / .docx, RFC-5322 .eml, CSV, SHA-256 digest
+│   ├── validators.py        # RU INN+CBR BIK, UA EDRPOU, FR SIRET Luhn, ISO 13616 IBAN mod-97
+│   ├── units.py             # Coil/pack expansion (бухты/уп -> базовые единицы) + tech specs
+│   ├── matcher.py           # Hybrid 3-gram + token matcher with -0.48 gauge collision penalty
+│   ├── money.py             # Exact Decimal minor-unit arithmetic & VAT reconciliation
+│   ├── baseline.py          # Legacy single-prompt failure simulator (Before vs After diff)
+│   ├── storage.py           # SQLite WAL ledger, idempotency lock, SHA-256 chained audit_log
+│   ├── engine.py            # Orchestrator: ingest -> validate -> quarantine or erp_outbox
+│   └── benchmark.py         # Reproducible 60-document corpus (0.0% silent leakage vs 40.0%)
+└── tests/                   # unittest suite: binary .xlsx/.docx/.eml, checksums, tamper detection</pre>
+            </div>
+          </div>
+        </div>
+        <table class="ch-stamp-block" data-sheet-stamp="project">
+          <tr>
+            <td style="width:24%"><span class="ch-label"><span class="ru">Обозначение</span><span class="en">Doc ID</span><span class="fr">Réf.</span></span><span class="v">LG-01.PYTHON</span></td>
+            <td style="width:38%"><span class="ch-label"><span class="ru">Стек</span><span class="en">Stack</span><span class="fr">Stack</span></span><span class="v">Python 3.12 · Decimal · SQLite WAL · SHA-256 Audit</span></td>
+            <td><span class="ch-label"><span class="ru">Токены</span><span class="en">Tokens</span><span class="fr">Tokens</span></span><span class="v" data-st-tok>0 ($0)</span></td>
+            <td><span class="ch-label"><span class="ru">Время</span><span class="en">Time</span><span class="fr">Temps</span></span><span class="v" data-st-ms><span class="ru">локально</span><span class="en">ready</span><span class="fr">prêt</span></span></td>
+            <td><span class="ch-label"><span class="ru">Статус</span><span class="en">Status</span><span class="fr">Statut</span></span><span class="v">MIT + CI</span></td>
           </tr>
         </table>
       </div>
@@ -2990,7 +3177,7 @@ async function checkout(cart, discountPercent) {
       };
       telemLogs.unshift(entry);
       renderTelemetry();
-      const epMap = { '/api/scope': 'architect', '/api/chat': 'sales', '/api/rag': 'rag', '/api/docs': 'docs', '/api/parse': 'parser', '/api/listing': 'listing', '/api/ocr': 'hand', '/api/gost': 'gost', '/api/audit': 'audit', '/api/redteam': 'redteam' };
+      const epMap = { '/api/ledgerguard/run': 'project', '/api/scope': 'architect', '/api/chat': 'sales', '/api/rag': 'rag', '/api/docs': 'docs', '/api/parse': 'parser', '/api/listing': 'listing', '/api/ocr': 'hand', '/api/gost': 'gost', '/api/audit': 'audit', '/api/redteam': 'redteam' };
       const sheetId = epMap[entry.endpoint];
       const stTbl = sheetId && document.querySelector(`[data-sheet-stamp="${sheetId}"]`);
       if (stTbl) {
@@ -3390,6 +3577,269 @@ async function checkout(cart, discountPercent) {
   }
   $('#rt-form').onsubmit = (e) => { e.preventDefault(); runRedTeam($('#rt-in').value, true); };
 
+  /* ==================== ★ FLAGSHIP PROJECT: LEDGERGUARD (PYTHON 3.12 + SQLITE) ==================== */
+  const LG_FALLBACK_PRESETS = {
+    ru: {
+      traps: [
+        'Поставщик: ООО «СеверЭнергоСнаб»',
+        'Счёт № 184 от 2026-11-19 | Договор ДП-2026/11',
+        'ИНН: 7707083893 | БИК: 044525225 | Р/С: 40702810638000998811',
+        '№ | Наименование | Кол-во | Ед. | Цена (₽) | Сумма (₽)',
+        '1 | Кабель ВВГнг(А)-LS 3х2,5 ГОСТ | 200 | м | 131.00 | 26200.00',
+        '2 | Кабель ВВГнг(А)-LS 3х1,5 (склад Челны) | 150 | м | 82.00 | 14300.00',
+        '3 | Автомат ABB S201 C16 1P 6kA | 24 | шт | 460.00 | 11040.00',
+        '4 | Труба гофр ПВХ d20 с зондом (бухта 100м) | 2 | бухта | 2800.00 | 5600.00',
+        'В т.ч. НДС 20%: 9523.33 ₽',
+        'Итого к оплате: 57140.00 ₽',
+      ].join('\n'),
+      clean_packs: [
+        'Поставщик: ООО «СеверЭнергоСнаб»',
+        'Счёт № 185 от 2026-11-20 | Договор ДП-2026/11',
+        'ИНН: 7707083893 | БИК: 044525225 | Р/С: 40702810438000124500',
+        '1 | ввгнг лс 3*2.5м (бухта 100м) | 3 | бухта | 11500.00 | 34500.00',
+        '2 | автом выкл с16 1п 6ка | 20 | шт | 455.00 | 9100.00',
+        '3 | гофра пвх д20 с зондом (бухта 100м) | 1 | бухта | 2850.00 | 2850.00',
+        'В т.ч. НДС 20%: 7741.67 ₽',
+        'Итого к оплате: 46450.00 ₽',
+      ].join('\n'),
+    },
+    en: {
+      traps: [
+        'Supplier: NorthGrid Electrical Supply Ltd',
+        'Invoice #INV-184 Date 2026-11-19 | Contract MSA-2026-09',
+        'VAT ID: GB849201472 | IBAN: GB65NWBK60161399887766',
+        '# | Description | Qty | Unit | Price (£) | LineTotal (£)',
+        '1 | NYM-J 3x2.5mm2 Twin & Earth Cable | 200 | m | 1.56 | 312.00',
+        '2 | NYM-J 3x1.5mm2 Lighting Cable | 150 | m | 0.95 | 172.50',
+        '3 | Schneider Acti9 iC60N C16 MCB 1P | 24 | pcs | 9.00 | 216.00',
+        '4 | PVC Conduit d20 with draw wire (coil 100m) | 2 | coil | 62.00 | 124.00',
+        'VAT (20%): £137.42',
+        'Total Due: £824.50',
+      ].join('\n'),
+      clean_packs: [
+        'Supplier: NorthGrid Electrical Supply Ltd',
+        'Invoice #INV-185 Date 2026-11-20 | Contract MSA-2026-09',
+        'VAT ID: GB849201472 | IBAN: GB29NWBK60161331926819',
+        '1 | nym 3*2.5 cable (coil 100m) | 3 | coil | 138.00 | 414.00',
+        '2 | mcb c16 acti9 1p 6ka | 20 | pcs | 8.90 | 178.00',
+        '3 | pvc conduit d20 (coil 100m) | 1 | coil | 60.00 | 60.00',
+        'VAT (20%): £108.67',
+        'Total Due: £652.00',
+      ].join('\n'),
+    },
+    fr: {
+      traps: [
+        'Fournisseur: VoltaPro Distribution SAS',
+        'Facture N°FAC-184 du 2026-11-19 | Contrat ACC-2026-14',
+        'SIRET: 73282932000074 | IBAN: FR1320041010050500999K88112',
+        'N° | Désignation | Qté | Unité | P.U. (€) | Total (€)',
+        '1 | Câble U-1000 R2V 3G2,5mm2 Nexans | 200 | m | 1.78 | 356.00',
+        '2 | Câble U-1000 R2V 3G1,5mm2 Nexans | 150 | m | 1.08 | 192.00',
+        '3 | Disjoncteur Legrand DNX3 C16 1P+N | 24 | pcs | 11.20 | 268.80',
+        '4 | Gaine ICTA d20 tire-fil (couronne 100m) | 2 | couronne | 72.00 | 144.00',
+        'Dont TVA 20%: 160.13 €',
+        'Montant TTC: 960.80 €',
+      ].join('\n'),
+      clean_packs: [
+        'Fournisseur: VoltaPro Distribution SAS',
+        'Facture N°FAC-185 du 2026-11-20 | Contrat ACC-2026-14',
+        'SIRET: 73282932000074 | IBAN: FR1420041010050500013M02606',
+        '1 | cable r2v 3g2.5 (couronne 100m) | 3 | couronne | 158.00 | 474.00',
+        '2 | disjoncteur c16 legrand dnx3 | 20 | pcs | 11.00 | 220.00',
+        '3 | gaine icta d20 (couronne 100m) | 1 | couronne | 70.00 | 70.00',
+        'Dont TVA 20%: 127.33 €',
+        'Montant TTC: 764.00 €',
+      ].join('\n'),
+    },
+  };
+
+  let lgSessionId = 'lg_' + Math.random().toString(36).slice(2, 10);
+  let lgPresetsCache = {};
+
+  const lgFmtMinor = (minor, cur) => {
+    const syms = { RUB: '₽', UAH: '₴', EUR: '€', USD: '$', GBP: '£' };
+    const s = syms[cur] || cur;
+    const val = (Number(minor || 0) / 100).toLocaleString(L === 'en' ? 'en-US' : L === 'fr' ? 'fr-FR' : 'ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (cur === 'GBP' || cur === 'USD') ? `${s}${val}` : `${val} ${s}`;
+  };
+
+  const lgTabs = [['#tab-lg-diff', '#pane-lg-diff'], ['#tab-lg-erp', '#pane-lg-erp'], ['#tab-lg-arch', '#pane-lg-arch']];
+  lgTabs.forEach(([tSel, pSel]) => {
+    $(tSel).onclick = () => {
+      lgTabs.forEach(([ts, ps]) => { $(ts).setAttribute('aria-selected', ts === tSel); $(ps).hidden = ps !== pSel; });
+    };
+  });
+
+  function renderLedgerGuardReport(rep) {
+    if (!rep || !rep.before) return;
+    const cur = rep.currency || 'RUB';
+    const isPass = rep.status === 'READY_FOR_ERP';
+    const isDup = rep.status === 'DUPLICATE_BLOCKED';
+
+    $('#lg-status').textContent = `${rep.status} · ${rep.elapsed_ms} ms · ${rep.source_format.toUpperCase()}`;
+
+    const taxOk = rep.tax_check?.checksum_valid;
+    const bankMatch = rep.bank_check?.matches_approved_registry;
+    const chainOk = rep.chain_verification?.valid;
+    const bar = $('#lg-checks-bar');
+    bar.replaceChildren();
+    [
+      [T('Налоговый ID', 'Tax ID', 'N° légal'), `${rep.tax_check?.tax_id || '—'} (${taxOk ? '✓ checksum OK' : '✕'})`],
+      [T('Счёт / IBAN', 'Bank / IBAN', 'RIB / IBAN'), bankMatch ? '✓ matches registry' : `✕ MISMATCH vs ${rep.bank_check?.approved_account || 'registry'}`],
+      [T('Договор', 'Contract', 'Contrat'), rep.contract_check?.matched || '—'],
+      [T('Цепь аудита', 'Audit chain', 'Audit SHA-256'), `${chainOk ? '✓ valid' : '✕ broken'} (${rep.chain_verification?.entries || 0} rec.)`],
+    ].forEach(([k, v]) => {
+      const sp = el('span'); sp.append(document.createTextNode(k + ': '), el('b', '', v)); bar.append(sp);
+    });
+
+    const bErrs = rep.before.silent_errors || [];
+    $('#lg-before-badge').textContent = rep.before.status || 'BLINDLY_POSTED';
+    $('#lg-before-summary').textContent = rep.before.summary || '';
+    const bl = $('#lg-before-list'); bl.replaceChildren();
+    if (!bErrs.length) {
+      bl.append(el('li', '', T('Скрытых потерь нет, но единицы упаковки и повторные дубли не проверялись.', 'No overcharge here, though pack expansion and duplicate lock are missing.', 'Pas de surcoût ici, mais pas de verrou anti-doublon ni conversion auto.')));
+    } else {
+      bErrs.forEach((er) => bl.append(el('li', '', er.detail)));
+    }
+
+    const afterCard = $('#lg-after-card');
+    afterCard.className = 'rt-card ' + (isPass ? 'lg-pass' : 'lg-warn');
+    const ab = $('#lg-after-badge');
+    ab.className = 'pill ' + (isPass ? 'ok' : 'bad');
+    ab.textContent = rep.status;
+    $('#lg-after-summary').textContent = isPass
+      ? T(`Чистый расчёт подтверждён: ${lgFmtMinor(rep.expected_gross_minor, cur)} готовы к передаче в ERP (без участия человека).`, `Verified clean total ${lgFmtMinor(rep.expected_gross_minor, cur)} queued to ERP outbox with zero human touches.`, `Total vérifié ${lgFmtMinor(rep.expected_gross_minor, cur)} prêt pour l'ERP sans intervention humaine.`)
+      : T(`Платёж остановлен до выгрузки в ERP · заблокировано потерь / риска: ${lgFmtMinor(rep.prevented_loss_minor, cur)}.`, `Blocked before ERP posting · exposure stopped: ${lgFmtMinor(rep.prevented_loss_minor, cur)}.`, `Bloqué avant injection ERP · montant protégé : ${lgFmtMinor(rep.prevented_loss_minor, cur)}.`);
+
+    const al = $('#lg-after-list'); al.replaceChildren();
+    if (isPass) {
+      al.append(el('li', '', T(`Все ${rep.lines.length} позиций приведены к базовым единицам и проверены по потолку договора.`, `All ${rep.lines.length} lines normalized to base units within contract price caps.`, `Toutes les ${rep.lines.length} lignes normalisées dans la limite du contrat.`)));
+    } else {
+      (rep.discrepancies || []).forEach((d) => al.append(el('li', '', `[${d.code}] ${d.message}`)));
+    }
+    if (isDup && rep.duplicate_of_batch_id) {
+      al.append(el('li', '', T(`Совпадает с уже проведённым пакетом ${rep.duplicate_of_batch_id}.`, `Matched existing batch ${rep.duplicate_of_batch_id}.`, `Correspond au lot déjà traité ${rep.duplicate_of_batch_id}.`)));
+    }
+
+    const tb = $('#lg-lines-tbody'); tb.replaceChildren();
+    (rep.lines || []).forEach((ln) => {
+      const tr = el('tr');
+      const hasIss = (ln.issues || []).length > 0;
+      const tdNorm = el('td', '', `${ln.normalized_qty} ${ln.normalized_unit} × ${lgFmtMinor(ln.normalized_unit_minor, cur)}`);
+      const tdSt = el('td', hasIss ? 'st-bad' : 'st-ok', hasIss ? ln.issues.join(', ') : (ln.pack_note ? `✓ OK (${ln.pack_note})` : '✓ OK'));
+      tr.append(
+        el('td', '', String(ln.line_no)),
+        el('td', '', ln.raw_description),
+        el('td', '', ln.matched_sku ? `${ln.matched_sku} (${Math.round(ln.confidence * 100)}%)` : 'UNMATCHED'),
+        tdNorm,
+        el('td', '', lgFmtMinor(ln.computed_line_total_minor, cur)),
+        tdSt
+      );
+      tb.append(tr);
+    });
+
+    $('#lg-outbox-lbl').textContent = rep.erp_payload
+      ? T('Пакет в 1С / ERP (erp_outbox)', 'ERP Outbox Payload (ready to POST)', 'Flux ERP prêt (erp_outbox)')
+      : T('Тикет в карантин (quarantine_queue)', 'Human Review Ticket (quarantine_queue)', 'Ticket de quarantaine (quarantine_queue)');
+    $('#lg-outbox-pre').textContent = JSON.stringify(rep.erp_payload || rep.quarantine_ticket || { status: rep.status, duplicate_of: rep.duplicate_of_batch_id }, null, 2);
+
+    const auditLines = [`chain_valid: ${rep.chain_verification?.valid} | total_entries: ${rep.chain_verification?.entries} | head_sha256: ${String(rep.chain_verification?.head_hash || '').slice(0, 24)}…\n`];
+    (rep.audit_trail || []).forEach((a) => {
+      auditLines.push(`#${a.seq} [${a.event}] batch=${a.batch_id} sha=${a.entry_hash.slice(0, 14)}…`);
+    });
+    $('#lg-audit-pre').textContent = auditLines.join('\n');
+
+    if (rep.benchmark) {
+      const b = rep.benchmark;
+      $('#lg-bench-summary').textContent = T(
+        `Бенчмарк на ${b.total_docs} документах (36 с опечатками/бухтами + 24 с ловушками): Было ${b.before_silent_error_rate_pct}% пропущенных ошибок → Стало ${b.after_silent_error_rate_pct}% (0 пропусков) · Автопроход чистых: ${b.clean_auto_pass_rate_pct}% · p95: ${b.p95_ms} мс · Задержано: ${b.prevented_loss_formatted}.`,
+        `60-document benchmark (36 noisy clean + 24 adversarial): Before ${b.before_silent_error_rate_pct}% silent leakage → After ${b.after_silent_error_rate_pct}% (0 missed) · Clean auto-pass: ${b.clean_auto_pass_rate_pct}% · p95: ${b.p95_ms} ms · Prevented loss: ${b.prevented_loss_formatted}.`,
+        `Banc de ${b.total_docs} dossiers (36 valides + 24 pièges) : Avant ${b.before_silent_error_rate_pct} % de pertes → Après ${b.after_silent_error_rate_pct} % · Passage auto : ${b.clean_auto_pass_rate_pct} % · p95 : ${b.p95_ms} ms · Montant bloqué : ${b.prevented_loss_formatted}.`
+      );
+    }
+  }
+
+  async function runLedgerGuard({ rawText = null, file = null, reset = false } = {}) {
+    $('#lg-run-btn').disabled = true;
+    $('#lg-status').textContent = T('Сверяю через Python…', 'Running Python engine…', 'Contrôle Python en cours…');
+    try {
+      const body = { lang: L, sessionId: lgSessionId, reset };
+      if (file) {
+        const buf = await file.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let bin = '';
+        for (let i = 0; i < bytes.length; i += 8192) {
+          bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+        }
+        body.fileName = file.name;
+        body.fileBase64 = btoa(bin);
+      } else {
+        body.rawText = rawText ?? $('#lg-input').value;
+        body.fileName = 'inline.txt';
+      }
+      const r = await fetch('/api/ledgerguard/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const er = await r.json().catch(() => ({}));
+        throw new Error(er.error || 'HTTP ' + r.status);
+      }
+      const data = await r.json();
+      if (file && data.source_format) {
+        $('#lg-status').textContent = `✓ ${data.status} (${data.source_format.toUpperCase()})`;
+      }
+      renderLedgerGuardReport(data);
+    } catch (err) {
+      $('#lg-status').textContent = T(`Локальный сервер не запущен (${err.message})`, `Engine offline (${err.message})`, `Hors ligne (${err.message})`);
+    } finally {
+      $('#lg-run-btn').disabled = false;
+    }
+  }
+
+  async function loadLedgerGuardForLang() {
+    lgSessionId = 'pf_' + Date.now().toString(36) + '_' + L;
+    const defText = (lgPresetsCache[L]?.traps?.text) || LG_FALLBACK_PRESETS[L].traps;
+    $('#lg-input').value = defText;
+    $$('#lg-presets [data-lgpreset]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.lgpreset === 'traps'));
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      try {
+        const pr = await fetch(`/api/ledgerguard/presets?lang=${L}`);
+        if (pr.ok) {
+          const pd = await pr.json();
+          if (pd?.presets) {
+            lgPresetsCache[L] = pd.presets;
+            $('#lg-input').value = pd.presets.traps.text;
+          }
+        }
+      } catch {}
+      runLedgerGuard({ rawText: $('#lg-input').value, reset: true });
+    }
+  }
+
+  $('#lg-presets').onclick = (e) => {
+    const b = e.target.closest('[data-lgpreset]'); if (!b) return;
+    const key = b.dataset.lgpreset;
+    $$('#lg-presets [data-lgpreset]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    const txt = lgPresetsCache[L]?.[key]?.text || LG_FALLBACK_PRESETS[L][key];
+    $('#lg-input').value = txt;
+    lgSessionId = 'pf_' + Date.now().toString(36) + '_' + L;
+    runLedgerGuard({ rawText: txt, reset: true });
+  };
+  $('#lg-run-btn').onclick = () => {
+    lgSessionId = 'pf_' + Date.now().toString(36) + '_' + L;
+    runLedgerGuard({ rawText: $('#lg-input').value, reset: true });
+  };
+  $('#lg-replay-btn').onclick = () => runLedgerGuard({ rawText: $('#lg-input').value, reset: false });
+  $('#lg-file-in').onchange = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    lgSessionId = 'pf_' + Date.now().toString(36) + '_' + L;
+    runLedgerGuard({ file: f, reset: true });
+    e.target.value = '';
+  };
+
   /* ====== Switch Language ====== */
   function setLang(l) {
     L = l;
@@ -3401,6 +3851,7 @@ async function checkout(cart, discountPercent) {
     $('#chatin').placeholder = T('Напишите как клиент…', 'Write as a patient…', 'Écrivez comme un client…');
     $('#ragin').placeholder = T('Вопрос по базе компании…', 'Ask the knowledge base…', 'Posez une question à la base…');
 
+    loadLedgerGuardForLang();
     loadArchForLang();
     loadKbForLang();
     renderChatPresets();

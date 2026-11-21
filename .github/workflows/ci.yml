@@ -1,0 +1,41 @@
+name: CI Tests & Benchmark
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  python-ledgerguard:
+    name: Python 3.12 · LedgerGuard Unit & Integration Suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run LedgerGuard tests (.xlsx, .docx, .eml, checksums, SQLite audit chain)
+        working-directory: ledgerguard
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -v
+      - name: Run 60-doc Before-vs-After benchmark
+        working-directory: ledgerguard
+        env:
+          PYTHONPATH: src
+        run: python -m ledgerguard benchmark --lang ru
+
+  node-portfolio-and-hooks:
+    name: Node 22 · Server Syntax & Claude Code Hooks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check server.mjs syntax
+        run: node --check server.mjs
+      - name: Run claude-code-kit hook tests
+        working-directory: claude-code-kit
+        run: node --test test/hooks.test.mjs

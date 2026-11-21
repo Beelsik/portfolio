@@ -800,6 +800,13 @@ footer { border-top: 1px solid var(--ink); }
 .live-meter b { color: var(--ink); font-weight: 500; }
 @media (max-width: 960px) { .live-meter { display: none; } }
 .term-out, #cc-result { max-width: 100%; overflow-x: auto; overflow-wrap: anywhere; }
+.lg-list { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13.5px; line-height: 1.45; }
+.lg-list li strong { font-weight: 600; }
+.lg-meta-row { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 400 12.5px/18px var(--font-mono); color: var(--ink-muted); padding: 8px 10px; background: var(--panel); border-radius: 4px; }
+.lg-meta-row b { color: var(--ink); font-weight: 600; }
+#lg-input { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.45; }
+.rt-card.lg-warn { border-top-color: var(--redline) !important; }
+.rt-card.lg-pass { border-top-color: var(--ok-ink) !important; }
 </style>
 </head>
 <body>
@@ -830,13 +837,14 @@ footer { border-top: 1px solid var(--ink); }
       <span class="ch-label">Стенди</span>
     </div>
     <div class="filters" role="group" aria-label="Фільтр">
-      <button class="fbtn" data-cat="all" aria-pressed="true">Усі · 10</button>
+      <button class="fbtn" data-cat="all" aria-pressed="true">Усі · 11</button>
       <button class="fbtn" data-cat="agents" aria-pressed="false">Боти й пошук</button>
       <button class="fbtn" data-cat="docs" aria-pressed="false">Документи</button>
       <button class="fbtn" data-cat="eng" aria-pressed="false">Код і ТЗ</button>
     </div>
     <nav class="toc" aria-label="Кейси">
       <a href="#cover" class="is-active"><span class="num">→</span>Огляд</a>
+      <a href="#project"><span class="num">★</span>Було → Стало</a>
       <a href="#architect"><span class="num">00</span>Оцінка ТЗ</a>
       <a href="#sales"><span class="num">01</span>Чат + CRM</a>
       <a href="#rag"><span class="num">02</span>Пошук із ролями</a>
@@ -900,7 +908,168 @@ footer { border-top: 1px solid var(--ink); }
           <tr>
             <td style="width:38%"><span class="ch-label">Стек</span><span class="name">Python · FastAPI · PostgreSQL · Node.js · Docker</span></td>
             <td><span class="ch-label">Маршрутизація моделей</span><span class="v" id="router-badge">VERTEX AI + NIM</span></td>
-            <td><span class="ch-label">Стендів</span><span class="v">10 + оцінка ТЗ</span></td>
+            <td><span class="ch-label">На сторінці</span><span class="v">1 проєкт + 10 стендів</span></td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==================== ★ FLAGSHIP PROJECT: LEDGERGUARD (БУЛО -> СТАЛО) ==================== -->
+    <section class="case ch-sheet" id="project" data-cat="docs">
+      <div class="ch-sheet__frame">
+        <div class="ch-sheet__body">
+          <div class="brief">
+            <div class="case-head">
+              <span><span class="case-idx">★</span>Open-source проєкт · Python 3.12 · SQLite WAL · без сторонніх залежностей</span>
+              <a class="btn ghost sm" href="https://github.com/Beelsik/portfolio/tree/main/ledgerguard" target="_blank" rel="noopener">Код і тести на GitHub ↗</a>
+            </div>
+            <h2>LedgerGuard: шлюз приймання рахунків перед записом у ERP / KeyCRM (Було → Стало)</h2>
+            <p>Типова ситуація у гуртових, будівельних та інженерних компаніях: менеджери вручну перебивають рахунки з пошти у систему обліку, або підключають «1 промпт у n8n → одразу запис у базу». Обидва підходи втрачають гроші на одних і тих самих деталях: підміна IBAN на інший валідний за модулем 97, ціна на 10% вище договору, арифметика в рядку, плутанина між <code>3×1,5</code> і <code>3×2,5</code>, бухти замість метрів та дублі при повторному листі.</p>
+            <div class="tbl">
+              <table class="ch-spec">
+                <thead>
+                  <tr>
+                    <th style="width:210px">Критерій</th>
+                    <th>Було (ручне занесення / 1 промпт)</th>
+                    <th>Стало (LedgerGuard, Python 3.12)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Час на документ</strong></td>
+                    <td>12–15 хв вручну; помилки втоми на довгих специфікаціях</td>
+                    <td><strong>2–4 мс</strong> автоперевірка (p95: 3,96 мс), <strong>&lt;1 хв</strong> на розбір у карантині</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Приховані помилки в ERP</strong></td>
+                    <td><strong>40,0%</strong> на тесті з 60 документів (24/60 пройшли з підміною, переплатою або дублем)</td>
+                    <td><strong>0,0%</strong> — усі 24/24 проблемні рахунки зупинено в <code>quarantine_queue</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Одиниці й артикули</strong></td>
+                    <td>«3 бухти» заходять як 3 м за ціною бухти; плутає <code>3×1,5</code> і <code>3×2,5</code></td>
+                    <td><strong>100%</strong> автопрохід чистих заявок (36/36): розгортає пакування, штрафує чужий переріз</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Дублі та аудит</strong></td>
+                    <td>Повторний лист створює дубль замовлення; немає доказової історії</td>
+                    <td>Ключ ідемпотентності <code>SHA-256</code> блокує дубль + звʼязаний ланцюг у <code>audit_log</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="stack"><span>Python 3.12 (stdlib)</span><span>Decimal Accounting</span><span>OOXML .xlsx / .docx / .eml</span><span>ЄДРПОУ / IBAN mod-97</span><span>SQLite WAL + SHA-256</span></div>
+          </div>
+
+          <div class="bench">
+            <div class="benchbar">
+              <span class="bench-title"><span class="dot-live"></span>Живий рушій LedgerGuard (Python 3.12)</span>
+              <div class="tabs" role="tablist">
+                <button class="tab" id="tab-lg-diff" aria-selected="true">Було → Стало</button>
+                <button class="tab" id="tab-lg-erp" aria-selected="false">ERP пакет &amp; SHA-256</button>
+                <button class="tab" id="tab-lg-arch" aria-selected="false">Архітектура &amp; бенчмарк</button>
+              </div>
+            </div>
+
+            <div class="benchbody" id="pane-lg-diff">
+              <div class="row" style="justify-content:space-between">
+                <div class="chips" id="lg-presets">
+                  <button class="chip" type="button" data-lgpreset="traps" aria-pressed="true">Рахунок № 184 (4 пастки)</button>
+                  <button class="chip" type="button" data-lgpreset="clean_packs" aria-pressed="false">Чистий рахунок (бухти → автопрохід)</button>
+                </div>
+                <div class="row">
+                  <button class="btn ghost sm" id="lg-replay-btn" type="button">Надіслати повторно (дубль)</button>
+                  <label class="btn ghost sm" style="cursor:pointer">
+                    Завантажити .xlsx / .docx / .eml
+                    <input type="file" id="lg-file-in" accept=".xlsx,.docx,.eml,.csv,.txt" hidden>
+                  </label>
+                </div>
+              </div>
+
+              <textarea id="lg-input" rows="8"></textarea>
+
+              <div class="between">
+                <button class="btn" id="lg-run-btn" type="button">Порівняти Було → Стало</button>
+                <span class="note mono" id="lg-status"></span>
+              </div>
+
+              <div class="lg-meta-row" id="lg-checks-bar"></div>
+
+              <div class="two">
+                <div class="rt-card lg-warn" id="lg-before-card">
+                  <div class="between">
+                    <strong>✕ БУЛО: ручне занесення / 1 промпт</strong>
+                    <span class="pill bad" id="lg-before-badge">BLINDLY_POSTED</span>
+                  </div>
+                  <p class="note" id="lg-before-summary" style="margin-top:6px"></p>
+                  <ul class="lg-list" id="lg-before-list"></ul>
+                </div>
+
+                <div class="rt-card lg-pass" id="lg-after-card">
+                  <div class="between">
+                    <strong>✓ СТАЛО: LedgerGuard Python</strong>
+                    <span class="pill ok" id="lg-after-badge">QUARANTINED</span>
+                  </div>
+                  <p class="note" id="lg-after-summary" style="margin-top:6px"></p>
+                  <ul class="lg-list" id="lg-after-list"></ul>
+                </div>
+              </div>
+
+              <div class="tbl">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:36px">#</th>
+                      <th>Рядок у рахунку</th>
+                      <th>SKU у довіднику</th>
+                      <th>Приведено (од.)</th>
+                      <th>Розрахунок Decimal</th>
+                      <th>Вердикт</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lg-lines-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="benchbody" id="pane-lg-erp" hidden>
+              <div class="two">
+                <div>
+                  <span class="lbl" id="lg-outbox-lbl">ERP Outbox / Тікет у карантин</span>
+                  <pre class="code" id="lg-outbox-pre"></pre>
+                </div>
+                <div>
+                  <span class="lbl">Ланцюг аудиту SQLite (SHA-256)</span>
+                  <pre class="code" id="lg-audit-pre"></pre>
+                </div>
+              </div>
+            </div>
+
+            <div class="benchbody" id="pane-lg-arch" hidden>
+              <p class="note" id="lg-bench-summary"></p>
+              <pre class="code">ledgerguard/
+├── pyproject.toml           # Пакет Python 3.12 (нуль зовнішніх залежностей)
+├── src/ledgerguard/
+│   ├── parsers.py           # Нативні OOXML .xlsx / .docx, RFC-5322 .eml, CSV, SHA-256
+│   ├── validators.py        # ЄДРПОУ (UA mod-11), IBAN (ISO 13616 mod-97), SIRET Luhn
+│   ├── units.py             # Розкриття бухт/упаковок у базові метри + техпараметри
+│   ├── matcher.py           # Гібридний 3-gram + токен матчер зі штрафом -0.48 за чужий переріз
+│   ├── money.py             # Точна арифметика Decimal (копійки/центи) і ПДВ
+│   ├── baseline.py          # Симулятор старого процесу (Було vs Стало)
+│   ├── storage.py           # SQLite WAL, ідемпотентність, SHA-256 ланцюг audit_log
+│   ├── engine.py            # Оркестратор: парсинг → перевірки → карантин або erp_outbox
+│   └── benchmark.py         # Відтворюваний тест на 60 документах (0.0% пропусків vs 40.0%)
+└── tests/                   # Автотести unittest: .xlsx/.docx/.eml, контрольні ключі, аудит</pre>
+            </div>
+          </div>
+        </div>
+        <table class="ch-stamp-block" data-sheet-stamp="project">
+          <tr>
+            <td style="width:24%"><span class="ch-label">Позначення</span><span class="v">LG-01.PYTHON</span></td>
+            <td style="width:38%"><span class="ch-label">Стек</span><span class="v">Python 3.12 · Decimal · SQLite WAL · SHA-256 Аудит</span></td>
+            <td><span class="ch-label">Токени</span><span class="v" data-st-tok>0 ($0)</span></td>
+            <td><span class="ch-label">Час</span><span class="v" data-st-ms>локально</span></td>
+            <td><span class="ch-label">Статус</span><span class="v">MIT + CI</span></td>
           </tr>
         </table>
       </div>
@@ -2386,7 +2555,7 @@ async function checkout(cart, discountPercent) {
       renderTelemetry();
       const topEntry = telemLogs[0];
       if (topEntry) {
-        const epMap = { '/api/scope': 'architect', '/api/chat': 'sales', '/api/rag': 'rag', '/api/docs': 'docs', '/api/parse': 'parser', '/api/listing': 'listing', '/api/ocr': 'hand', '/api/gost': 'spec', '/api/audit': 'audit', '/api/redteam': 'redteam' };
+        const epMap = { '/api/ledgerguard/run': 'project', '/api/scope': 'architect', '/api/chat': 'sales', '/api/rag': 'rag', '/api/docs': 'docs', '/api/parse': 'parser', '/api/listing': 'listing', '/api/ocr': 'hand', '/api/gost': 'spec', '/api/audit': 'audit', '/api/redteam': 'redteam' };
         const sheetId = epMap[topEntry.endpoint];
         const stTbl = sheetId && document.querySelector(`[data-sheet-stamp="${sheetId}"]`);
         if (stTbl) {
@@ -2633,6 +2802,209 @@ async function checkout(cart, discountPercent) {
   }
   $('#rt-form').onsubmit = (e) => { e.preventDefault(); runRedTeam($('#rt-in').value, true); };
 
+  /* ==================== ★ FLAGSHIP PROJECT: LEDGERGUARD (UA) ==================== */
+  const LG_FALLBACK_UA = {
+    traps: [
+      'Постачальник: ТОВ «ЕлектроПром Постач»',
+      'Рахунок № 184 від 2026-11-19 | Договір ДП-2026/44',
+      'ЄДРПОУ: 38492011 | IBAN: UA653223130000026009998877002',
+      '№ | Найменування | К-сть | Од. | Ціна (₴) | Сума (₴)',
+      '1 | Кабель ВВГнг-П 3х2,5 (Одескабель) | 200 | м | 60.00 | 12000.00',
+      '2 | Кабель ВВГнг-П 3х1,5 (склад Київ) | 150 | м | 36.00 | 6400.00',
+      '3 | Автомат ABB S201 C16 1P 6kA | 24 | шт | 240.00 | 5760.00',
+      '4 | Гофротруба ПВХ d20 з протяжкою (бухта 100м) | 2 | бухта | 1500.00 | 3000.00',
+      'У т.ч. ПДВ 20%: 4526.67 ₴',
+      'Разом до сплати: 27160.00 ₴',
+    ].join('\n'),
+    clean_packs: [
+      'Постачальник: ТОВ «ЕлектроПром Постач»',
+      'Рахунок № 185 від 2026-11-20 | Договір ДП-2026/44',
+      'ЄДРПОУ: 38492011 | IBAN: UA213223130000026007233566001',
+      '1 | ввгнг 3*2.5м (бухта 100м) | 3 | бухта | 5300.00 | 15900.00',
+      '2 | вимикач c16 abb s201 | 20 | шт | 238.00 | 4760.00',
+      '3 | гофра д20 пвх (бухта 100м) | 1 | бухта | 1480.00 | 1480.00',
+      'У т.ч. ПДВ 20%: 3690.00 ₴',
+      'Разом до сплати: 22140.00 ₴',
+    ].join('\n'),
+  };
+
+  let lgSessionId = 'lg_ua_' + Math.random().toString(36).slice(2, 10);
+  let lgPresetsCache = null;
+
+  const lgFmtMinor = (minor, cur) => {
+    const syms = { UAH: '₴', EUR: '€', USD: '$', GBP: '£' };
+    const s = syms[cur] || cur;
+    const val = (Number(minor || 0) / 100).toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (cur === 'GBP' || cur === 'USD') ? `${s}${val}` : `${val} ${s}`;
+  };
+
+  const lgTabs = [['#tab-lg-diff', '#pane-lg-diff'], ['#tab-lg-erp', '#pane-lg-erp'], ['#tab-lg-arch', '#pane-lg-arch']];
+  lgTabs.forEach(([tSel, pSel]) => {
+    $(tSel).onclick = () => {
+      lgTabs.forEach(([ts, ps]) => { $(ts).setAttribute('aria-selected', ts === tSel); $(ps).hidden = ps !== pSel; });
+    };
+  });
+
+  function renderLedgerGuardReport(rep) {
+    if (!rep || !rep.before) return;
+    const cur = rep.currency || 'UAH';
+    const isPass = rep.status === 'READY_FOR_ERP';
+    const isDup = rep.status === 'DUPLICATE_BLOCKED';
+
+    $('#lg-status').textContent = `${rep.status} · ${rep.elapsed_ms} ms · ${rep.source_format.toUpperCase()}`;
+
+    const taxOk = rep.tax_check?.checksum_valid;
+    const bankMatch = rep.bank_check?.matches_approved_registry;
+    const chainOk = rep.chain_verification?.valid;
+    const bar = $('#lg-checks-bar');
+    bar.replaceChildren();
+    [
+      ['ЄДРПОУ / Tax ID', `${rep.tax_check?.tax_id || '—'} (${taxOk ? '✓ ключ OK' : '✕'})`],
+      ['IBAN', bankMatch ? '✓ збігається з реєстром' : `✕ ПІДМІНА vs ${rep.bank_check?.approved_account || 'реєстр'}`],
+      ['Договір', rep.contract_check?.matched || '—'],
+      ['Ланцюг аудиту', `${chainOk ? '✓ валідний' : '✕ порушено'} (${rep.chain_verification?.entries || 0} зап.)`],
+    ].forEach(([k, v]) => {
+      const sp = el('span'); sp.append(document.createTextNode(k + ': '), el('b', '', v)); bar.append(sp);
+    });
+
+    const bErrs = rep.before.silent_errors || [];
+    $('#lg-before-badge').textContent = rep.before.status || 'BLINDLY_POSTED';
+    $('#lg-before-summary').textContent = rep.before.summary || '';
+    const bl = $('#lg-before-list'); bl.replaceChildren();
+    if (!bErrs.length) {
+      bl.append(el('li', '', 'Прихованої переплати немає, але пакування та повторні дублі не перевірялися.'));
+    } else {
+      bErrs.forEach((er) => bl.append(el('li', '', er.detail)));
+    }
+
+    const afterCard = $('#lg-after-card');
+    afterCard.className = 'rt-card ' + (isPass ? 'lg-pass' : 'lg-warn');
+    const ab = $('#lg-after-badge');
+    ab.className = 'pill ' + (isPass ? 'ok' : 'bad');
+    ab.textContent = rep.status;
+    $('#lg-after-summary').textContent = isPass
+      ? `Чистий розрахунок підтверджено: ${lgFmtMinor(rep.expected_gross_minor, cur)} готові до передачі в ERP (без участі оператора).`
+      : `Оплату зупинено до вивантаження в ERP · заблоковано втрат / ризику: ${lgFmtMinor(rep.prevented_loss_minor, cur)}.`;
+
+    const al = $('#lg-after-list'); al.replaceChildren();
+    if (isPass) {
+      al.append(el('li', '', `Усі ${rep.lines.length} позицій приведено до базових одиниць і перевірено за лімітами договору.`));
+    } else {
+      (rep.discrepancies || []).forEach((d) => al.append(el('li', '', `[${d.code}] ${d.message}`)));
+    }
+    if (isDup && rep.duplicate_of_batch_id) {
+      al.append(el('li', '', `Збігається з уже проведеним пакетом ${rep.duplicate_of_batch_id}.`));
+    }
+
+    const tb = $('#lg-lines-tbody'); tb.replaceChildren();
+    (rep.lines || []).forEach((ln) => {
+      const tr = el('tr');
+      const hasIss = (ln.issues || []).length > 0;
+      const tdNorm = el('td', '', `${ln.normalized_qty} ${ln.normalized_unit} × ${lgFmtMinor(ln.normalized_unit_minor, cur)}`);
+      const tdSt = el('td', hasIss ? 'st-bad' : 'st-ok', hasIss ? ln.issues.join(', ') : (ln.pack_note ? `✓ OK (${ln.pack_note})` : '✓ OK'));
+      tr.append(
+        el('td', '', String(ln.line_no)),
+        el('td', '', ln.raw_description),
+        el('td', '', ln.matched_sku ? `${ln.matched_sku} (${Math.round(ln.confidence * 100)}%)` : 'UNMATCHED'),
+        tdNorm,
+        el('td', '', lgFmtMinor(ln.computed_line_total_minor, cur)),
+        tdSt
+      );
+      tb.append(tr);
+    });
+
+    $('#lg-outbox-lbl').textContent = rep.erp_payload
+      ? 'Пакет у ERP / KeyCRM (erp_outbox)'
+      : 'Тікет у карантин (quarantine_queue)';
+    $('#lg-outbox-pre').textContent = JSON.stringify(rep.erp_payload || rep.quarantine_ticket || { status: rep.status, duplicate_of: rep.duplicate_of_batch_id }, null, 2);
+
+    const auditLines = [`chain_valid: ${rep.chain_verification?.valid} | total_entries: ${rep.chain_verification?.entries} | head_sha256: ${String(rep.chain_verification?.head_hash || '').slice(0, 24)}…\n`];
+    (rep.audit_trail || []).forEach((a) => {
+      auditLines.push(`#${a.seq} [${a.event}] batch=${a.batch_id} sha=${a.entry_hash.slice(0, 14)}…`);
+    });
+    $('#lg-audit-pre').textContent = auditLines.join('\n');
+
+    if (rep.benchmark) {
+      const b = rep.benchmark;
+      $('#lg-bench-summary').textContent = `Бенчмарк на ${b.total_docs} документах (36 з опечатками/бухтами + 24 із пастками): Було ${b.before_silent_error_rate_pct}% пропущених помилок → Стало ${b.after_silent_error_rate_pct}% (0 пропусків) · Автопрохід чистих: ${b.clean_auto_pass_rate_pct}% · p95: ${b.p95_ms} мс · Затримано: ${b.prevented_loss_formatted}.`;
+    }
+  }
+
+  async function runLedgerGuard({ rawText = null, file = null, reset = false } = {}) {
+    $('#lg-run-btn').disabled = true;
+    $('#lg-status').textContent = 'Звіряю через Python…';
+    try {
+      const body = { lang: LANG, sessionId: lgSessionId, reset };
+      if (file) {
+        const buf = await file.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let bin = '';
+        for (let i = 0; i < bytes.length; i += 8192) {
+          bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+        }
+        body.fileName = file.name;
+        body.fileBase64 = btoa(bin);
+      } else {
+        body.rawText = rawText ?? $('#lg-input').value;
+        body.fileName = 'inline.txt';
+      }
+      const r = await fetch('/api/ledgerguard/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const er = await r.json().catch(() => ({}));
+        throw new Error(er.error || 'HTTP ' + r.status);
+      }
+      const data = await r.json();
+      renderLedgerGuardReport(data);
+    } catch (err) {
+      $('#lg-status').textContent = `Сервер офлайн (${err.message})`;
+    } finally {
+      $('#lg-run-btn').disabled = false;
+    }
+  }
+
+  async function initLedgerGuard() {
+    $('#lg-input').value = LG_FALLBACK_UA.traps;
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      try {
+        const pr = await fetch('/api/ledgerguard/presets?lang=uk');
+        if (pr.ok) {
+          const pd = await pr.json();
+          if (pd?.presets) {
+            lgPresetsCache = pd.presets;
+            $('#lg-input').value = pd.presets.traps.text;
+          }
+        }
+      } catch {}
+      runLedgerGuard({ rawText: $('#lg-input').value, reset: true });
+    }
+  }
+
+  $('#lg-presets').onclick = (e) => {
+    const b = e.target.closest('[data-lgpreset]'); if (!b) return;
+    const key = b.dataset.lgpreset;
+    $$('#lg-presets [data-lgpreset]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    const txt = lgPresetsCache?.[key]?.text || LG_FALLBACK_UA[key];
+    $('#lg-input').value = txt;
+    lgSessionId = 'lg_ua_' + Date.now().toString(36);
+    runLedgerGuard({ rawText: txt, reset: true });
+  };
+  $('#lg-run-btn').onclick = () => {
+    lgSessionId = 'lg_ua_' + Date.now().toString(36);
+    runLedgerGuard({ rawText: $('#lg-input').value, reset: true });
+  };
+  $('#lg-replay-btn').onclick = () => runLedgerGuard({ rawText: $('#lg-input').value, reset: false });
+  $('#lg-file-in').onchange = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    lgSessionId = 'lg_ua_' + Date.now().toString(36);
+    runLedgerGuard({ file: f, reset: true });
+    e.target.value = '';
+  };
+
   if ('IntersectionObserver' in window) {
     const tocMap = new Map($$('.toc a').map((a) => [a.getAttribute('href').slice(1), a]));
     const obs = new IntersectionObserver((entries) => {
@@ -2648,6 +3020,7 @@ async function checkout(cart, discountPercent) {
   }
 
   /* Boot */
+  initLedgerGuard();
   resetChat();
   runRagSearch('Скільки днів безкоштовне зберігання у Варшаві?', false);
   extractAndVerifyDocs(false);

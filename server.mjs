@@ -2,10 +2,85 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { spawn, execFileSync } from 'node:child_process';
+import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
+
+/* ====== PERSISTENT PYTHON JSON-RPC BRIDGE FOR LEDGERGUARD ====== */
+const LEDGERGUARD_SRC = path.join(__dirname, 'ledgerguard', 'src');
+
+function detectPythonRuntime() {
+  for (const bin of ['python3', 'python']) {
+    try {
+      const out = execFileSync(bin, ['--version'], { encoding: 'utf8', timeout: 2500 }).trim();
+      if (out.toLowerCase().startsWith('python 3.')) return { bin, version: out };
+    } catch {}
+  }
+  return null;
+}
+
+const PYTHON_RT = detectPythonRuntime();
+let lgProc = null;
+let lgNextId = 1;
+const lgPending = new Map();
+
+function ensureLedgerGuardWorker() {
+  if (!PYTHON_RT) throw new Error('Python 3 runtime not available on host');
+  if (lgProc && !lgProc.killed && lgProc.exitCode === null) return lgProc;
+
+  const proc = spawn(PYTHON_RT.bin, ['-m', 'ledgerguard.rpc'], {
+    env: { ...process.env, PYTHONPATH: LEDGERGUARD_SRC, PYTHONIOENCODING: 'utf-8' },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  const rl = readline.createInterface({ input: proc.stdout, crlfDelay: Infinity });
+  rl.on('line', (line) => {
+    if (!line.trim()) return;
+    try {
+      const msg = JSON.parse(line);
+      const entry = lgPending.get(msg.id);
+      if (!entry) return;
+      clearTimeout(entry.timer);
+      lgPending.delete(msg.id);
+      if (msg.ok) entry.resolve(msg.result);
+      else entry.reject(new Error(msg.error || 'LedgerGuard RPC error'));
+    } catch {}
+  });
+  proc.stderr.on('data', (chunk) => {
+    console.error('[ledgerguard]', chunk.toString().trim());
+  });
+  proc.on('exit', () => {
+    lgProc = null;
+    for (const [id, entry] of lgPending.entries()) {
+      clearTimeout(entry.timer);
+      entry.reject(new Error('LedgerGuard worker exited unexpectedly'));
+      lgPending.delete(id);
+    }
+  });
+  lgProc = proc;
+  return proc;
+}
+
+function callLedgerGuardRpc(method, params = {}, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    let proc;
+    try {
+      proc = ensureLedgerGuardWorker();
+    } catch (err) {
+      reject(err);
+      return;
+    }
+    const id = lgNextId++;
+    const timer = setTimeout(() => {
+      lgPending.delete(id);
+      reject(new Error('LedgerGuard RPC timeout'));
+    }, timeoutMs);
+    lgPending.set(id, { resolve, reject, timer });
+    proc.stdin.write(JSON.stringify({ id, method, params }) + '\n');
+  });
+}
 
 /* ====== TIER 1: FAST / FREE TIER (NVIDIA NIM / OpenAI-compatible / etc.) ====== */
 const LLM_PROVIDER = (process.env.LLM_PROVIDER || 'openai').toLowerCase();
@@ -556,8 +631,60 @@ const server = http.createServer(async (req, res) => {
         dailySpentUsd: Number(dailySpentUsd.toFixed(4)),
         hourlyIpLimit: HEAVY_IP_LIMIT_PER_HOUR,
       },
+      ledgerguard: {
+        enabled: Boolean(PYTHON_RT && fs.existsSync(LEDGERGUARD_SRC)),
+        runtime: PYTHON_RT?.version || null,
+      },
       today: { day: budgetDayKey, requests: dailyRequests, tokens: dailyTokens },
     });
+    return;
+  }
+
+  if (req.method === 'GET' && urlPath === '/api/ledgerguard/presets') {
+    const u = new URL(req.url || '/', 'http://localhost');
+    const lang = (u.searchParams.get('lang') || 'ru').toLowerCase();
+    try {
+      const data = await callLedgerGuardRpc('presets', { lang });
+      sendJson(res, 200, data);
+    } catch (err) {
+      sendJson(res, 503, { error: err.message || 'LedgerGuard unavailable' });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && urlPath === '/api/ledgerguard/run') {
+    const ip = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress || 'local';
+    if (!checkRateLimit(ip)) {
+      sendJson(res, 429, { error: 'Rate limit exceeded for demo session. Try again shortly.' });
+      return;
+    }
+    const meta = {
+      endpoint: '/api/ledgerguard/run',
+      tier: 'deterministic-python',
+      latencyMs: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      costUsd: 0,
+      model: PYTHON_RT?.version || 'Python 3',
+    };
+    const t0 = Date.now();
+    try {
+      const body = await readJsonBody(req, 1024 * 1024);
+      const { lang = 'ru', rawText = null, fileName = 'inline.txt', fileBase64 = null, sessionId = 'web', reset = false } = body;
+      if (reset) {
+        await callLedgerGuardRpc('reset_session', { sessionId });
+      }
+      if (fileBase64 && String(fileBase64).length > 720 * 1024) {
+        sendJson(res, 413, { error: 'Uploaded file exceeds 512 KB demo limit' });
+        return;
+      }
+      const result = await callLedgerGuardRpc('reconcile', { lang, rawText, fileName, fileBase64, sessionId });
+      meta.latencyMs = Date.now() - t0;
+      sendJson(res, 200, { ...result, _meta: meta });
+    } catch (err) {
+      meta.latencyMs = Date.now() - t0;
+      sendJson(res, 502, { error: err.message || 'LedgerGuard reconciliation error', _meta: meta });
+    }
     return;
   }
 
