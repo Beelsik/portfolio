@@ -1372,10 +1372,9 @@ server.on('clientError', (_err, socket) => {
   }
 });
 
-if (process.env.DISABLE_KEEPALIVE !== '1') {
+if (process.env.DISABLE_KEEPALIVE !== '1' && !process.env.RENDER) {
   const keepaliveBase = (
     process.env.KEEPALIVE_URL ||
-    process.env.RENDER_EXTERNAL_URL ||
     'https://beelsik-portfolio.onrender.com'
   ).replace(/\/+$/, '');
   const pingRender = () => {
@@ -1385,7 +1384,8 @@ if (process.env.DISABLE_KEEPALIVE !== '1') {
       headers: { 'User-Agent': 'portfolio-keepalive/1.0' },
     }).catch(() => {});
   };
-  setInterval(pingRender, 11 * 60 * 1000).unref();
+  setTimeout(pingRender, 15_000).unref();
+  setInterval(pingRender, 8 * 60 * 1000).unref();
 }
 
 function shutdownGracefully(signal) {
