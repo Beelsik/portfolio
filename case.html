@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LedgerGuard — Кейс на один экран · Beelsik</title>
-<meta name="description" content="Синтетический набор из 60 счетов: 24 из 24 проблемных счетов остановлены до записи в 1С и ERP за 2–4 мс.">
+<meta name="description" content="Синтетический набор из 60 счетов: 24 из 24 проблемных счетов остановлены и все 36 из 36 корректных пропущены автоматически.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="LedgerGuard — 24 из 24 проблемных счетов остановлены до записи в 1С">
-<meta property="og:description" content="Синтетический набор из 60 счетов, открытый код Python 3.12 на GitHub. Время на документ 2–4 мс (p95 3,96 мс), 0,0% тихих ошибок.">
+<meta property="og:description" content="Синтетический набор из 60 счетов, открытый код Python 3.12 на GitHub: 24/24 проблемных счетов остановлены и 36/36 корректных прошли автоматически (0,0% тихих ошибок).">
 <meta property="og:url" content="https://beelsik-portfolio.onrender.com/case">
 <meta property="og:image" content="https://beelsik-portfolio.onrender.com/assets/og-ru.png">
 <meta property="og:image:width" content="1200">
@@ -88,9 +88,17 @@ figcaption { font-size: 13px; color: var(--ink-muted); }
 .cta-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-top: 12px; border-top: 1px solid var(--line); }
 main.wrap > *, .figs > *, figure > * { min-width: 0; }
 .cta-row .btn { max-width: 100%; }
+html.from-marketplace .direct-only { display: none !important; }
+.inquiry-box { margin-top: 4px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 8px; display: grid; gap: 12px; min-width: 0; max-width: 100%; }
+.inquiry-box[hidden], .pkg-copy-fallback[hidden] { display: none !important; }
+.inquiry-field { display: grid; gap: 5px; font-size: 13.5px; color: var(--ink); min-width: 0; }
+.inquiry-field > span { font-weight: 500; }
+.inquiry-box textarea, .inquiry-box input[type="text"], .pkg-copy-fallback { width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink); border-radius: 8px; padding: 10px 13px; font: 400 14px/1.55 var(--font-sans); }
+.between { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 @media (max-width: 680px) {
   .cta-row .btn { white-space: normal; text-align: left; line-height: 1.4; }
-  .cta-row #case-cta-pkg { width: 100%; justify-content: center; text-align: center; }
+  .cta-row #case-cta-pkg, .cta-row #case-cta-inquire { width: 100%; justify-content: center; text-align: center; }
   h1 { overflow-wrap: anywhere; }
 }
 </style>
@@ -150,24 +158,24 @@ main.wrap > *, .figs > *, figure > * { min-width: 0; }
         </thead>
         <tbody>
           <tr>
-            <td><strong><span class="ru">Время на документ</span><span class="en">Time per invoice</span><span class="fr">Temps par dossier</span></strong></td>
-            <td><span class="ru">12–15 мин вручную</span><span class="en">12–15 min manual</span><span class="fr">12–15 min manuel</span></td>
-            <td><strong><span class="ru">2–4 мс автопроверка (p95 3,96 мс)</span><span class="en">2–4 ms verification (p95 3.96 ms)</span><span class="fr">2–4 ms (p95 : 3,96 ms)</span></strong></td>
-          </tr>
-          <tr>
-            <td><strong><span class="ru">Тихие ошибки в ERP</span><span class="en">Silent ERP leakage</span><span class="fr">Erreurs silencieuses</span></strong></td>
-            <td><span class="ru">40,0% (24/60)</span><span class="en">40.0% (24/60)</span><span class="fr">40,0 % (24/60)</span></td>
-            <td><strong><span class="ru">0,0% — 24/24 в карантине</span><span class="en">0.0% — 24/24 quarantined</span><span class="fr">0,0 % — 24/24 en quarantaine</span></strong></td>
+            <td><strong><span class="ru">Отсев ошибок (тест на 60 счетах)</span><span class="en">Error filtering (60-invoice test set)</span><span class="fr">Filtrage des erreurs (jeu de 60 factures)</span></strong></td>
+            <td><span class="ru"><strong>24 из 60</strong> счетов прошли с подменой, переплатой или дублем (40,0% тихих ошибок)</span><span class="en"><strong>24 of 60</strong> bills leaked with swaps, overbilling, or replays (40.0% leakage)</span><span class="fr"><strong>24 sur 60</strong> passées avec substitution, surcoût ou doublon (40,0 %)</span></td>
+            <td><strong><span class="ru">24 из 24 проблемных остановлены, 36 из 36 корректных прошли автопроходом (0,0% тихих ошибок)</span><span class="en">24 of 24 faulty invoices stopped, 36 of 36 valid ones auto-passed (0.0% leakage)</span><span class="fr">24 sur 24 atypiques bloquées, 36 sur 36 conformes validées d'office (0,0 % d'oubli)</span></strong></td>
           </tr>
           <tr>
             <td><strong><span class="ru">Единицы и артикулы</span><span class="en">Units &amp; SKUs</span><span class="fr">Unités &amp; SKU</span></strong></td>
-            <td><span class="ru">3 бухты уходят как 3 м</span><span class="en">3 coils booked as 3 m</span><span class="fr">3 couronnes saisies en 3 m</span></td>
-            <td><strong><span class="ru">100% автопроход чистых (36/36)</span><span class="en">100% clean auto-pass (36/36)</span><span class="fr">100 % des sains validés (36/36)</span></strong></td>
+            <td><span class="ru">3 бухты уходят как 3 м по цене бухты; путает сечения</span><span class="en">3 coils booked as 3 m at coil price; swaps look-alike gauges</span><span class="fr">3 couronnes saisies en 3 m ; confusion de sections</span></td>
+            <td><strong><span class="ru">Пересчитывает бухты в метры (<code>2 × 100 м = 200 м</code>) и штрафует чужое сечение</span><span class="en">Expands coils to meters (<code>2 × 100 m = 200 m</code>) and blocks gauge swaps</span><span class="fr">Convertit les conditionnements et bloque les écarts techniques</span></strong></td>
           </tr>
           <tr>
             <td><strong><span class="ru">Дубли и аудит</span><span class="en">Duplicates &amp; audit</span><span class="fr">Doublons &amp; audit</span></strong></td>
             <td><span class="ru">повторное письмо = дубль</span><span class="en">re-sent email = duplicate</span><span class="fr">e-mail renvoyé = doublon</span></td>
             <td><strong><span class="ru">ключ <code>SHA-256</code> блокирует дубль</span><span class="en"><code>SHA-256</code> key blocks replays</span><span class="fr">clé <code>SHA-256</code> anti-doublon</span></strong></td>
+          </tr>
+          <tr>
+            <td><strong><span class="ru">Ручная проверка</span><span class="en">Human review load</span><span class="fr">Contrôle humain</span></strong></td>
+            <td><span class="ru">Сплошная вычитка всех входящих счетов и реквизитов</span><span class="en">Manual line-by-line review of every incoming invoice</span><span class="fr">Relecture manuelle ligne par ligne de chaque facture</span></td>
+            <td><span class="ru">Менеджер разбирает только задержанные счета (правила ядра — 2–4 мс на разобранный счёт, p95 3,96 мс)</span><span class="en">Team reviews flagged bills only (rule core runs in 2–4 ms per parsed bill, p95 3.96 ms)</span><span class="fr">L'équipe ne traite que les alertes (moteur de règles : 2–4 ms par facture analysée, p95 : 3,96 ms)</span></td>
           </tr>
         </tbody>
       </table>
@@ -186,7 +194,17 @@ main.wrap > *, .figs > *, figure > * { min-width: 0; }
   </section>
 
   <div class="cta-row">
-    <a class="btn" id="case-cta-pkg" href="./#packages">
+    <button class="btn direct-only" id="case-cta-inquire" type="button">
+      <span class="ru">Оставить запрос · 9 000 ₽ · 2 дня</span>
+      <span class="en">Send inquiry · $140 · 2 days</span>
+      <span class="fr">Envoyer une demande · 130 € · 2 jours</span>
+    </button>
+    <button class="btn ghost" id="case-cta-copy" type="button">
+      <span class="ru">Скопировать запрос</span>
+      <span class="en">Copy message</span>
+      <span class="fr">Copier le message</span>
+    </button>
+    <a class="btn ghost" id="case-cta-pkg" href="./#packages">
       <span class="ru">Сверка счетов на 50 ваших файлах — 9 000 ₽ · 2 дня</span>
       <span class="en">Invoice verification on 50 sample files — $140 · 2 days</span>
       <span class="fr">Contrôle de factures sur 50 fichiers — 130 € · 2 jours</span>
@@ -198,6 +216,43 @@ main.wrap > *, .figs > *, figure > * { min-width: 0; }
       <span class="ru">Все стенды ↗</span><span class="en">All demos ↗</span><span class="fr">Toutes les démos ↗</span>
     </a>
   </div>
+
+  <div class="inquiry-box direct-only" id="case-inquiry-box" hidden>
+    <div class="between">
+      <strong>
+        <span class="ru">Запрос по пакету сверки счетов</span>
+        <span class="en">Invoice verification inquiry</span>
+        <span class="fr">Demande de contrôle de factures</span>
+      </strong>
+      <button class="btn ghost sm" id="inq-close" type="button" aria-label="Close">✕</button>
+    </div>
+    <label class="inquiry-field">
+      <span>
+        <span class="ru">Сообщение (можно поправить под вашу задачу)</span>
+        <span class="en">Message (edit to match your workflow)</span>
+        <span class="fr">Message (adaptable à votre besoin)</span>
+      </span>
+      <textarea id="inq-msg" rows="3"></textarea>
+    </label>
+    <label class="inquiry-field">
+      <span>
+        <span class="ru">Куда ответить (рабочая почта, WhatsApp или мессенджер)</span>
+        <span class="en">Where to reply (work email, WhatsApp, or LinkedIn)</span>
+        <span class="fr">Où vous répondre (e-mail pro, WhatsApp ou LinkedIn)</span>
+      </span>
+      <input type="text" id="inq-contact" autocomplete="email" placeholder="name@company.ru или +7…">
+    </label>
+    <input type="text" id="inq-hp" name="website" tabindex="-1" autocomplete="off" hidden>
+    <div class="row">
+      <button class="btn" id="inq-submit" type="button">
+        <span class="ru">Отправить запрос</span>
+        <span class="en">Send inquiry</span>
+        <span class="fr">Envoyer</span>
+      </button>
+      <span class="note" id="inq-status"></span>
+    </div>
+  </div>
+  <textarea class="pkg-copy-fallback" id="case-copy-fallback" rows="2" readonly hidden></textarea>
 </main>
 
 <script>
@@ -214,6 +269,21 @@ main.wrap > *, .figs > *, figure > * { min-width: 0; }
     else if (nl === 'fr') L = 'fr';
     else if (nl !== 'ru') L = 'en';
   } catch {}
+  const PKG2_MSG = {
+    ru: 'Нужна сверка счетов. Прайс в Excel, счета в PDF. Могу прислать три обезличенных примера. Подойдёт ли пакет?',
+    en: 'I need invoice verification. Our price list is in Excel and supplier invoices arrive as PDFs. I can send three anonymized samples. Would this package fit?',
+    fr: 'J\'ai besoin d\'un contrôle de factures. Nos tarifs sont sur Excel et les factures fournisseurs en PDF. Je peux envoyer trois exemples anonymisés. Ce forfait conviendrait-il ?',
+  };
+  let inqDirty = false;
+  const syncCaseInqLang = () => {
+    const c = $('#inq-contact'), m = $('#inq-msg'), cb = $('#case-cta-copy');
+    if (c) c.placeholder = L === 'fr' ? 'nom@entreprise.fr ou WhatsApp / LinkedIn' : L === 'en' ? 'name@company.com or LinkedIn / WhatsApp' : 'name@company.ru или +7…';
+    if (m && !inqDirty) m.value = PKG2_MSG[L] || PKG2_MSG.ru;
+    if (cb) {
+      if (cb.dataset.copied) cb.textContent = L === 'fr' ? 'Copié ✓' : L === 'en' ? 'Copied ✓' : 'Скопировано ✓';
+      else cb.innerHTML = '<span class="ru">Скопировать запрос</span><span class="en">Copy message</span><span class="fr">Copier le message</span>';
+    }
+  };
   const applyLang = (l) => {
     L = l;
     document.documentElement.dataset.l = l;
@@ -221,6 +291,7 @@ main.wrap > *, .figs > *, figure > * { min-width: 0; }
     ['ru', 'en', 'fr'].forEach((c) => $(`#l-${c}`).setAttribute('aria-pressed', l === c));
     try { localStorage.setItem('pf-lang', l); } catch {}
     updateThemeBtn();
+    syncCaseInqLang();
   };
 
   let theme = 'light';
@@ -259,6 +330,62 @@ main.wrap > *, .figs > *, figure > * { min-width: 0; }
     }
   } catch {}
   if (!src) src = 'direct';
+  const isMarketplace = /^(kwork|fl|freelancehunt|upwork|codeur|habr|malt|peopleperhour|freelancer|weblancer|useme)$/i.test(src)
+    || /^ref:.*(kwork|freelancehunt|fl\.ru|upwork|codeur|malt|peopleperhour|freelancer|weblancer|useme)/i.test(src);
+  document.documentElement.classList.toggle('from-marketplace', isMarketplace);
+
+  $('#case-cta-copy')?.addEventListener('click', async () => {
+    const phrase = PKG2_MSG[L] || PKG2_MSG.ru;
+    let copied = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(phrase);
+        copied = true;
+      }
+    } catch {}
+    if (!copied) {
+      const fb = $('#case-copy-fallback');
+      if (fb) { fb.value = phrase; fb.hidden = false; fb.select(); try { copied = document.execCommand('copy'); } catch {} }
+    }
+    const cb = $('#case-cta-copy');
+    if (cb) {
+      cb.dataset.copied = '1';
+      cb.textContent = L === 'fr' ? 'Copié ✓' : L === 'en' ? 'Copied ✓' : 'Скопировано ✓';
+      setTimeout(() => { delete cb.dataset.copied; syncCaseInqLang(); }, 2500);
+    }
+    sendVisit('act', ['case:copy']);
+  });
+  $('#case-cta-inquire')?.addEventListener('click', () => {
+    inqDirty = false;
+    syncCaseInqLang();
+    const box = $('#case-inquiry-box');
+    if (box) { box.hidden = false; box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    $('#inq-contact')?.focus();
+  });
+  $('#inq-msg')?.addEventListener('input', () => { inqDirty = true; });
+  $('#inq-close')?.addEventListener('click', () => { const b = $('#case-inquiry-box'); if (b) b.hidden = true; });
+  $('#inq-submit')?.addEventListener('click', async () => {
+    const btn = $('#inq-submit'), cEl = $('#inq-contact'), mEl = $('#inq-msg'), stEl = $('#inq-status'), hp = $('#inq-hp');
+    const contact = (cEl?.value || '').trim(), message = (mEl?.value || '').trim();
+    if (contact.length < 3) { if (stEl) stEl.textContent = L === 'fr' ? 'Indiquez votre e-mail ou contact.' : L === 'en' ? 'Please enter your email or contact.' : 'Укажите email, WhatsApp или контакт.'; cEl?.focus(); return; }
+    if (message.length < 5) { if (stEl) stEl.textContent = L === 'fr' ? 'Ajoutez quelques mots.' : L === 'en' ? 'Please add a short note.' : 'Добавьте пару слов о задаче.'; mEl?.focus(); return; }
+    btn.disabled = true;
+    if (stEl) stEl.textContent = L === 'fr' ? 'Envoi…' : L === 'en' ? 'Sending…' : 'Отправляю…';
+    try {
+      const r = await fetch((API_BASE || '') + '/api/inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pkg: 'pkg-2', contact, message, website: hp?.value || '', src, page: location.pathname, lang: L }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+      if (stEl) stEl.textContent = L === 'fr' ? 'Demande envoyée — je vous répondrai rapidement.' : L === 'en' ? 'Inquiry sent — I will reply shortly.' : 'Запрос отправлен — отвечу в ближайшее время.';
+      if (cEl) cEl.value = '';
+      inqDirty = false;
+    } catch {
+      if (stEl) stEl.textContent = L === 'fr' ? 'Échec d\'envoi. Copiez le message ci-dessus.' : L === 'en' ? 'Could not send right now. Please copy the message above.' : 'Не удалось отправить. Скопируйте запрос кнопкой выше.';
+    } finally { btn.disabled = false; }
+  });
 
   let sid = '';
   try {

@@ -264,11 +264,12 @@ textarea { resize: vertical; }
 .cv-banner { padding: 0; }
 .cv-copy { max-width: 64ch; }
 .display-xl {
-  font-size: clamp(26px, 3.2vw, 32px);
+  font-size: clamp(24px, 3vw, 31px);
   font-weight: 600;
   letter-spacing: -0.028em;
-  line-height: 1.2;
+  line-height: 1.22;
   color: var(--ink);
+  max-width: 28ch;
   margin: 4px 0 16px;
 }
 .cv-lead { font: 400 17px/1.62 var(--font-sans); color: var(--ink); max-width: 60ch; margin: 0; }
@@ -480,22 +481,33 @@ footer {
 .task-foot-callout { margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
 .task-compose-box { margin-top: 8px; padding: 14px 16px; background: var(--panel); border: 1px dashed var(--line-strong); border-radius: 8px; display: grid; gap: 10px; }
 
+html.from-marketplace .direct-only { display: none !important; }
+.inquiry-box { margin-top: 6px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 8px; display: grid; gap: 12px; min-width: 0; max-width: 100%; }
+.inquiry-box[hidden], .pkg-copy-fallback[hidden] { display: none !important; }
+.inquiry-field { display: grid; gap: 5px; font-size: 13.5px; color: var(--ink); min-width: 0; }
+.inquiry-field > span { font-weight: 500; }
+
 /* Fixed-price starter packages (#packages) */
-#packages { scroll-margin-top: 84px; }
+#packages, #approach { scroll-margin-top: 84px; }
 .pkg-demo-link { display: inline-block; margin-top: 4px; font-size: 12.5px; color: var(--ink-muted); text-decoration-color: var(--line-strong); }
 .pkg-demo-link:hover { color: var(--ink); }
 .pkg-table th.pkg-col-price, .pkg-table td.pkg-price { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pkg-amt { display: block; font-weight: 600; color: var(--ink); font-size: 14.5px; }
 .pkg-days { display: block; font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
+.pkg-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; margin-top: 8px; }
+.pkg-actions .btn.sm { padding: 5px 10px; font-size: 12.5px; }
 @media (max-width: 680px) {
   .pkg-table thead { display: none; }
   .pkg-table, .pkg-table tbody { display: block; width: 100%; }
-  .pkg-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .pkg-table tr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 16px 0; border-bottom: 1px solid var(--line); }
   .pkg-table tr:first-child { border-top: 1px solid var(--line-strong); }
   .pkg-table td { border: 0; padding: 0; }
   .pkg-table td.pkg-name { grid-column: 1; grid-row: 1; }
-  .pkg-table td.pkg-price { grid-column: 2; grid-row: 1; }
-  .pkg-table td.pkg-desc { grid-column: 1 / -1; grid-row: 2; padding-top: 2px; }
+  .pkg-table td.pkg-desc { grid-column: 1; grid-row: 2; }
+  .pkg-table td.pkg-price { grid-column: 1; grid-row: 3; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; text-align: left; white-space: normal; padding-top: 4px; }
+  .pkg-price-meta { display: flex; align-items: baseline; gap: 8px; }
+  .pkg-price-meta .pkg-amt, .pkg-price-meta .pkg-days { display: inline; margin: 0; }
+  .pkg-actions { flex-direction: row; flex-wrap: wrap; align-items: center; margin-top: 0; gap: 6px; }
 }
 
 /* Trust FAQ (#trust) & Task Next Steps (#task-next) */
@@ -542,15 +554,110 @@ footer {
       <div class="ch-sheet__frame">
         <div class="cv-banner">
           <div class="cv-copy">
-            <span class="ch-label">Прикладна розробка та автоматизація</span>
-            <h1 class="display-xl">Beelsik</h1>
-            <p class="cv-lead">Роблю робочу автоматизацію для бізнесу: ботів першої лінії й запису, пошук по внутрішніх документах, розбір рахунків і кошторисів, інтеграції з CRM та ERP.</p>
-            <p class="cv-sub">Нейромережу підключаю лише там, де плаває формат: живий діалог, криві скани, різнобій у назвах позицій. Підрахунок сум, права доступу й запис у базу залишаються у звичайному перевірюваному коді. Нижче — відкритий проєкт LedgerGuard та 11 інтерактивних стендів: можна вставити власне ТЗ, завантажити фото документа або перевірити стійкість бота.</p>
+            <span class="ch-label">Прикладна розробка та автоматизація · beelsik</span>
+            <h1 class="display-xl">Автоматизую звірку рахунків і відповіді клієнтам за вашим прайсом</h1>
+            <p class="cv-lead">Боти першої лінії й запису, пошук по внутрішніх документах, перевірка рахунків перед записом у ERP/KeyCRM і доробка проєктів після Lovable / Cursor. Нижче — 3 стартові пакети з фіксованою ціною, відкритий проєкт LedgerGuard та 11 інтерактивних стендів.</p>
           </div>
         </div>
 
-        <div class="ch-sheet__body">
+        <div class="ch-sheet__body" id="packages">
+          <span class="ch-label">Невеликі задачі з фіксованою ціною</span>
+          <div class="tbl">
+            <table class="ch-spec pkg-table">
+              <thead>
+                <tr>
+                  <th style="width:52px">№</th>
+                  <th style="width:240px">Пакет</th>
+                  <th>Що входить на виході</th>
+                  <th class="pkg-col-price" style="width:196px">Термін, ціна і запит</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="pos">01</td>
+                  <td class="pkg-name">
+                    <strong>Бот для відповідей за вашим прайсом і частими питаннями</strong>
+                    <a class="pkg-demo-link" href="#sales">стенд 01 ↓</a>
+                  </td>
+                  <td class="pkg-desc">Підключаю ваш прайс і правила (до 150 позицій із Excel або Google Таблиць) для сайту, WhatsApp або Telegram: бот відповідає строго за цінами без вигадок, збирає контакти в заявку та передає нестандартні звернення менеджеру. Готовий Docker-контейнер та інструкція.</td>
+                  <td class="pkg-price">
+                    <div class="pkg-price-meta">
+                      <span class="pkg-amt">5 500 ₴</span>
+                      <span class="pkg-days">3 дні</span>
+                    </div>
+                    <div class="pkg-actions">
+                      <button class="btn sm pkg-open-form-btn direct-only" type="button" data-pkg="pkg-1">Залишити запит</button>
+                      <button class="btn ghost sm pkg-copy-btn" type="button" data-pkg="pkg-1">Скопіювати запит</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="pos">02</td>
+                  <td class="pkg-name">
+                    <strong>Звірка рахунків і накладних на 50 ваших файлах</strong>
+                    <a class="pkg-demo-link" href="#project">LedgerGuard ↓</a>
+                  </td>
+                  <td class="pkg-desc">Налаштовую перевірку під ваш прайс і договори (PDF, XLSX, скани): ловлю помилки арифметики, ПДВ, цін вище договору, перерахунок бухт/метрів і підміну ЄДРПОУ або IBAN. На виході — таблиця розбіжностей і готовий Python-скрипт.</td>
+                  <td class="pkg-price">
+                    <div class="pkg-price-meta">
+                      <span class="pkg-amt">4 200 ₴</span>
+                      <span class="pkg-days">2 дні</span>
+                    </div>
+                    <div class="pkg-actions">
+                      <button class="btn sm pkg-open-form-btn direct-only" type="button" data-pkg="pkg-2">Залишити запит</button>
+                      <button class="btn ghost sm pkg-copy-btn" type="button" data-pkg="pkg-2">Скопіювати запит</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="pos">03</td>
+                  <td class="pkg-name">
+                    <strong>Аудит Supabase і безпеки після Lovable / Cursor</strong>
+                    <a class="pkg-demo-link" href="#audit">стенд 09 ↓</a>
+                  </td>
+                  <td class="pkg-desc">Перевіряю політики RLS, витоки сервісних ключів у фронтенд, підміну сум замовлення на клієнті та Edge Functions. Ви отримуєте звіт за критичністю і готові SQL-міграції з патчами для закриття критичних дір.</td>
+                  <td class="pkg-price">
+                    <div class="pkg-price-meta">
+                      <span class="pkg-amt">4 800 ₴</span>
+                      <span class="pkg-days">2 дні</span>
+                    </div>
+                    <div class="pkg-actions">
+                      <button class="btn sm pkg-open-form-btn direct-only" type="button" data-pkg="pkg-3">Залишити запит</button>
+                      <button class="btn ghost sm pkg-copy-btn" type="button" data-pkg="pkg-3">Скопіювати запит</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Обсяг і ціна фіксуються до старту — скопіюйте готовий запит і вставте його в переписку на біржі або залиште контакт у формі нижче. Якщо після малого пакета перейдемо до повного впровадження, його вартість зарахується в основний проєкт.</p>
+
+          <div class="inquiry-box direct-only" id="pkg-inquiry-box" hidden>
+            <div class="between">
+              <strong id="inq-title">Швидкий запит щодо пакета</strong>
+              <button class="btn ghost sm" id="inq-close" type="button" aria-label="Закрити">✕</button>
+            </div>
+            <label class="inquiry-field">
+              <span>Повідомлення (можна уточнити під вашу задачу)</span>
+              <textarea id="inq-msg" rows="3"></textarea>
+            </label>
+            <label class="inquiry-field">
+              <span>Куди відповісти (робоча пошта, WhatsApp або месенджер)</span>
+              <input type="text" id="inq-contact" autocomplete="email" placeholder="name@company.ua або +380…">
+            </label>
+            <input type="text" id="inq-hp" name="website" tabindex="-1" autocomplete="off" hidden>
+            <div class="row">
+              <button class="btn" id="inq-submit" type="button">Надіслати запит</button>
+              <span class="note" id="inq-status"></span>
+            </div>
+          </div>
+
+          <textarea class="pkg-copy-fallback" id="pkg-copy-fallback" rows="2" readonly hidden></textarea>
+        </div>
+
+        <div class="ch-sheet__body" id="approach">
           <span class="ch-label">Підхід до роботи</span>
+          <p class="note" style="margin-top:-14px;max-width:64ch">Нейромережу підключаю лише там, де плаває формат: живий діалог, криві скани, різнобій у назвах позицій. Підрахунок сум, права доступу й запис у базу залишаються у звичайному перевірюваному коді.</p>
           <div class="tbl">
             <table class="ch-spec">
               <thead>
@@ -579,61 +686,6 @@ footer {
               </tbody>
             </table>
           </div>
-        </div>
-
-        <div class="ch-sheet__body" id="packages">
-          <span class="ch-label">Невеликі задачі з фіксованою ціною</span>
-          <div class="tbl">
-            <table class="ch-spec pkg-table">
-              <thead>
-                <tr>
-                  <th style="width:52px">№</th>
-                  <th style="width:240px">Пакет</th>
-                  <th>Що входить на виході</th>
-                  <th class="pkg-col-price" style="width:150px">Термін і ціна</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="pos">01</td>
-                  <td class="pkg-name">
-                    <strong>Telegram-бот за вашим прайсом і частими питаннями</strong>
-                    <a class="pkg-demo-link" href="#sales">стенд 01 ↓</a>
-                  </td>
-                  <td class="pkg-desc">Підключаю ваш прайс і правила (до 150 позицій із Excel або Google Таблиць): бот відповідає строго за цінами без вигадок, збирає контакти в заявку та передає нестандартні звернення менеджеру. Готовий Docker-контейнер та інструкція.</td>
-                  <td class="pkg-price">
-                    <span class="pkg-amt">5 500 ₴</span>
-                    <span class="pkg-days">3 дні</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="pos">02</td>
-                  <td class="pkg-name">
-                    <strong>Звірка рахунків і накладних на 50 ваших файлах</strong>
-                    <a class="pkg-demo-link" href="#project">LedgerGuard ↓</a>
-                  </td>
-                  <td class="pkg-desc">Налаштовую перевірку під ваш прайс і договори (PDF, XLSX, скани): ловлю помилки арифметики, ПДВ, цін вище договору, перерахунок бухт/метрів і підміну ЄДРПОУ або IBAN. На виході — таблиця розбіжностей і готовий Python-скрипт.</td>
-                  <td class="pkg-price">
-                    <span class="pkg-amt">4 200 ₴</span>
-                    <span class="pkg-days">2 дні</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="pos">03</td>
-                  <td class="pkg-name">
-                    <strong>Аудит Supabase і безпеки після Lovable / Cursor</strong>
-                    <a class="pkg-demo-link" href="#audit">стенд 09 ↓</a>
-                  </td>
-                  <td class="pkg-desc">Перевіряю політики RLS, витоки сервісних ключів у фронтенд, підміну сум замовлення на клієнті та Edge Functions. Ви отримуєте звіт за критичністю і готові SQL-міграції з патчами для закриття критичних дір.</td>
-                  <td class="pkg-price">
-                    <span class="pkg-amt">4 800 ₴</span>
-                    <span class="pkg-days">2 дні</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="note">Обсяг і ціна фіксуються до старту — достатньо написати назву пакета й додати приклад файлу або посилання на репозиторій. Якщо після малого пакета перейдемо до повного впровадження, його вартість зарахується в основний проєкт.</p>
         </div>
 
         <div class="ch-sheet__body" id="trust">
@@ -705,26 +757,20 @@ footer {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><strong>Час на документ</strong></td>
-                    <td>12–15 хв вручну; помилки втоми на довгих специфікаціях</td>
-                    <td><strong>2–4 мс</strong> автоперевірка (p95: 3,96 мс), <strong>&lt;1 хв</strong> на розбір у карантині</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Приховані помилки в ERP</strong></td>
-                    <td><strong>40,0%</strong> на тесті з 60 документів (24/60 пройшли з підміною, переплатою або дублем)</td>
-                    <td><strong>0,0%</strong> — усі 24/24 проблемні рахунки зупинено в <code>quarantine_queue</code></td>
+                    <td><strong>Відсів помилок (тест на 60 рахунках)</strong></td>
+                    <td><strong>24 із 60</strong> рахунків пішли в облік із підміною IBAN, переплатою або дублем (40,0% прихованих помилок)</td>
+                    <td>Зупинено <strong>усі 24 з 24</strong> проблемних рахунків, а <strong>усі 36 із 36</strong> коректних пройшли автоматично (0,0% пропусків у <code>quarantine_queue</code>)</td>
                   </tr>
                   <tr>
                     <td><strong>Одиниці й артикули</strong></td>
                     <td>«3 бухти» заходять як 3 м за ціною бухти; плутає <code>3×1,5</code> і <code>3×2,5</code></td>
-                    <td><strong>100%</strong> автопрохід чистих заявок (36/36): розгортає пакування, штрафує чужий переріз</td>
+                    <td>Перераховує бухти й пакування в базові одиниці (<code>2 × 100 м = 200 м</code>) і блокує чужий переріз</td>
                   </tr>
                   <tr>
                     <td><strong>Дублі та аудит</strong></td>
                     <td>Повторний лист створює дубль замовлення; немає доказової історії</td>
                     <td>Ключ ідемпотентності <code>SHA-256</code> блокує дубль + звʼязаний ланцюг у <code>audit_log</code></td>
                   </tr>
-                </tbody>
               </table>
             </div>
             <div class="stack"><span>Python 3.12 (stdlib)</span><span>Decimal Accounting</span><span>OOXML .xlsx / .docx / .eml</span><span>ЄДРПОУ / IBAN mod-97</span><span>SQLite WAL + SHA-256</span></div>
@@ -1623,7 +1669,7 @@ async function checkout(cart, discountPercent) {
   <footer>
     <div>
       <strong style="color:var(--ink)">Обговорити задачу</strong>
-      <p style="margin:5px 0 0;max-width:64ch">Напишіть у переписці на майданчику, де ви відкрили це посилання, і додайте приклад файлу або короткий опис процесу — відповім із термінами, архітектурою та пропозицією щодо пілоту. Або почніть з одного з <a href="#packages">3 фіксованих пакетів (4 200 – 5 500 ₴) ↑</a> · <a href="#trust">Умови та гарантія пілоту ↑</a>.</p>
+      <p style="margin:5px 0 0;max-width:64ch">Напишіть у переписці на майданчику, де ви відкрили це посилання, і додайте приклад файлу або короткий опис процесу — відповім із термінами, архітектурою та пропозицією щодо пілоту. <span class="direct-only">За прямим посиланням <a href="#pkg-inquiry-box" class="open-custom-inquiry">залиште запит у формі ↑</a> · </span><a href="#packages">3 фіксовані пакети (4 200 – 5 500 ₴) ↑</a> · <a href="#trust">Умови та гарантія пілоту ↑</a>.</p>
       <p class="note" style="margin-top:12px;max-width:74ch;opacity:0.85">Усі стенди — демонстрація на вигаданих даних (клініка «Квітень», «ЄвроТранс», «БудІнвест» тощо): реквізити, прайси й замовлення синтетичні, реальні дані клієнтів під NDA не публікуються.</p>
     </div>
     <div class="foot-links" id="foot-links">
@@ -3376,7 +3422,149 @@ async function checkout(cart, discountPercent) {
     $$('.ch-sheet').forEach((s) => obs.observe(s));
   }
 
+  const PKG_TEMPLATES = {
+    'pkg-1': 'Потрібен бот для відповідей за прайсом. Прайс у Excel / Google Таблицях, список частих питань є. Можу надіслати знеособлений фрагмент таблиці. Чи підійде стартовий пакет?',
+    'pkg-2': 'Потрібна звірка рахунків. Прайс у Excel, рахунки в PDF. Можу надіслати три знеособлені приклади. Чи підійде пакет?',
+    'pkg-3': 'Потрібен аудит проєкту на Supabase після Lovable / Cursor. Можу надати доступ на читання до репозиторію та схему таблиць. Чи підійде пакет?',
+  };
+  let activeInquiryPkg = 'custom';
+  let inqMsgDirty = false;
+  let activeSrcTag = 'direct';
+
+  function detectVisitorSource() {
+    let s = '';
+    try {
+      const rawSrc = urlParamsBoot.get('src') || urlParamsBoot.get('utm_source') || '';
+      const clean = rawSrc.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+      if (clean) {
+        s = clean;
+        sessionStorage.setItem('pf-src', clean);
+      } else {
+        s = sessionStorage.getItem('pf-src') || '';
+      }
+      if (!s && document.referrer) {
+        const refHost = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
+        if (refHost && refHost !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|localhost|127\.0\.0\.1)$/i.test(refHost)) {
+          s = ('ref:' + refHost).slice(0, 40);
+          sessionStorage.setItem('pf-src', s);
+        }
+      }
+    } catch {}
+    activeSrcTag = s || 'direct';
+    const isMarketplace = /^(kwork|fl|freelancehunt|upwork|codeur|habr|malt|peopleperhour|freelancer|weblancer|useme)$/i.test(activeSrcTag)
+      || /^ref:.*(kwork|freelancehunt|fl\.ru|upwork|codeur|malt|peopleperhour|freelancer|weblancer|useme)/i.test(activeSrcTag);
+    document.documentElement.classList.toggle('from-marketplace', isMarketplace);
+  }
+  detectVisitorSource();
+
+  function openInquiryBox(pkgId) {
+    const box = $('#pkg-inquiry-box');
+    const msgEl = $('#inq-msg');
+    const stEl = $('#inq-status');
+    if (!box || !msgEl) return;
+    activeInquiryPkg = PKG_TEMPLATES[pkgId] ? pkgId : 'custom';
+    inqMsgDirty = false;
+    if (PKG_TEMPLATES[activeInquiryPkg]) {
+      msgEl.value = PKG_TEMPLATES[activeInquiryPkg];
+    } else {
+      msgEl.value = '';
+      msgEl.placeholder = 'Коротко опишіть задачу та формат файлів…';
+    }
+    if (stEl) stEl.textContent = '';
+    box.hidden = false;
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    $('#inq-contact')?.focus();
+  }
+
+  function initPackagesUi() {
+    $$('.pkg-copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const phrase = PKG_TEMPLATES[btn.dataset.pkg];
+        if (!phrase) return;
+        let copied = false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(phrase);
+            copied = true;
+          }
+        } catch {}
+        if (!copied) {
+          const fb = $('#pkg-copy-fallback');
+          if (fb) {
+            fb.value = phrase;
+            fb.hidden = false;
+            fb.select();
+            try { copied = document.execCommand('copy'); } catch {}
+          }
+        }
+        btn.textContent = 'Скопійовано ✓';
+        setTimeout(() => { btn.textContent = 'Скопіювати запит'; }, 2500);
+      });
+    });
+
+    $$('.pkg-open-form-btn').forEach((btn) => {
+      btn.addEventListener('click', () => openInquiryBox(btn.dataset.pkg));
+    });
+    $$('.open-custom-inquiry').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        openInquiryBox('custom');
+      });
+    });
+    $('#inq-msg')?.addEventListener('input', () => { inqMsgDirty = true; });
+    $('#inq-close')?.addEventListener('click', () => {
+      const box = $('#pkg-inquiry-box');
+      if (box) box.hidden = true;
+    });
+    $('#inq-submit')?.addEventListener('click', async () => {
+      const btn = $('#inq-submit');
+      const msgEl = $('#inq-msg');
+      const contactEl = $('#inq-contact');
+      const hpEl = $('#inq-hp');
+      const stEl = $('#inq-status');
+      const contact = (contactEl?.value || '').trim();
+      const message = (msgEl?.value || '').trim();
+      if (contact.length < 3) {
+        if (stEl) stEl.textContent = 'Вкажіть пошту, WhatsApp або месенджер для відповіді.';
+        contactEl?.focus();
+        return;
+      }
+      if (message.length < 5) {
+        if (stEl) stEl.textContent = 'Додайте кілька слів про задачу.';
+        msgEl?.focus();
+        return;
+      }
+      btn.disabled = true;
+      if (stEl) stEl.textContent = 'Надсилаю…';
+      try {
+        const res = await fetch('/api/inquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pkg: activeInquiryPkg,
+            contact,
+            message,
+            website: hpEl?.value || '',
+            src: activeSrcTag,
+            page: location.pathname,
+            lang: LANG,
+          }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+        if (stEl) stEl.textContent = 'Запит надіслано — відповім найближчим часом.';
+        if (contactEl) contactEl.value = '';
+        inqMsgDirty = false;
+      } catch {
+        if (stEl) stEl.textContent = 'Не вдалося надіслати. Скопіюйте запит кнопкою вище або повторіть пізніше.';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
   /* Boot */
+  initPackagesUi();
   if (taskParamBoot) {
     const archSec = $('#architect');
     const mainList = $('.album-main');

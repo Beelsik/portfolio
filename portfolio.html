@@ -264,11 +264,12 @@ textarea { resize: vertical; }
 .cv-banner { padding: 0; }
 .cv-copy { max-width: 64ch; }
 .display-xl {
-  font-size: clamp(26px, 3.2vw, 32px);
+  font-size: clamp(24px, 3vw, 31px);
   font-weight: 600;
   letter-spacing: -0.028em;
-  line-height: 1.2;
+  line-height: 1.22;
   color: var(--ink);
+  max-width: 28ch;
   margin: 4px 0 16px;
 }
 .cv-lead { font: 400 17px/1.62 var(--font-sans); color: var(--ink); max-width: 60ch; margin: 0; }
@@ -480,22 +481,33 @@ footer {
 .task-foot-callout { margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
 .task-compose-box { margin-top: 8px; padding: 14px 16px; background: var(--panel); border: 1px dashed var(--line-strong); border-radius: 8px; display: grid; gap: 10px; }
 
+html.from-marketplace .direct-only { display: none !important; }
+.inquiry-box { margin-top: 6px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 8px; display: grid; gap: 12px; min-width: 0; max-width: 100%; }
+.inquiry-box[hidden] { display: none !important; }
+.inquiry-field { display: grid; gap: 5px; font-size: 13.5px; color: var(--ink); min-width: 0; }
+.inquiry-field > span { font-weight: 500; }
+
 /* Fixed-price starter packages (#packages) */
-#packages { scroll-margin-top: 84px; }
+#packages, #approach { scroll-margin-top: 84px; }
 .pkg-demo-link { display: inline-block; margin-top: 4px; font-size: 12.5px; color: var(--ink-muted); text-decoration-color: var(--line-strong); }
 .pkg-demo-link:hover { color: var(--ink); }
 .pkg-table th.pkg-col-price, .pkg-table td.pkg-price { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pkg-amt { display: block; font-weight: 600; color: var(--ink); font-size: 14.5px; }
 .pkg-days { display: block; font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
+.pkg-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; margin-top: 8px; }
+.pkg-actions .btn.sm { padding: 5px 10px; font-size: 12.5px; }
 @media (max-width: 680px) {
   .pkg-table thead { display: none; }
   .pkg-table, .pkg-table tbody { display: block; width: 100%; }
-  .pkg-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .pkg-table tr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 16px 0; border-bottom: 1px solid var(--line); }
   .pkg-table tr:first-child { border-top: 1px solid var(--line-strong); }
   .pkg-table td { border: 0; padding: 0; }
   .pkg-table td.pkg-name { grid-column: 1; grid-row: 1; }
-  .pkg-table td.pkg-price { grid-column: 2; grid-row: 1; }
-  .pkg-table td.pkg-desc { grid-column: 1 / -1; grid-row: 2; padding-top: 2px; }
+  .pkg-table td.pkg-desc { grid-column: 1; grid-row: 2; }
+  .pkg-table td.pkg-price { grid-column: 1; grid-row: 3; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; text-align: left; white-space: normal; padding-top: 4px; }
+  .pkg-price-meta { display: flex; align-items: baseline; gap: 8px; }
+  .pkg-price-meta .pkg-amt, .pkg-price-meta .pkg-days { display: inline; margin: 0; }
+  .pkg-actions { flex-direction: row; flex-wrap: wrap; align-items: center; margin-top: 0; gap: 6px; }
 }
 
 /* Trust FAQ (#trust) & Task Next Steps (#task-next) */
@@ -552,26 +564,181 @@ footer {
         <div class="cv-banner">
           <div class="cv-copy">
             <span class="ch-label">
-              <span class="ru">Прикладная разработка и автоматизация</span>
-              <span class="en">Applied AI &amp; backend automation</span>
-              <span class="fr">Automatisation IA &amp; backend sur mesure</span>
+              <span class="ru">Прикладная разработка и автоматизация · beelsik</span>
+              <span class="en">Applied AI &amp; backend automation · beelsik</span>
+              <span class="fr">Automatisation IA &amp; backend sur mesure · beelsik</span>
             </span>
-            <h1 class="display-xl">Beelsik</h1>
+            <h1 class="display-xl">
+              <span class="ru">Автоматизирую сверку счетов и ответы клиентам по вашему прайсу</span>
+              <span class="en">I automate invoice verification and customer replies from your price list</span>
+              <span class="fr">J'automatise le contrôle de vos factures et les réponses clients sur vos tarifs</span>
+            </h1>
             <p class="cv-lead">
-              <span class="ru">Делаю рабочую автоматизацию для бизнеса: ботов первой линии и записи, поиск по внутренним документам, разбор счетов и смет, интеграции с CRM и 1С/ERP.</span>
-              <span class="en">I build practical automation for operations teams: front-desk and booking bots, internal document search, invoice and BOM parsers, and CRM/ERP integrations.</span>
-              <span class="fr">Je développe des automatisations concrètes pour les équipes métier : bots d'accueil et de prise de rendez-vous, recherche documentaire interne, lecture de factures/devis et intégrations CRM/ERP.</span>
-            </p>
-            <p class="cv-sub">
-              <span class="ru">Нейросеть подключаю только там, где плывёт формат: живой диалог, кривые сканы, разнобой в названиях позиций. Расчёты сумм, права доступа и запись в базу остаются в обычном проверяемом коде. Ниже — открытый проект LedgerGuard и 11 интерактивных стендов: можно подставить своё ТЗ, загрузить фото документа или проверить устойчивость бота.</span>
-              <span class="en">LLMs handle the messy inputs — free-text chat, skewed scans, inconsistent supplier naming — while totals, permissions, and database writes stay in plain, testable code. Below are the open-source LedgerGuard project and 11 live sandboxes where you can paste your own brief, upload an invoice photo, or stress-test prompt defenses.</span>
-              <span class="fr">Le LLM n'intervient que là où le format varie — dialogue libre, scans imparfaits, libellés fournisseurs hétérogènes — tandis que les montants, les droits d'accès et l'écriture en base restent en code classique testé. Ci-dessous, le projet open-source LedgerGuard et 11 démonstrateurs actifs à tester avec vos propres textes ou photos.</span>
+              <span class="ru">Боты первой линии и записи, поиск по внутренним документам, проверка счетов перед записью в 1С/ERP и доводка проектов после Lovable / Cursor. Ниже — 3 стартовых пакета с фиксированной ценой, открытый проект LedgerGuard и 11 интерактивных стендов.</span>
+              <span class="en">Front-desk and booking bots, internal document search, pre-ERP invoice checks, and post-Lovable/Cursor security hardening. Below: 3 fixed-price starter packages, the open-source LedgerGuard engine, and 11 interactive demos.</span>
+              <span class="fr">Bots d'accueil et de prise de rendez-vous, recherche documentaire interne, contrôle de factures avant ERP et sécurisation après Lovable / Cursor. Ci-dessous : 3 forfaits à prix fixe, le moteur open-source LedgerGuard et 11 démonstrateurs actifs.</span>
             </p>
           </div>
         </div>
 
-        <div class="ch-sheet__body">
+        <div class="ch-sheet__body" id="packages">
+          <span class="ch-label">
+            <span class="ru">Небольшие задачи с фиксированной ценой</span>
+            <span class="en">Fixed-price starter packages</span>
+            <span class="fr">Forfaits courts à prix fixe</span>
+          </span>
+          <div class="tbl">
+            <table class="ch-spec pkg-table">
+              <thead>
+                <tr>
+                  <th style="width:52px"><span class="ru">№</span><span class="en">#</span><span class="fr">N°</span></th>
+                  <th style="width:240px"><span class="ru">Пакет</span><span class="en">Package</span><span class="fr">Forfait</span></th>
+                  <th><span class="ru">Что входит на выходе</span><span class="en">What you get</span><span class="fr">Livrable concret</span></th>
+                  <th class="pkg-col-price" style="width:196px"><span class="ru">Срок, цена и запрос</span><span class="en">Time, price &amp; inquiry</span><span class="fr">Délai, tarif &amp; demande</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="pos">01</td>
+                  <td class="pkg-name">
+                    <strong>
+                      <span class="ru">Бот для ответов по вашему прайсу и частым вопросам</span>
+                      <span class="en">Customer FAQ &amp; lead bot grounded on your price list</span>
+                      <span class="fr">Bot FAQ &amp; prise de contact sur votre grille tarifaire</span>
+                    </strong>
+                    <a class="pkg-demo-link" href="#sales">
+                      <span class="ru">стенд 01 ↓</span>
+                      <span class="en">demo 01 ↓</span>
+                      <span class="fr">démo 01 ↓</span>
+                    </a>
+                  </td>
+                  <td class="pkg-desc">
+                    <span class="ru">Подключаю ваш прайс и правила (до 150 позиций из Excel или Google Таблиц) для сайта, WhatsApp или Telegram: бот отвечает строго по ценам без выдумок, собирает контакты в заявку и передаёт нестандартные вопросы менеджеру. Готовый Docker-контейнер и инструкция.</span>
+                    <span class="en">For web chat, WhatsApp, or Slack — connected to your sheet/JSON (up to 150 items &amp; FAQs): answers strictly from your catalog without inventing prices, captures lead details, and routes edge cases to your team. Docker + handover guide.</span>
+                    <span class="fr">Pour site web ou WhatsApp — branché sur vos tarifs et règles (jusqu'à 150 lignes Excel/Sheets) : répond sans inventer de prix, qualifie le contact et transfère les cas particuliers à un conseiller. Livrable Docker + guide.</span>
+                  </td>
+                  <td class="pkg-price">
+                    <div class="pkg-price-meta">
+                      <span class="pkg-amt"><span class="ru">12 000 ₽</span><span class="en">$180</span><span class="fr">170 €</span></span>
+                      <span class="pkg-days"><span class="ru">3 дня</span><span class="en">3 days</span><span class="fr">3 jours</span></span>
+                    </div>
+                    <div class="pkg-actions">
+                      <button class="btn sm pkg-open-form-btn direct-only" type="button" data-pkg="pkg-1"><span class="ru">Оставить запрос</span><span class="en">Send inquiry</span><span class="fr">Envoyer une demande</span></button>
+                      <button class="btn ghost sm pkg-copy-btn" type="button" data-pkg="pkg-1"><span class="ru">Скопировать запрос</span><span class="en">Copy message</span><span class="fr">Copier le message</span></button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="pos">02</td>
+                  <td class="pkg-name">
+                    <strong>
+                      <span class="ru">Сверка счетов и накладных на 50 ваших файлах</span>
+                      <span class="en">Invoice &amp; PO verification run on 50 sample files</span>
+                      <span class="fr">Contrôle de factures et devis sur 50 fichiers</span>
+                    </strong>
+                    <a class="pkg-demo-link" href="#project">LedgerGuard ↓</a>
+                  </td>
+                  <td class="pkg-desc">
+                    <span class="ru">Настраиваю проверку под ваш прайс и договоры (PDF, XLSX, сканы): ловлю ошибки арифметики, НДС, цен выше договора, пересчёт бухт/метров и подмену ИНН или расчётного счёта. На выходе — таблица найденных расхождений и переиспользуемый Python-скрипт.</span>
+                    <span class="en">Configured for your supplier PDFs/XLSX and contract caps: flags line-math drift, VAT errors, pack-vs-unit mix-ups, bank/tax ID swaps, and duplicates. Delivered as a discrepancy sheet + reusable Python script.</span>
+                    <span class="fr">Paramétré sur vos tarifs et PDF/XLSX fournisseurs : détecte écarts TTC/TVA, dépassements contrat, erreurs d'unités, SIRET/IBAN et doublons. Rapport d'écarts + script Python réutilisable.</span>
+                  </td>
+                  <td class="pkg-price">
+                    <div class="pkg-price-meta">
+                      <span class="pkg-amt"><span class="ru">9 000 ₽</span><span class="en">$140</span><span class="fr">130 €</span></span>
+                      <span class="pkg-days"><span class="ru">2 дня</span><span class="en">2 days</span><span class="fr">2 jours</span></span>
+                    </div>
+                    <div class="pkg-actions">
+                      <button class="btn sm pkg-open-form-btn direct-only" type="button" data-pkg="pkg-2"><span class="ru">Оставить запрос</span><span class="en">Send inquiry</span><span class="fr">Envoyer une demande</span></button>
+                      <button class="btn ghost sm pkg-copy-btn" type="button" data-pkg="pkg-2"><span class="ru">Скопировать запрос</span><span class="en">Copy message</span><span class="fr">Copier le message</span></button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="pos">03</td>
+                  <td class="pkg-name">
+                    <strong>
+                      <span class="ru">Аудит Supabase и безопасности после Lovable / Cursor</span>
+                      <span class="en">Supabase &amp; security audit after Lovable / Cursor</span>
+                      <span class="fr">Audit Supabase &amp; sécurité après Lovable / Cursor</span>
+                    </strong>
+                    <a class="pkg-demo-link" href="#audit">
+                      <span class="ru">стенд 09 ↓</span>
+                      <span class="en">demo 09 ↓</span>
+                      <span class="fr">démo 09 ↓</span>
+                    </a>
+                  </td>
+                  <td class="pkg-desc">
+                    <span class="ru">Проверяю политики RLS, утечки сервисных ключей во фронтенд, подмену сумм заказа на клиенте и Edge Functions. Вы получаете отчёт по критичности и готовые SQL-миграции с патчами для закрытия критичных дыр.</span>
+                    <span class="en">Review of RLS policies, exposed service keys in client bundles, client-side price tampering, and Edge Functions. Includes a prioritized report plus ready-to-apply SQL migrations and patches for critical issues.</span>
+                    <span class="fr">Vérification des règles RLS, clés exposées côté navigateur, calcul des prix côté client et Edge Functions. Rapport classé par criticité + migrations SQL et correctifs prêts à appliquer.</span>
+                  </td>
+                  <td class="pkg-price">
+                    <div class="pkg-price-meta">
+                      <span class="pkg-amt"><span class="ru">10 000 ₽</span><span class="en">$150</span><span class="fr">140 €</span></span>
+                      <span class="pkg-days"><span class="ru">2 дня</span><span class="en">2 days</span><span class="fr">2 jours</span></span>
+                    </div>
+                    <div class="pkg-actions">
+                      <button class="btn sm pkg-open-form-btn direct-only" type="button" data-pkg="pkg-3"><span class="ru">Оставить запрос</span><span class="en">Send inquiry</span><span class="fr">Envoyer une demande</span></button>
+                      <button class="btn ghost sm pkg-copy-btn" type="button" data-pkg="pkg-3"><span class="ru">Скопировать запрос</span><span class="en">Copy message</span><span class="fr">Copier le message</span></button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">
+            <span class="ru">Объём и цена фиксируются до старта — скопируйте готовый запрос и вставьте его в переписку на бирже или оставьте контакт в форме ниже. Если после малого пакета перейдём к полному внедрению, его стоимость зачтётся в основном этапе.</span>
+            <span class="en">Scope and price are locked before kickoff — copy the ready-made message for your platform thread or leave your contact below. If we continue into a full build afterward, the starter package credits toward the main project.</span>
+            <span class="fr">Périmètre et tarif fixés avant démarrage — copiez le message prêt à l'emploi pour votre messagerie ou laissez votre contact ci-dessous. Si vous poursuivez sur un projet complet, ce montant est déduit de la suite.</span>
+          </p>
+
+          <div class="inquiry-box direct-only" id="pkg-inquiry-box" hidden>
+            <div class="between">
+              <strong id="inq-title">
+                <span class="ru">Быстрый запрос по пакету</span>
+                <span class="en">Quick package inquiry</span>
+                <span class="fr">Demande rapide</span>
+              </strong>
+              <button class="btn ghost sm" id="inq-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <label class="inquiry-field">
+              <span>
+                <span class="ru">Сообщение (можно поправить под вашу задачу)</span>
+                <span class="en">Message (edit to match your workflow)</span>
+                <span class="fr">Message (adaptable à votre besoin)</span>
+              </span>
+              <textarea id="inq-msg" rows="3"></textarea>
+            </label>
+            <label class="inquiry-field">
+              <span id="inq-contact-lbl">
+                <span class="ru">Куда ответить (рабочая почта, WhatsApp или мессенджер)</span>
+                <span class="en">Where to reply (work email, WhatsApp, or LinkedIn)</span>
+                <span class="fr">Où vous répondre (e-mail pro, WhatsApp ou LinkedIn)</span>
+              </span>
+              <input type="text" id="inq-contact" autocomplete="email" placeholder="name@company.ru или +7…">
+            </label>
+            <input type="text" id="inq-hp" name="website" tabindex="-1" autocomplete="off" hidden>
+            <div class="row">
+              <button class="btn" id="inq-submit" type="button">
+                <span class="ru">Отправить запрос</span>
+                <span class="en">Send inquiry</span>
+                <span class="fr">Envoyer</span>
+              </button>
+              <span class="note" id="inq-status"></span>
+            </div>
+          </div>
+
+          <textarea class="pkg-copy-fallback" id="pkg-copy-fallback" rows="2" readonly hidden></textarea>
+        </div>
+
+        <div class="ch-sheet__body" id="approach">
           <span class="ch-label"><span class="ru">Подход к работе</span><span class="en">How I work</span><span class="fr">Principes de travail</span></span>
+          <p class="note" style="margin-top:-14px;max-width:64ch">
+            <span class="ru">Нейросеть подключаю только там, где плывёт формат: живой диалог, кривые сканы, разнобой в названиях позиций. Расчёты сумм, права доступа и запись в базу остаются в обычном проверяемом коде.</span>
+            <span class="en">LLMs handle the messy inputs — free-text chat, skewed scans, inconsistent supplier naming — while totals, permissions, and database writes stay in plain, testable code.</span>
+            <span class="fr">Le LLM n'intervient que là où le format varie — dialogue libre, scans imparfaits, libellés fournisseurs hétérogènes — tandis que les montants, les droits d'accès et l'écriture en base restent en code classique testé.</span>
+          </p>
           <div class="tbl">
             <table class="ch-spec">
               <thead>
@@ -612,101 +779,6 @@ footer {
               </tbody>
             </table>
           </div>
-        </div>
-
-        <div class="ch-sheet__body" id="packages">
-          <span class="ch-label">
-            <span class="ru">Небольшие задачи с фиксированной ценой</span>
-            <span class="en">Fixed-price starter packages</span>
-            <span class="fr">Forfaits courts à prix fixe</span>
-          </span>
-          <div class="tbl">
-            <table class="ch-spec pkg-table">
-              <thead>
-                <tr>
-                  <th style="width:52px"><span class="ru">№</span><span class="en">#</span><span class="fr">N°</span></th>
-                  <th style="width:240px"><span class="ru">Пакет</span><span class="en">Package</span><span class="fr">Forfait</span></th>
-                  <th><span class="ru">Что входит на выходе</span><span class="en">What you get</span><span class="fr">Livrable concret</span></th>
-                  <th class="pkg-col-price" style="width:150px"><span class="ru">Срок и цена</span><span class="en">Time &amp; price</span><span class="fr">Délai &amp; tarif</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="pos">01</td>
-                  <td class="pkg-name">
-                    <strong>
-                      <span class="ru">Telegram-бот по вашему прайсу и частым вопросам</span>
-                      <span class="en">Telegram / Web FAQ bot grounded on your price list</span>
-                      <span class="fr">Bot FAQ &amp; prise de contact sur votre grille tarifaire</span>
-                    </strong>
-                    <a class="pkg-demo-link" href="#sales">
-                      <span class="ru">стенд 01 ↓</span>
-                      <span class="en">demo 01 ↓</span>
-                      <span class="fr">démo 01 ↓</span>
-                    </a>
-                  </td>
-                  <td class="pkg-desc">
-                    <span class="ru">Подключаю ваш прайс и правила (до 150 позиций из Excel или Google Таблиц): бот отвечает строго по ценам без выдумок, собирает контакты в заявку и передаёт нестандартные вопросы менеджеру. Готовый Docker-контейнер и инструкция.</span>
-                    <span class="en">Connected to your sheet/JSON (up to 150 items &amp; FAQs): answers strictly from your catalog without inventing prices, captures lead details, and routes edge cases to your team. Docker + handover guide.</span>
-                    <span class="fr">Branché sur vos tarifs et règles (jusqu'à 150 lignes Excel/Sheets) : répond sans inventer de prix, qualifie le contact et transfère les cas particuliers à un conseiller. Livrable Docker + guide.</span>
-                  </td>
-                  <td class="pkg-price">
-                    <span class="pkg-amt"><span class="ru">12 000 ₽</span><span class="en">$180</span><span class="fr">170 €</span></span>
-                    <span class="pkg-days"><span class="ru">3 дня</span><span class="en">3 days</span><span class="fr">3 jours</span></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="pos">02</td>
-                  <td class="pkg-name">
-                    <strong>
-                      <span class="ru">Сверка счетов и накладных на 50 ваших файлах</span>
-                      <span class="en">Invoice &amp; PO verification run on 50 sample files</span>
-                      <span class="fr">Contrôle de factures et devis sur 50 fichiers</span>
-                    </strong>
-                    <a class="pkg-demo-link" href="#project">LedgerGuard ↓</a>
-                  </td>
-                  <td class="pkg-desc">
-                    <span class="ru">Настраиваю проверку под ваш прайс и договоры (PDF, XLSX, сканы): ловлю ошибки арифметики, НДС, цен выше договора, пересчёт бухт/метров и подмену ИНН или расчётного счёта. На выходе — таблица найденных расхождений и переиспользуемый Python-скрипт.</span>
-                    <span class="en">Configured for your supplier PDFs/XLSX and contract caps: flags line-math drift, VAT errors, pack-vs-unit mix-ups, bank/tax ID swaps, and duplicates. Delivered as a discrepancy sheet + reusable Python script.</span>
-                    <span class="fr">Paramétré sur vos tarifs et PDF/XLSX fournisseurs : détecte écarts TTC/TVA, dépassements contrat, erreurs d'unités, SIRET/IBAN et doublons. Rapport d'écarts + script Python réutilisable.</span>
-                  </td>
-                  <td class="pkg-price">
-                    <span class="pkg-amt"><span class="ru">9 000 ₽</span><span class="en">$140</span><span class="fr">130 €</span></span>
-                    <span class="pkg-days"><span class="ru">2 дня</span><span class="en">2 days</span><span class="fr">2 jours</span></span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="pos">03</td>
-                  <td class="pkg-name">
-                    <strong>
-                      <span class="ru">Аудит Supabase и безопасности после Lovable / Cursor</span>
-                      <span class="en">Supabase &amp; security audit after Lovable / Cursor</span>
-                      <span class="fr">Audit Supabase &amp; sécurité après Lovable / Cursor</span>
-                    </strong>
-                    <a class="pkg-demo-link" href="#audit">
-                      <span class="ru">стенд 09 ↓</span>
-                      <span class="en">demo 09 ↓</span>
-                      <span class="fr">démo 09 ↓</span>
-                    </a>
-                  </td>
-                  <td class="pkg-desc">
-                    <span class="ru">Проверяю политики RLS, утечки сервисных ключей во фронтенд, подмену сумм заказа на клиенте и Edge Functions. Вы получаете отчёт по критичности и готовые SQL-миграции с патчами для закрытия критичных дыр.</span>
-                    <span class="en">Review of RLS policies, exposed service keys in client bundles, client-side price tampering, and Edge Functions. Includes a prioritized report plus ready-to-apply SQL migrations and patches for critical issues.</span>
-                    <span class="fr">Vérification des règles RLS, clés exposées côté navigateur, calcul des prix côté client et Edge Functions. Rapport classé par criticité + migrations SQL et correctifs prêts à appliquer.</span>
-                  </td>
-                  <td class="pkg-price">
-                    <span class="pkg-amt"><span class="ru">10 000 ₽</span><span class="en">$150</span><span class="fr">140 €</span></span>
-                    <span class="pkg-days"><span class="ru">2 дня</span><span class="en">2 days</span><span class="fr">2 jours</span></span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="note">
-            <span class="ru">Объём и цена фиксируются до старта — достаточно прислать в переписке название пакета и пример файла или ссылку на репозиторий. Если после малого пакета перейдём к полному внедрению, его стоимость зачтётся в основном этапе.</span>
-            <span class="en">Scope and price are locked before kickoff — just send the package name with a sample file or repo link. If we continue into a full build afterward, the starter package credits toward the main project.</span>
-            <span class="fr">Périmètre et tarif fixés avant démarrage — indiquez simplement le forfait choisi avec un fichier exemple ou le dépôt. Si vous poursuivez sur un projet complet, ce montant est déduit de la suite.</span>
-          </p>
         </div>
 
         <div class="ch-sheet__body" id="trust">
@@ -846,24 +918,24 @@ footer {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><strong><span class="ru">Время на документ</span><span class="en">Time per invoice</span><span class="fr">Temps par dossier</span></strong></td>
-                    <td><span class="ru">12–15 мин вручную; на длинных сметных таблицах ошибки усталости</span><span class="en">12–15 min manual re-keying per multi-line bill</span><span class="fr">12–15 min de saisie manuelle par facture multi-lignes</span></td>
-                    <td><span class="ru"><strong>2–4 мс</strong> автопроверка (p95: 3,96 мс), <strong>&lt;1 мин</strong> на разбор спорных в карантине</span><span class="en"><strong>2–4 ms</strong> verification (p95: 3.96 ms), <strong>&lt;1 min</strong> operator sign-off when flagged</span><span class="fr"><strong>2–4 ms</strong> de contrôle (p95 : 3,96 ms), <strong>&lt;1 min</strong> pour valider une alerte</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong><span class="ru">Тихие ошибки в ERP</span><span class="en">Silent ERP leakage</span><span class="fr">Erreurs silencieuses</span></strong></td>
-                    <td><span class="ru"><strong>40,0%</strong> на тесте из 60 документов (24/60 прошли с подменой, переплатой или дублем)</span><span class="en"><strong>40.0%</strong> across a 60-doc corpus (24/60 leaked with swaps, overbilling, or replays)</span><span class="fr"><strong>40,0 %</strong> sur un banc de 60 dossiers (24/60 passés avec anomalies)</span></td>
-                    <td><span class="ru"><strong>0,0%</strong> — все 24/24 проблемных счетов остановлены в <code>quarantine_queue</code></span><span class="en"><strong>0.0%</strong> — all 24/24 adversarial invoices trapped in <code>quarantine_queue</code></span><span class="fr"><strong>0,0 %</strong> — 24/24 dossiers atypiques bloqués en <code>quarantine_queue</code></span></td>
+                    <td><strong><span class="ru">Отсев ошибок (тест на 60 счетах)</span><span class="en">Error filtering (60-invoice test set)</span><span class="fr">Filtrage des erreurs (jeu de 60 factures)</span></strong></td>
+                    <td><span class="ru"><strong>24 из 60</strong> счетов прошли в учёт с подменой счёта, переплатой или дублем (40,0% тихих ошибок)</span><span class="en"><strong>24 of 60</strong> bills slipped through with account swaps, overbilling, or replays (40.0% silent leakage)</span><span class="fr"><strong>24 factures sur 60</strong> passées avec substitution d'IBAN, surcoût ou doublon (40,0 % d'erreurs silencieuses)</span></td>
+                    <td><span class="ru">Остановлены <strong>все 24 из 24</strong> проблемных счетов, а <strong>все 36 из 36</strong> корректных прошли автоматически (0,0% тихих ошибок в <code>quarantine_queue</code>)</span><span class="en">Stopped <strong>all 24 of 24</strong> faulty invoices and auto-passed <strong>all 36 of 36</strong> valid ones (0.0% silent leakage via <code>quarantine_queue</code>)</span><span class="fr"><strong>24 sur 24</strong> factures atypiques bloquées en <code>quarantine_queue</code> et <strong>36 sur 36</strong> conformes validées d'office (0,0 % d'oubli)</span></td>
                   </tr>
                   <tr>
                     <td><strong><span class="ru">Единицы и артикулы</span><span class="en">Units &amp; SKU matching</span><span class="fr">Unités et références</span></strong></td>
                     <td><span class="ru">«3 бухты» уходят как 3 м по цене бухты; путает <code>3×1,5</code> и <code>3×2,5</code></span><span class="en">“3 coils” booked as 3 m at coil price; swaps look-alike <code>3x1.5</code> vs <code>3x2.5</code></span><span class="fr">« 3 couronnes » saisies en 3 m ; confusion entre <code>3G1,5</code> et <code>3G2,5</code></span></td>
-                    <td><span class="ru"><strong>100%</strong> автопроход чистых заявок (36/36): раскрывает упаковки, штрафует чужие сечения</span><span class="en"><strong>100%</strong> clean auto-pass (36/36): expands coils/packs and blocks gauge mismatches</span><span class="fr"><strong>100 %</strong> des dossiers sains validés (36/36) : conversion auto et verrou technique</span></td>
+                    <td><span class="ru">Пересчитывает бухты и упаковки в базовые единицы (<code>2 × 100 м = 200 м</code>) и штрафует чужие сечения</span><span class="en">Expands coils and packs to base units (<code>2 × 100 m = 200 m</code>) and blocks gauge mismatches</span><span class="fr">Convertit les conditionnements en unités de base et bloque les écarts de section</span></td>
                   </tr>
                   <tr>
                     <td><strong><span class="ru">Дубли и аудит</span><span class="en">Duplicates &amp; audit</span><span class="fr">Doublons et audit</span></strong></td>
                     <td><span class="ru">Повторное письмо создаёт дубль накладной; нельзя доказать, кто что правил</span><span class="en">Re-sent emails create duplicate bills; no tamper-evident change history</span><span class="fr">Un e-mail renvoyé recrée une facture ; aucune piste d'audit fiable</span></td>
                     <td><span class="ru">Ключ идемпотентности <code>SHA-256</code> блокирует дубль + связная цепь в <code>audit_log</code></span><span class="en">SQLite idempotency key blocks replays + SHA-256 hash-chained <code>audit_log</code></span><span class="fr">Clé d'idempotence SQLite anti-doublon + journal chaîné <code>SHA-256</code></span></td>
+                  </tr>
+                  <tr>
+                    <td><strong><span class="ru">Ручная проверка</span><span class="en">Human review load</span><span class="fr">Charge de contrôle humain</span></strong></td>
+                    <td><span class="ru">Сплошная ручная вычитка каждой строки, цен договора и реквизитов во всех входящих счетах</span><span class="en">Manual line-by-line check of contract caps, math, and bank details on every incoming bill</span><span class="fr">Vérification manuelle ligne par ligne des tarifs, totaux et RIB sur chaque facture reçue</span></td>
+                    <td><span class="ru">Менеджер разбирает только задержанные счета в карантине (проверка правил ядром — 2–4 мс на разобранный счёт, p95: 3,96 мс)</span><span class="en">Staff review only quarantined exceptions (rule engine runs in 2–4 ms per parsed bill, p95: 3.96 ms)</span><span class="fr">L'équipe ne traite que les alertes en quarantaine (moteur de règles : 2–4 ms par facture analysée, p95 : 3,96 ms)</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -1928,9 +2000,9 @@ async function checkout(cart, discountPercent) {
         <span class="fr">Discuter d'un projet</span>
       </strong>
       <p style="margin:5px 0 0;max-width:64ch">
-        <span class="ru">Напишите в переписке на площадке, где вы открыли эту ссылку, и приложите пример файла или короткое описание процесса — отвечу со сроками, архитектурой и вариантом пилота. Или начните с одного из <a href="#packages">3 фиксированных пакетов (9 000 – 12 000 ₽) ↑</a> · <a href="#trust">Условия и гарантия пилота ↑</a>.</span>
-        <span class="en">Reply on the platform where I shared this link with a sample file or a short note on your workflow — I'll get back with a concrete architecture, timeline, and pilot scope. Or start with one of the <a href="#packages">3 fixed-price packages ($140–$180) ↑</a> · <a href="#trust">Terms &amp; pilot guarantee ↑</a>.</span>
-        <span class="fr">Répondez sur la plateforme où ce lien vous a été transmis avec un fichier exemple ou quelques lignes sur votre flux — je reviendrai avec l'architecture, le délai et le périmètre d'un pilote. Ou démarrez par l'un des <a href="#packages">3 forfaits à prix fixe (130–170 €) ↑</a> · <a href="#trust">Conditions et garantie du pilote ↑</a>.</span>
+        <span class="ru">Напишите в переписке на площадке, где вы открыли эту ссылку, и приложите пример файла или короткое описание процесса — отвечу со сроками, архитектурой и вариантом пилота. <span class="direct-only">По прямой ссылке <a href="#pkg-inquiry-box" class="open-custom-inquiry">оставьте запрос в форме ↑</a> · </span><a href="#packages">3 фиксированных пакета (9 000 – 12 000 ₽) ↑</a> · <a href="#trust">Условия и гарантия пилота ↑</a>.</span>
+        <span class="en">Reply on the platform where I shared this link with a sample file or a short note on your workflow — I'll get back with a concrete architecture, timeline, and pilot scope. <span class="direct-only">Or <a href="#pkg-inquiry-box" class="open-custom-inquiry">send an inquiry directly ↑</a> · </span><a href="#packages">3 fixed-price packages ($140–$180) ↑</a> · <a href="#trust">Terms &amp; pilot guarantee ↑</a>.</span>
+        <span class="fr">Répondez sur la plateforme où ce lien vous a été transmis avec un fichier exemple ou quelques lignes sur votre flux — je reviendrai avec l'architecture, le délai et le périmètre d'un pilote. <span class="direct-only">Ou <a href="#pkg-inquiry-box" class="open-custom-inquiry">envoyez votre demande ici ↑</a> · </span><a href="#packages">3 forfaits à prix fixe (130–170 €) ↑</a> · <a href="#trust">Conditions et garantie du pilote ↑</a>.</span>
       </p>
       <p class="note" style="margin-top:12px;max-width:74ch;opacity:0.85">
         <span class="ru">Все стенды — демонстрация на вымышленных данных (клиника «Апрель», TransLogik, «СеверСнаб» и др.): реквизиты, прайсы и заказы синтетические, реальные данные клиентов под NDA не публикуются.</span>
@@ -4454,6 +4526,7 @@ async function checkout(cart, discountPercent) {
     runScopeSim();
     renderSpecTables();
     loadRtForLang();
+    refreshInquiryUiLang();
   }
   $('#l-ru').onclick = () => setLang('ru');
   $('#l-en').onclick = () => setLang('en');
@@ -4469,6 +4542,187 @@ async function checkout(cart, discountPercent) {
     $$('.ch-sheet').forEach((s) => obs.observe(s));
   }
 
+  const PKG_TEMPLATES = {
+    'pkg-1': {
+      ru: 'Нужен бот для ответов по прайсу. Прайс в Excel / Google Таблицах, список частых вопросов есть. Могу прислать обезличенный фрагмент таблицы. Подойдёт ли стартовый пакет?',
+      en: 'I need a customer FAQ bot grounded on our price list (Excel / Google Sheets). I can share an anonymized sample of our catalog and common questions. Would this starter package fit?',
+      fr: 'J\'ai besoin d\'un bot FAQ branché sur notre grille tarifaire (Excel / Google Sheets). Je peux partager un extrait anonymisé de nos tarifs et questions fréquentes. Ce forfait conviendrait-il ?',
+    },
+    'pkg-2': {
+      ru: 'Нужна сверка счетов. Прайс в Excel, счета в PDF. Могу прислать три обезличенных примера. Подойдёт ли пакет?',
+      en: 'I need invoice verification. Our price list is in Excel and supplier invoices arrive as PDFs. I can send three anonymized samples. Would this package fit?',
+      fr: 'J\'ai besoin d\'un contrôle de factures. Nos tarifs sont sur Excel et les factures fournisseurs en PDF. Je peux envoyer trois exemples anonymisés. Ce forfait conviendrait-il ?',
+    },
+    'pkg-3': {
+      ru: 'Нужен аудит проекта на Supabase после Lovable / Cursor. Могу дать доступ на чтение к репозиторию и схему таблиц. Подойдёт ли пакет?',
+      en: 'I need a Supabase & security audit for an app built with Lovable / Cursor. I can share read-only repo access and the table schema. Would this package fit?',
+      fr: 'J\'ai besoin d\'un audit Supabase et sécurité sur un projet généré avec Lovable / Cursor. Je peux donner un accès lecture au dépôt et au schéma SQL. Ce forfait conviendrait-il ?',
+    },
+  };
+  let activeInquiryPkg = 'custom';
+  let inqMsgDirty = false;
+  let activeSrcTag = 'direct';
+
+  function detectVisitorSource() {
+    let s = '';
+    try {
+      const rawSrc = urlParamsBoot.get('src') || urlParamsBoot.get('utm_source') || '';
+      const clean = rawSrc.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+      if (clean) {
+        s = clean;
+        sessionStorage.setItem('pf-src', clean);
+      } else {
+        s = sessionStorage.getItem('pf-src') || '';
+      }
+      if (!s && document.referrer) {
+        const refHost = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
+        if (refHost && refHost !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|localhost|127\.0\.0\.1)$/i.test(refHost)) {
+          s = ('ref:' + refHost).slice(0, 40);
+          sessionStorage.setItem('pf-src', s);
+        }
+      }
+    } catch {}
+    activeSrcTag = s || 'direct';
+    const isMarketplace = /^(kwork|fl|freelancehunt|upwork|codeur|habr|malt|peopleperhour|freelancer|weblancer|useme)$/i.test(activeSrcTag)
+      || /^ref:.*(kwork|freelancehunt|fl\.ru|upwork|codeur|malt|peopleperhour|freelancer|weblancer|useme)/i.test(activeSrcTag);
+    document.documentElement.classList.toggle('from-marketplace', isMarketplace);
+  }
+  detectVisitorSource();
+
+  function refreshInquiryUiLang() {
+    const contactEl = $('#inq-contact');
+    const msgEl = $('#inq-msg');
+    if (contactEl) {
+      contactEl.placeholder = T('name@company.ru или +7…', 'name@company.com or LinkedIn / WhatsApp', 'nom@entreprise.fr ou WhatsApp / LinkedIn');
+    }
+    if (msgEl && !inqMsgDirty) {
+      if (activeInquiryPkg !== 'custom' && PKG_TEMPLATES[activeInquiryPkg]) {
+        msgEl.value = PKG_TEMPLATES[activeInquiryPkg][L] || PKG_TEMPLATES[activeInquiryPkg].ru;
+      } else {
+        msgEl.placeholder = T('Коротко опишите задачу и формат файлов…', 'Briefly describe your task and file formats…', 'Décrivez brièvement votre besoin et vos formats…');
+      }
+    }
+    $$('.pkg-copy-btn').forEach((b) => {
+      if (b.dataset.copied) {
+        b.textContent = T('Скопировано ✓', 'Copied ✓', 'Copié ✓');
+      } else {
+        b.innerHTML = '<span class="ru">Скопировать запрос</span><span class="en">Copy message</span><span class="fr">Copier le message</span>';
+      }
+    });
+  }
+
+  function openInquiryBox(pkgId) {
+    const box = $('#pkg-inquiry-box');
+    const msgEl = $('#inq-msg');
+    const stEl = $('#inq-status');
+    if (!box || !msgEl) return;
+    activeInquiryPkg = PKG_TEMPLATES[pkgId] ? pkgId : 'custom';
+    inqMsgDirty = false;
+    if (PKG_TEMPLATES[activeInquiryPkg]) {
+      msgEl.value = PKG_TEMPLATES[activeInquiryPkg][L] || PKG_TEMPLATES[activeInquiryPkg].ru;
+    } else {
+      msgEl.value = '';
+    }
+    if (stEl) stEl.textContent = '';
+    refreshInquiryUiLang();
+    box.hidden = false;
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    $('#inq-contact')?.focus();
+  }
+
+  function initPackagesUi() {
+    $$('.pkg-copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const pkgId = btn.dataset.pkg;
+        const tpl = PKG_TEMPLATES[pkgId];
+        if (!tpl) return;
+        const phrase = tpl[L] || tpl.ru;
+        let copied = false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(phrase);
+            copied = true;
+          }
+        } catch {}
+        if (!copied) {
+          const fb = $('#pkg-copy-fallback');
+          if (fb) {
+            fb.value = phrase;
+            fb.hidden = false;
+            fb.select();
+            try { copied = document.execCommand('copy'); } catch {}
+          }
+        }
+        btn.dataset.copied = '1';
+        btn.textContent = T('Скопировано ✓', 'Copied ✓', 'Copié ✓');
+        setTimeout(() => {
+          delete btn.dataset.copied;
+          refreshInquiryUiLang();
+        }, 2500);
+      });
+    });
+
+    $$('.pkg-open-form-btn').forEach((btn) => {
+      btn.addEventListener('click', () => openInquiryBox(btn.dataset.pkg));
+    });
+    $$('.open-custom-inquiry').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        openInquiryBox('custom');
+      });
+    });
+    $('#inq-msg')?.addEventListener('input', () => { inqMsgDirty = true; });
+    $('#inq-close')?.addEventListener('click', () => {
+      const box = $('#pkg-inquiry-box');
+      if (box) box.hidden = true;
+    });
+    $('#inq-submit')?.addEventListener('click', async () => {
+      const btn = $('#inq-submit');
+      const msgEl = $('#inq-msg');
+      const contactEl = $('#inq-contact');
+      const hpEl = $('#inq-hp');
+      const stEl = $('#inq-status');
+      const contact = (contactEl?.value || '').trim();
+      const message = (msgEl?.value || '').trim();
+      if (contact.length < 3) {
+        if (stEl) stEl.textContent = T('Укажите email, WhatsApp или контакт для ответа.', 'Please enter your email, WhatsApp, or contact.', 'Indiquez votre e-mail, WhatsApp ou contact.');
+        contactEl?.focus();
+        return;
+      }
+      if (message.length < 5) {
+        if (stEl) stEl.textContent = T('Добавьте пару слов о задаче.', 'Please add a short note about your task.', 'Ajoutez quelques mots sur votre besoin.');
+        msgEl?.focus();
+        return;
+      }
+      btn.disabled = true;
+      if (stEl) stEl.textContent = T('Отправляю…', 'Sending…', 'Envoi…');
+      try {
+        const res = await fetch('/api/inquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pkg: activeInquiryPkg,
+            contact,
+            message,
+            website: hpEl?.value || '',
+            src: activeSrcTag,
+            page: location.pathname,
+            lang: L,
+          }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+        if (stEl) stEl.textContent = T('Запрос отправлен — отвечу в ближайшее время.', 'Inquiry sent — I will reply shortly.', 'Demande envoyée — je vous répondrai rapidement.');
+        if (contactEl) contactEl.value = '';
+        inqMsgDirty = false;
+      } catch (err) {
+        if (stEl) stEl.textContent = T('Не удалось отправить. Скопируйте запрос кнопкой выше или повторите чуть позже.', 'Could not send right now. Please try again or copy the message above.', 'Échec d\'envoi. Réessayez ou copiez le message ci-dessus.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
   /* Boot */
   if (taskParamBoot) {
     const archSec = $('#architect');
@@ -4480,6 +4734,7 @@ async function checkout(cart, discountPercent) {
     }
     $('#arch-note').textContent = T('Загружаю разбор задачи…', 'Loading task scope…', 'Chargement du cadrage…');
   }
+  initPackagesUi();
   setLang(L);
   initTaskFromUrl().then(() => {
     initPrivateComposer();

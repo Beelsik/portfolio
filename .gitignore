@@ -8,3 +8,4 @@ __pycache__/
 *.sqlite
 *.db
 visits.jsonl
+inquiries.jsonl

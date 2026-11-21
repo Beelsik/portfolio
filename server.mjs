@@ -198,15 +198,21 @@ const RATE_MAX = Number(process.env.RATE_LIMIT_MAX || 80);
 const hits = new Map();
 const heavyHits = new Map();
 const beaconHits = new Map();
+const inquiryHits = new Map();
 const MAX_RATE_MAP_KEYS = 2000;
 
 const STATS_KEY = (process.env.STATS_KEY || '').trim();
 const VISITS_LOG_PATH = (process.env.VISITS_LOG_PATH || path.join(__dirname, 'visits.jsonl')).trim();
+const INQUIRIES_LOG_PATH = (process.env.INQUIRIES_LOG_PATH || path.join(__dirname, 'inquiries.jsonl')).trim();
+const NOTIFY_WEBHOOK_URL = (process.env.NOTIFY_WEBHOOK_URL || '').trim();
+const TELEGRAM_BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+const TELEGRAM_CHAT_ID = (process.env.TELEGRAM_CHAT_ID || '').trim();
 const visitStats = {
   startedAt: new Date().toISOString(),
   bySource: new Map(),
   byStand: Object.create(null),
   recent: [],
+  inquiries: [],
 };
 
 function sanitizeTag(val, max = 40) {
@@ -299,6 +305,67 @@ function recordVisitEvent({ src, task, page, lang, dev, sid, event, stands } = {
   }
 }
 
+function checkInquiryLimit(ip) {
+  const now = Date.now();
+  if (!inquiryHits.has(ip) && inquiryHits.size >= MAX_RATE_MAP_KEYS) {
+    pruneSingleRateMap(inquiryHits, RATE_WINDOW_MS, now);
+  }
+  const list = (inquiryHits.get(ip) || []).filter((ts) => now - ts < RATE_WINDOW_MS);
+  if (list.length >= 8) return false;
+  list.push(now);
+  inquiryHits.set(ip, list);
+  return true;
+}
+
+function recordInquiry({ pkg, contact, message, src, page, lang } = {}) {
+  const ts = new Date().toISOString();
+  const id = crypto.randomBytes(4).toString('hex');
+  const sPkg = sanitizeTag(pkg, 32) || 'custom';
+  const sSrc = sanitizeTag(src, 40) || 'direct';
+  const sLang = sanitizeTag(lang, 8) || '-';
+  const sPage = String(page || '/').slice(0, 64).replace(/[\r\n|]+/g, '') || '/';
+  const cleanContact = String(contact || '').trim().replace(/[\r\n]+/g, ' ').slice(0, 160);
+  const cleanMsg = String(message || '').trim().slice(0, 2000);
+
+  console.log(`[inquiry] ${ts} | id=${id} | pkg=${sPkg} | src=${sSrc} | lang=${sLang} | page=${sPage} | contact=${cleanContact.replace(/\|/g, '/')} | msg=${cleanMsg.replace(/[\r\n|]+/g, ' ').slice(0, 500)}`);
+
+  const rec = { id, ts, pkg: sPkg, src: sSrc, lang: sLang, page: sPage, contact: cleanContact, message: cleanMsg };
+  while (visitStats.inquiries.length >= 100) visitStats.inquiries.shift();
+  visitStats.inquiries.push(rec);
+
+  if (INQUIRIES_LOG_PATH) {
+    fs.promises
+      .stat(INQUIRIES_LOG_PATH)
+      .then((st) => st.size < 5 * 1024 * 1024)
+      .catch(() => true)
+      .then((canWrite) => {
+        if (canWrite) {
+          return fs.promises.appendFile(INQUIRIES_LOG_PATH, JSON.stringify(rec) + '\n', 'utf8');
+        }
+      })
+      .catch(() => {});
+  }
+
+  const summary = `Новая заявка (${id}) · пакет: ${sPkg} · src: ${sSrc} · lang: ${sLang}\nКонтакт: ${cleanContact}\nСообщение: ${cleanMsg}`;
+  if (NOTIFY_WEBHOOK_URL) {
+    fetch(NOTIFY_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: summary, content: summary, inquiry: rec }),
+      signal: AbortSignal.timeout(5000),
+    }).catch(() => {});
+  }
+  if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: summary }),
+      signal: AbortSignal.timeout(5000),
+    }).catch(() => {});
+  }
+  return { id, ts };
+}
+
 function pruneSingleRateMap(map, windowMs, now) {
   for (const [key, timestamps] of map.entries()) {
     const fresh = timestamps.filter((ts) => now - ts < windowMs);
@@ -317,6 +384,7 @@ function pruneRateMaps() {
   pruneSingleRateMap(hits, RATE_WINDOW_MS, now);
   pruneSingleRateMap(heavyHits, 60 * 60 * 1000, now);
   pruneSingleRateMap(beaconHits, RATE_WINDOW_MS, now);
+  pruneSingleRateMap(inquiryHits, RATE_WINDOW_MS, now);
 }
 
 setInterval(pruneRateMaps, 5 * 60 * 1000).unref();
@@ -1170,6 +1238,48 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === 'POST' && urlPath === '/api/inquiry') {
+      const ip = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket?.remoteAddress || 'local';
+      if (!checkInquiryLimit(ip)) {
+        sendJson(res, 429, { error: 'Too many requests. Please try again in a few minutes.' });
+        return;
+      }
+      let body = null;
+      try {
+        body = await readJsonBody(req, 8192);
+      } catch {
+        sendJson(res, 400, { error: 'Invalid JSON body' });
+        return;
+      }
+      if (String(body?.website || '').trim() !== '') {
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+      const contact = String(body?.contact || '').trim();
+      const message = String(body?.message || '').trim();
+      if (contact.length < 3) {
+        sendJson(res, 400, { error: 'Contact is required' });
+        return;
+      }
+      if (message.length < 5) {
+        sendJson(res, 400, { error: 'Message is required' });
+        return;
+      }
+      const saved = recordInquiry(body);
+      recordVisitEvent({
+        src: body?.src || 'direct',
+        task: '',
+        page: body?.page || '/',
+        lang: body?.lang || '-',
+        dev: 'web',
+        sid: 'inq',
+        event: 'act',
+        stands: ['packages:inquiry-' + (sanitizeTag(body?.pkg, 24) || 'custom')],
+      });
+      sendJson(res, 200, { ok: true, id: saved.id });
+      return;
+    }
+
     if (isGetOrHead && urlPath === '/api/stats') {
       const supplied = String(parsedUrl.searchParams.get('key') || req.headers['x-stats-key'] || '');
       let authorized = false;
@@ -1206,6 +1316,7 @@ const server = http.createServer(async (req, res) => {
           bySource,
           byStand: visitStats.byStand,
           recent: visitStats.recent,
+          inquiries: visitStats.inquiries,
         },
         headOnly
       );

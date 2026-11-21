@@ -91,12 +91,20 @@ test('both index.html and ua.html expose 3 fixed-price starter packages in #pack
   }
 });
 
-test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, tracks ?src=/api/event & protects /api/stats', async () => {
+test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, tracks ?src=/api/event, saves /api/inquiry & protects /api/stats', async () => {
   const tmpVisits = path.join(os.tmpdir(), `pf-visits-test-${Date.now()}.jsonl`);
+  const tmpInquiries = path.join(os.tmpdir(), `pf-inquiries-test-${Date.now()}.jsonl`);
   let serverStdout = '';
   const proc = spawn(process.execPath, [path.join(ROOT, 'server.mjs')], {
     cwd: ROOT,
-    env: { ...process.env, PORT: '0', DISABLE_KEEPALIVE: '1', STATS_KEY: 'test-secret-123', VISITS_LOG_PATH: tmpVisits },
+    env: {
+      ...process.env,
+      PORT: '0',
+      DISABLE_KEEPALIVE: '1',
+      STATS_KEY: 'test-secret-123',
+      VISITS_LOG_PATH: tmpVisits,
+      INQUIRIES_LOG_PATH: tmpInquiries,
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
@@ -178,6 +186,30 @@ test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, tracks ?s
     const rNoKey = await fetch(`${base}/api/stats`);
     assert.equal(rNoKey.status, 404);
 
+    const rInqBad = await fetch(`${base}/api/inquiry`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pkg: 'pkg-2', contact: '', message: 'Need verification' }),
+    });
+    assert.equal(rInqBad.status, 400);
+
+    const rInqOk = await fetch(`${base}/api/inquiry`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pkg: 'pkg-2',
+        contact: 'ops@acme.eu',
+        message: 'Need invoice verification on 50 PDFs.',
+        src: 'direct',
+        page: '/',
+        lang: 'en',
+      }),
+    });
+    assert.equal(rInqOk.status, 200);
+    const inqJson = await rInqOk.json();
+    assert.equal(inqJson.ok, true);
+    assert.ok(inqJson.id, 'Expected inquiry id');
+
     const rStats = await fetch(`${base}/api/stats?key=test-secret-123`);
     assert.equal(rStats.status, 200);
     const statsJson = await rStats.json();
@@ -185,6 +217,9 @@ test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, tracks ?s
     assert.ok(statsJson.bySource?.kwork?.hits >= 1);
     assert.equal(statsJson.byStand?.packages?.views, 1);
     assert.match(serverStdout, /\[visit\].*src=kwork.*event=view.*stands=architect,packages,sales/);
+    assert.equal(statsJson.inquiries?.length, 1);
+    assert.equal(statsJson.inquiries?.[0]?.contact, 'ops@acme.eu');
+    assert.match(serverStdout, /\[inquiry\].*pkg=pkg-2.*contact=ops@acme\.eu/);
 
     const rCase = await fetch(`${base}/case`);
     assert.equal(rCase.status, 200);
@@ -206,6 +241,7 @@ test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, tracks ?s
   } finally {
     proc.kill('SIGTERM');
     try { fs.unlinkSync(tmpVisits); } catch {}
+    try { fs.unlinkSync(tmpInquiries); } catch {}
   }
 });
 
@@ -274,5 +310,39 @@ test('buildPlatformPitch fits PLATFORM_LIMITS across tasks/*.json and includes l
         );
       }
     }
+  }
+});
+
+test('cover leads with task headline + packages before approach, copy buttons & EU-friendly inquiry form', () => {
+  for (const fname of ['index.html', 'ua.html']) {
+    const html = fs.readFileSync(path.join(ROOT, fname), 'utf8');
+    const h1Match = html.match(/<h1 class="display-xl">([\s\S]*?)<\/h1>/);
+    assert.ok(h1Match, `${fname}: missing <h1 class="display-xl">`);
+    assert.notEqual(h1Match[1].trim(), 'Beelsik', `${fname}: hero H1 must describe the client task`);
+
+    const pkgIdx = html.indexOf('id="packages"');
+    const appIdx = html.indexOf('id="approach"');
+    assert.ok(pkgIdx > 0 && appIdx > 0 && pkgIdx < appIdx, `${fname}: #packages must appear before #approach`);
+
+    const copyBtns = html.match(/class="[^"]*\bpkg-copy-btn\b/g) || [];
+    assert.equal(copyBtns.length, 3, `${fname}: expected 3 .pkg-copy-btn buttons`);
+    assert.match(html, /id="pkg-inquiry-box"/, `${fname}: missing #pkg-inquiry-box`);
+  }
+
+  for (const fname of ['index.html', 'case.html']) {
+    const html = fs.readFileSync(path.join(ROOT, fname), 'utf8');
+    const enFrInq = [...html.matchAll(/<span class="(?:en|fr)">([^<]*(?:Where to reply|Où vous répondre)[^<]*)<\/span>/g)].map((m) => m[1]);
+    assert.ok(enFrInq.length >= 2, `${fname}: missing EN/FR inquiry contact labels`);
+    for (const label of enFrInq) {
+      assert.doesNotMatch(label, /telegram/i, `${fname}: EN/FR contact label should not promote Telegram`);
+    }
+  }
+});
+
+test('LedgerGuard tables lead with 24/24 & 36/36 accuracy without misleading 12-15 min vs 2-4 ms', () => {
+  for (const fname of ['index.html', 'ua.html', 'case.html', 'ua-case.html']) {
+    const html = fs.readFileSync(path.join(ROOT, fname), 'utf8');
+    assert.doesNotMatch(html, /12–15\s*(?:мин|хв|min)/i, `${fname}: must not compare 12-15 min manual timing against 2-4 ms`);
+    assert.ok(html.includes('24') && html.includes('36'), `${fname}: LedgerGuard table must report 24/24 and 36/36 metrics`);
   }
 });
