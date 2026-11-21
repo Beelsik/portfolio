@@ -2,12 +2,20 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import zlib from 'node:zlib';
 import { spawn, execFileSync } from 'node:child_process';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
+
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err?.stack || err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
+});
 
 /* ====== PERSISTENT PYTHON JSON-RPC BRIDGE FOR LEDGERGUARD ====== */
 const LEDGERGUARD_SRC = path.join(__dirname, 'ledgerguard', 'src');
@@ -26,6 +34,14 @@ const PYTHON_RT = detectPythonRuntime();
 let lgProc = null;
 let lgNextId = 1;
 const lgPending = new Map();
+
+function rejectAllPending(reason) {
+  for (const [id, entry] of lgPending.entries()) {
+    clearTimeout(entry.timer);
+    lgPending.delete(id);
+    entry.reject(new Error(reason));
+  }
+}
 
 function ensureLedgerGuardWorker() {
   if (!PYTHON_RT) throw new Error('Python 3 runtime not available on host');
@@ -51,13 +67,17 @@ function ensureLedgerGuardWorker() {
   proc.stderr.on('data', (chunk) => {
     console.error('[ledgerguard]', chunk.toString().trim());
   });
+  proc.stdin.on('error', (err) => {
+    console.error('[ledgerguard stdin error]', err.message);
+  });
+  proc.on('error', (err) => {
+    console.error('[ledgerguard spawn error]', err.message);
+    if (lgProc === proc) lgProc = null;
+    rejectAllPending('LedgerGuard worker process error');
+  });
   proc.on('exit', () => {
-    lgProc = null;
-    for (const [id, entry] of lgPending.entries()) {
-      clearTimeout(entry.timer);
-      entry.reject(new Error('LedgerGuard worker exited unexpectedly'));
-      lgPending.delete(id);
-    }
+    if (lgProc === proc) lgProc = null;
+    rejectAllPending('LedgerGuard worker exited unexpectedly');
   });
   lgProc = proc;
   return proc;
@@ -65,11 +85,20 @@ function ensureLedgerGuardWorker() {
 
 function callLedgerGuardRpc(method, params = {}, timeoutMs = 5000) {
   return new Promise((resolve, reject) => {
+    if (lgPending.size >= 32) {
+      reject(new Error('LedgerGuard worker busy'));
+      return;
+    }
     let proc;
     try {
       proc = ensureLedgerGuardWorker();
     } catch (err) {
       reject(err);
+      return;
+    }
+    if (!proc.stdin || proc.stdin.destroyed || !proc.stdin.writable) {
+      lgProc = null;
+      reject(new Error('LedgerGuard worker stdin closed'));
       return;
     }
     const id = lgNextId++;
@@ -78,7 +107,23 @@ function callLedgerGuardRpc(method, params = {}, timeoutMs = 5000) {
       reject(new Error('LedgerGuard RPC timeout'));
     }, timeoutMs);
     lgPending.set(id, { resolve, reject, timer });
-    proc.stdin.write(JSON.stringify({ id, method, params }) + '\n');
+    try {
+      proc.stdin.write(JSON.stringify({ id, method, params }) + '\n', (err) => {
+        if (err && lgPending.has(id)) {
+          const entry = lgPending.get(id);
+          clearTimeout(entry.timer);
+          lgPending.delete(id);
+          entry.reject(new Error(`LedgerGuard write error: ${err.message}`));
+        }
+      });
+    } catch (err) {
+      if (lgPending.has(id)) {
+        const entry = lgPending.get(id);
+        clearTimeout(entry.timer);
+        lgPending.delete(id);
+        entry.reject(err);
+      }
+    }
   });
 }
 
@@ -152,6 +197,29 @@ const RATE_MAX = Number(process.env.RATE_LIMIT_MAX || 80);
 
 const hits = new Map();
 const heavyHits = new Map();
+const MAX_RATE_MAP_KEYS = 2000;
+
+function pruneSingleRateMap(map, windowMs, now) {
+  for (const [key, timestamps] of map.entries()) {
+    const fresh = timestamps.filter((ts) => now - ts < windowMs);
+    if (fresh.length === 0) map.delete(key);
+    else if (fresh.length !== timestamps.length) map.set(key, fresh);
+  }
+  while (map.size > MAX_RATE_MAP_KEYS) {
+    const oldestKey = map.keys().next().value;
+    if (oldestKey === undefined) break;
+    map.delete(oldestKey);
+  }
+}
+
+function pruneRateMaps() {
+  const now = Date.now();
+  pruneSingleRateMap(hits, RATE_WINDOW_MS, now);
+  pruneSingleRateMap(heavyHits, 60 * 60 * 1000, now);
+}
+
+setInterval(pruneRateMaps, 5 * 60 * 1000).unref();
+
 let budgetDayKey = new Date().toISOString().slice(0, 10);
 let dailySpentUsd = 0;
 let dailyHeavyCalls = 0;
@@ -171,6 +239,9 @@ function resetBudgetIfNewDay() {
 
 function checkRateLimit(ip) {
   const now = Date.now();
+  if (!hits.has(ip) && hits.size >= MAX_RATE_MAP_KEYS) {
+    pruneSingleRateMap(hits, RATE_WINDOW_MS, now);
+  }
   const list = (hits.get(ip) || []).filter((ts) => now - ts < RATE_WINDOW_MS);
   if (list.length >= RATE_MAX) return false;
   list.push(now);
@@ -253,7 +324,7 @@ async function getVertexAccessToken() {
   return cachedVertexToken.token;
 }
 
-async function callVertexAI({ system, messages, maxTokens = 900, jsonMode = false, timeoutMs = 32000, ip = 'local', metaSink = null }) {
+async function callVertexAI({ system, messages, maxTokens = 900, jsonMode = false, timeoutMs = 22000, ip = 'local', metaSink = null }) {
   const t0 = Date.now();
   const contents = messages.map((m) => {
     const parts = Array.isArray(m.content)
@@ -303,7 +374,9 @@ async function callVertexAI({ system, messages, maxTokens = 900, jsonMode = fals
     ? [...new Set([VERTEX_LOCATION, 'global', 'eu', 'us'])]
     : [VERTEX_LOCATION];
 
+  const perRegionTimeoutMs = Math.min(timeoutMs, 22000);
   let res = null;
+  let lastErr = null;
   for (let attempt = 0; attempt < Math.min(candidateLocs.length, 3); attempt++) {
     const loc = candidateLocs[attempt];
     const reqUrl =
@@ -320,13 +393,21 @@ async function callVertexAI({ system, messages, maxTokens = 900, jsonMode = fals
           })()
         : url;
 
-    res = await fetch(reqUrl, {
-      method: 'POST',
-      signal: AbortSignal.timeout(timeoutMs),
-      headers,
-      body: reqBody,
-    });
-    if (res.ok || ![429, 500, 502, 503, 504].includes(res.status)) break;
+    try {
+      res = await fetch(reqUrl, {
+        method: 'POST',
+        signal: AbortSignal.timeout(perRegionTimeoutMs),
+        headers,
+        body: reqBody,
+      });
+      if (res.ok || ![429, 500, 502, 503, 504].includes(res.status)) break;
+    } catch (fetchErr) {
+      lastErr = fetchErr;
+      res = null;
+    }
+  }
+  if (!res) {
+    throw lastErr || new Error('Vertex request failed across all regions');
   }
   if (!res.ok) {
     const errTxt = await res.text().catch(() => '');
@@ -353,15 +434,23 @@ async function callVertexAI({ system, messages, maxTokens = 900, jsonMode = fals
   return String(textPart?.text || '').trim();
 }
 
-function readJsonBody(req, maxBytes = 4 * 1024 * 1024) {
+function readJsonBody(req, maxBytes = Math.floor(2.5 * 1024 * 1024)) {
   return new Promise((resolve, reject) => {
+    let settled = false;
     let size = 0;
     const chunks = [];
+    const finish = (err, val) => {
+      if (settled) return;
+      settled = true;
+      if (err) reject(err);
+      else resolve(val);
+    };
     req.on('data', (c) => {
+      if (settled) return;
       size += c.length;
       if (size > maxBytes) {
         req.destroy();
-        reject(new Error('Payload too large (max 4 MB)'));
+        finish(new Error('Payload too large (max 2.5 MB)'));
         return;
       }
       chunks.push(c);
@@ -369,18 +458,20 @@ function readJsonBody(req, maxBytes = 4 * 1024 * 1024) {
     req.on('end', () => {
       try {
         const raw = Buffer.concat(chunks).toString('utf8');
-        resolve(raw ? JSON.parse(raw) : {});
+        finish(null, raw ? JSON.parse(raw) : {});
       } catch {
-        reject(new Error('Invalid JSON'));
+        finish(new Error('Invalid JSON'));
       }
     });
-    req.on('error', reject);
+    req.on('aborted', () => finish(new Error('Request aborted')));
+    req.on('error', (err) => finish(err));
   });
 }
 
-function sendJson(res, status, data) {
+function sendJson(res, status, data, headOnly = false) {
+  if (res.headersSent || res.writableEnded || res.destroyed) return;
   // Public daily counters for the live meter in the site header (no IPs or content stored)
-  if (status === 200 && data && data._meta) {
+  if (!headOnly && status === 200 && data && data._meta) {
     resetBudgetIfNewDay();
     dailyRequests += 1;
     dailyTokens += (Number(data._meta.promptTokens) || 0) + (Number(data._meta.completionTokens) || 0);
@@ -391,7 +482,7 @@ function sendJson(res, status, data) {
     'Content-Length': Buffer.byteLength(body),
     'Cache-Control': 'no-store',
   });
-  res.end(body);
+  res.end(headOnly ? undefined : body);
 }
 
 function extractJson(text) {
@@ -539,12 +630,28 @@ async function callLLM({ system, messages, maxTokens = 750, jsonMode = false, vi
     payload.chat_template_kwargs = { enable_thinking: false };
   }
 
-  const res = await fetch(`${LLM_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    signal: AbortSignal.timeout(timeoutMs),
-    headers,
-    body: JSON.stringify(payload),
-  });
+  const perAttemptMs = Math.min(timeoutMs, 20_000);
+  let res = null;
+  let lastFetchErr = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      res = await fetch(`${LLM_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        signal: AbortSignal.timeout(perAttemptMs),
+        headers,
+        body: JSON.stringify(payload),
+      });
+      if (res.ok || ![429, 500, 502, 503, 504].includes(res.status) || attempt === 1) break;
+    } catch (fetchErr) {
+      lastFetchErr = fetchErr;
+      res = null;
+      if (attempt === 1) break;
+    }
+    await new Promise((r) => setTimeout(r, 600));
+  }
+  if (!res) {
+    throw lastFetchErr || new Error('LLM request failed after retry');
+  }
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');
     throw new Error(`LLM HTTP ${res.status}${errBody ? ': ' + errBody.slice(0, 140) : ''}`);
@@ -593,67 +700,134 @@ function scanInputLayer1(raw) {
   return { sanitized, flags, injectionSuspected, offTopicSuspected };
 }
 
-const server = http.createServer(async (req, res) => {
-  const urlPath = (req.url || '/').split('?')[0];
+const htmlCache = new Map();
 
-  if (req.method === 'GET' && (urlPath === '/ua' || urlPath === '/ua/' || urlPath === '/ua.html')) {
-    fs.readFile(path.join(__dirname, 'ua.html'), (err, buf) => {
-      if (err) { res.writeHead(404); res.end('Not found'); return; }
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(buf);
-    });
-    return;
-  }
+async function getCachedHtml(filename) {
+  const filePath = path.join(__dirname, filename);
+  const st = await fs.promises.stat(filePath);
+  const cached = htmlCache.get(filename);
+  if (cached && cached.mtimeMs === st.mtimeMs) return cached;
 
-  if (req.method === 'GET' && (urlPath === '/' || urlPath === '/index.html' || urlPath === '/portfolio.html')) {
-    fs.readFile(path.join(__dirname, 'index.html'), (err, buf) => {
-      if (err) { res.writeHead(404); res.end('Not found'); return; }
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(buf);
-    });
-    return;
-  }
+  const raw = await fs.promises.readFile(filePath);
+  const gzip = zlib.gzipSync(raw, { level: 6 });
+  const etag = `"${crypto.createHash('sha1').update(raw).digest('hex').slice(0, 16)}"`;
+  const entry = { mtimeMs: st.mtimeMs, raw, gzip, etag };
+  htmlCache.set(filename, entry);
+  return entry;
+}
 
-  if (req.method === 'GET' && urlPath === '/api/health') {
-    resetBudgetIfNewDay();
-    sendJson(res, 200, {
-      ok: true,
-      llmEnabled: LLM_ENABLED || VERTEX_ENABLED,
-      visionEnabled: VISION_ENABLED,
-      provider: LLM_ENABLED ? LLM_PROVIDER : VERTEX_ENABLED ? 'vertex' : 'local',
-      model: LLM_ENABLED ? LLM_MODEL : 'deterministic',
-      visionModel: VISION_ENABLED ? LLM_VISION_MODEL : 'none',
-      heavyVertex: {
-        enabled: VERTEX_ENABLED,
-        model: VERTEX_ENABLED ? VERTEX_MODEL : null,
-        location: VERTEX_ENABLED ? VERTEX_LOCATION : null,
-        dailyBudgetUsd: DAILY_BUDGET_USD,
-        dailySpentUsd: Number(dailySpentUsd.toFixed(4)),
-        hourlyIpLimit: HEAVY_IP_LIMIT_PER_HOUR,
-      },
-      ledgerguard: {
-        enabled: Boolean(PYTHON_RT && fs.existsSync(LEDGERGUARD_SRC)),
-        runtime: PYTHON_RT?.version || null,
-      },
-      today: { day: budgetDayKey, requests: dailyRequests, tokens: dailyTokens },
-    });
-    return;
-  }
-
-  if (req.method === 'GET' && urlPath === '/api/ledgerguard/presets') {
-    const u = new URL(req.url || '/', 'http://localhost');
-    const lang = (u.searchParams.get('lang') || 'ru').toLowerCase();
-    try {
-      const data = await callLedgerGuardRpc('presets', { lang });
-      sendJson(res, 200, data);
-    } catch (err) {
-      sendJson(res, 503, { error: err.message || 'LedgerGuard unavailable' });
+async function serveHtmlPage(req, res, filename) {
+  let entry;
+  try {
+    entry = await getCachedHtml(filename);
+  } catch {
+    if (!res.headersSent && !res.destroyed) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(req.method === 'HEAD' ? undefined : 'Not found');
     }
     return;
   }
+  if (res.headersSent || res.destroyed) return;
 
-  if (req.method === 'POST' && urlPath === '/api/ledgerguard/run') {
-    const ip = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress || 'local';
+  const ifNoneMatch = String(req.headers['if-none-match'] || '').trim();
+  if (ifNoneMatch && ifNoneMatch === entry.etag) {
+    res.writeHead(304, {
+      ETag: entry.etag,
+      'Cache-Control': 'no-cache',
+      Vary: 'Accept-Encoding',
+    });
+    res.end();
+    return;
+  }
+
+  const acceptsGzip = String(req.headers['accept-encoding'] || '').toLowerCase().includes('gzip');
+  const payload = acceptsGzip ? entry.gzip : entry.raw;
+  const headers = {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Content-Length': payload.length,
+    'Cache-Control': 'no-cache',
+    ETag: entry.etag,
+    Vary: 'Accept-Encoding',
+  };
+  if (acceptsGzip) headers['Content-Encoding'] = 'gzip';
+  res.writeHead(200, headers);
+  res.end(req.method === 'HEAD' ? undefined : payload);
+}
+
+function safeParseUrl(rawUrl) {
+  try {
+    return new URL(rawUrl || '/', 'http://localhost');
+  } catch {
+    return null;
+  }
+}
+
+const server = http.createServer(async (req, res) => {
+  const headOnly = req.method === 'HEAD';
+  const isGetOrHead = req.method === 'GET' || headOnly;
+  try {
+    const parsedUrl = safeParseUrl(req.url || '/');
+    if (!parsedUrl) {
+      sendJson(res, 400, { error: 'Malformed URL' }, headOnly);
+      return;
+    }
+    const urlPath = parsedUrl.pathname;
+
+    if (isGetOrHead && (urlPath === '/ua' || urlPath === '/ua/' || urlPath === '/ua.html')) {
+      await serveHtmlPage(req, res, 'ua.html');
+      return;
+    }
+
+    if (isGetOrHead && (urlPath === '/' || urlPath === '/index.html' || urlPath === '/portfolio.html')) {
+      await serveHtmlPage(req, res, 'index.html');
+      return;
+    }
+
+    if (isGetOrHead && (urlPath === '/api/health' || urlPath === '/healthz')) {
+      resetBudgetIfNewDay();
+      sendJson(
+        res,
+        200,
+        {
+          ok: true,
+          uptimeSec: Math.round(process.uptime()),
+          llmEnabled: LLM_ENABLED || VERTEX_ENABLED,
+          visionEnabled: VISION_ENABLED,
+          provider: LLM_ENABLED ? LLM_PROVIDER : VERTEX_ENABLED ? 'vertex' : 'local',
+          model: LLM_ENABLED ? LLM_MODEL : 'deterministic',
+          visionModel: VISION_ENABLED ? LLM_VISION_MODEL : 'none',
+          heavyVertex: {
+            enabled: VERTEX_ENABLED,
+            model: VERTEX_ENABLED ? VERTEX_MODEL : null,
+            location: VERTEX_ENABLED ? VERTEX_LOCATION : null,
+            dailyBudgetUsd: DAILY_BUDGET_USD,
+            dailySpentUsd: Number(dailySpentUsd.toFixed(4)),
+            hourlyIpLimit: HEAVY_IP_LIMIT_PER_HOUR,
+          },
+          ledgerguard: {
+            enabled: Boolean(PYTHON_RT && fs.existsSync(LEDGERGUARD_SRC)),
+            runtime: PYTHON_RT?.version || null,
+          },
+          today: { day: budgetDayKey, requests: dailyRequests, tokens: dailyTokens },
+        },
+        headOnly
+      );
+      return;
+    }
+
+    if (isGetOrHead && urlPath === '/api/ledgerguard/presets') {
+      const lang = (parsedUrl.searchParams.get('lang') || 'ru').toLowerCase();
+      try {
+        const data = await callLedgerGuardRpc('presets', { lang });
+        sendJson(res, 200, data, headOnly);
+      } catch (err) {
+        sendJson(res, 503, { error: err.message || 'LedgerGuard unavailable' }, headOnly);
+      }
+      return;
+    }
+
+    if (req.method === 'POST' && urlPath === '/api/ledgerguard/run') {
+      const ip = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket?.remoteAddress || 'local';
     if (!checkRateLimit(ip)) {
       sendJson(res, 429, { error: 'Rate limit exceeded for demo session. Try again shortly.' });
       return;
@@ -689,7 +863,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && urlPath.startsWith('/api/')) {
-    const ip = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress || 'local';
+    const ip = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket?.remoteAddress || 'local';
     if (!checkRateLimit(ip)) {
       sendJson(res, 429, { error: 'Rate limit exceeded for demo session. Try again shortly.' });
       return;
@@ -1175,11 +1349,59 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  res.writeHead(404);
-  res.end('Not found');
+    if (!res.headersSent && !res.destroyed) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(headOnly ? undefined : 'Not found');
+    }
+  } catch (err) {
+    console.error('[http handler error]', err?.stack || err);
+    if (!res.headersSent && !res.destroyed) {
+      sendJson(res, 500, { error: 'Internal server error' }, headOnly);
+    }
+  }
 });
 
+// Keep idle sockets open longer than upstream reverse proxies (60s) to avoid intermittent 502 resets
+server.keepAliveTimeout = 65_000;
+server.headersTimeout = 66_000;
+server.requestTimeout = 55_000;
+
+server.on('clientError', (_err, socket) => {
+  if (socket.writable && !socket.destroyed) {
+    socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+  }
+});
+
+if (process.env.DISABLE_KEEPALIVE !== '1') {
+  const keepaliveBase = (
+    process.env.KEEPALIVE_URL ||
+    process.env.RENDER_EXTERNAL_URL ||
+    'https://beelsik-portfolio.onrender.com'
+  ).replace(/\/+$/, '');
+  const pingRender = () => {
+    fetch(`${keepaliveBase}/api/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(30_000),
+      headers: { 'User-Agent': 'portfolio-keepalive/1.0' },
+    }).catch(() => {});
+  };
+  setInterval(pingRender, 11 * 60 * 1000).unref();
+}
+
+function shutdownGracefully(signal) {
+  console.log(`Received ${signal}, shutting down...`);
+  try {
+    if (lgProc && !lgProc.killed) lgProc.kill('SIGTERM');
+  } catch {}
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 5000).unref();
+}
+
+process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
+process.on('SIGINT', () => shutdownGracefully('SIGINT'));
+
 server.listen(PORT, '0.0.0.0', () => {
+  Promise.all([getCachedHtml('index.html'), getCachedHtml('ua.html')]).catch(() => {});
   console.log(
     `Portfolio server listening on http://0.0.0.0:${PORT} | Fast: ${LLM_ENABLED ? `${LLM_PROVIDER}/${LLM_MODEL}` : 'off'} | Heavy Vertex AI: ${VERTEX_ENABLED ? `${VERTEX_MODEL} (cap $${DAILY_BUDGET_USD}/day)` : 'off (fallback to Fast)'}`
   );
