@@ -13,10 +13,22 @@ const TASKS_DIR = path.join(ROOT, 'tasks');
 const ALLOWED_CASES = ['project', 'sales', 'rag', 'docs', 'parser', 'listing', 'hand', 'cc', 'gost', 'spec', 'audit', 'redteam'];
 const ALLOWED_KINDS = ['io', 'code', 'ai', 'db', 'human'];
 
+// Conservative character limits per freelance platform so proposals do not truncate
+export const PLATFORM_LIMITS = {
+  kwork: 900,
+  fl: 1500,
+  freelancehunt: 1500,
+  codeur: 1200,
+  upwork: 1500,
+  habr: 1000,
+  default: 1200,
+};
+
 function printHelp() {
   console.log(`Usage:
   node scripts/make-task.mjs <slug> --brief "..." [--lang ru|uk|en|fr] [--src kwork|fl|codeur] [--case <id>] [--title "..."] [--push]
   node scripts/make-task.mjs <slug> --file brief.txt [--lang ...] [--src ...] [--push]
+  node scripts/make-task.mjs --pitch-only <slug> [--src kwork|fl|codeur|freelancehunt]
   cat brief.txt | node scripts/make-task.mjs <slug> [--src ...] [--push]
 
 Options:
@@ -27,6 +39,7 @@ Options:
   --src         Source tag for attribution (e.g. kwork, fl, codeur, freelancehunt)
   --case        Related portfolio stand: ${ALLOWED_CASES.join(' | ')}
   --title       Optional override for heading title
+  --pitch-only  Print sized pitch for an existing tasks/<slug>.json without writing
   --push        Stage tasks/<slug>.json, commit, and push to origin
   --dry-run     Build structural template offline without LLM call
   --help, -h    Show this help message`);
@@ -101,6 +114,7 @@ function parseArgs(argv) {
     if (a === '--help' || a === '-h') opts.help = true;
     else if (a === '--push') opts.push = true;
     else if (a === '--dry-run') opts.dryRun = true;
+    else if (a === '--pitch-only') opts.pitchOnly = true;
     else if (a === '--brief' && i + 1 < argv.length) opts.brief = argv[++i];
     else if (a === '--file' && i + 1 < argv.length) opts.file = argv[++i];
     else if (a === '--lang' && i + 1 < argv.length) opts.lang = argv[++i];
@@ -454,6 +468,61 @@ function normalizeTaskObject({ rawPlan, slug, brief, lang, titleOverride, caseOv
   return task;
 }
 
+export function buildPlatformPitch({ task, src = '', link = '' }) {
+  const sSrc = sanitizeSrc(src) || 'default';
+  const limit = PLATFORM_LIMITS[sSrc] || PLATFORM_LIMITS.default;
+  const lang = task?.lang || 'ru';
+  const firstCode = String(task?.split?.code?.[0] || '').trim();
+  const question = String(task?.questions?.[0] || '').trim();
+  const rawSummary = String(task?.summary || '').trim().replace(/\s+/g, ' ');
+  const firstSentence = (rawSummary.split(/(?<=[.!?])\s+/)[0] || rawSummary).trim();
+  const resolvedLink = link || buildTaskLink(lang, task?.slug || 'custom-order', src);
+
+  const tpl = {
+    ru: {
+      hook: 'Здравствуйте! Посмотрел ваше ТЗ: ',
+      link: `Набросал схему, этапы и цены под вашу задачу: ${resolvedLink}`,
+    },
+    uk: {
+      hook: 'Вітаю! Переглянув ваше ТЗ: ',
+      link: `Підготував схему, етапи та ціни під вашу задачу: ${resolvedLink}`,
+    },
+    fr: {
+      hook: 'Bonjour ! J’ai lu votre besoin : ',
+      link: `J’ai préparé le schéma, les étapes et les tarifs pour votre projet : ${resolvedLink}`,
+    },
+    en: {
+      hook: 'Hi! Read your brief: ',
+      link: `I mapped out the pipeline, milestones, and pricing for your task: ${resolvedLink}`,
+    },
+  }[lang] || {
+    hook: 'Hi! Read your brief: ',
+    link: `I mapped out the pipeline, milestones, and pricing for your task: ${resolvedLink}`,
+  };
+
+  const partA = `${tpl.hook}${firstSentence}`;
+  const partB = tpl.link;
+  const partC = firstCode;
+  const partD = question;
+
+  let text = [partA, partB, partC, partD].filter(Boolean).join('\n\n');
+  if (text.length > limit) {
+    text = [partA, partB, partD].filter(Boolean).join('\n\n');
+  }
+  if (text.length > limit) {
+    const fixedSuffix = [partB, partD].filter(Boolean).join('\n\n');
+    const overhead = tpl.hook.length + (fixedSuffix ? 3 + fixedSuffix.length : 1); // '…\n\n'
+    const avail = Math.max(0, limit - overhead);
+    const trimmed = avail > 0 ? firstSentence.slice(0, avail).trimEnd() + '…' : '…';
+    const shortA = `${tpl.hook}${trimmed}`.trim();
+    text = [shortA, fixedSuffix].filter(Boolean).join('\n\n');
+  }
+  if (text.length > limit) {
+    text = [partB, partD].filter(Boolean).join('\n\n');
+  }
+  return { text, limit, length: text.length };
+}
+
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (opts.help) {
@@ -465,6 +534,23 @@ async function main() {
     throw new Error('Provide a valid <slug> matching /^[a-z0-9][a-z0-9_-]{0,63}$/i. Run with --help for usage.');
   }
 
+  const src = sanitizeSrc(opts.src);
+  if (opts.pitchOnly) {
+    const existingPath = path.join(TASKS_DIR, `${slug}.json`);
+    if (!fs.existsSync(existingPath)) {
+      throw new Error(`Task file not found: ${existingPath}`);
+    }
+    const existingTask = JSON.parse(fs.readFileSync(existingPath, 'utf8'));
+    const link = buildTaskLink(existingTask.lang || 'ru', slug, src);
+    const pitched = buildPlatformPitch({ task: existingTask, src, link });
+    const srcLabel = src || 'default';
+    console.log(`\nPitch for ${srcLabel} (${pitched.length}/${pitched.limit} chars):\n${pitched.text}\n`);
+    if (src === 'kwork') {
+      console.log('Kwork может модерировать внешние ссылки — при отказе оставьте ссылку в портфолио профиля.\n');
+    }
+    return;
+  }
+
   let brief = opts.brief || '';
   if (!brief && opts.file) brief = fs.readFileSync(path.resolve(opts.file), 'utf8');
   if (!brief && !process.stdin.isTTY) brief = fs.readFileSync(0, 'utf8');
@@ -472,7 +558,6 @@ async function main() {
   if (!brief) throw new Error('Task brief is required via --brief, --file, or stdin.');
 
   const lang = ['ru', 'uk', 'en', 'fr'].includes(opts.lang) ? opts.lang : detectLang(brief);
-  const src = sanitizeSrc(opts.src);
   const env = parseDotEnv(path.join(ROOT, '.env'));
 
   const rawPlan = opts.dryRun
@@ -509,7 +594,15 @@ async function main() {
   console.log(`GitHub Pages (instant): ${ghUrl}`);
   console.log(`Render URL:             ${renderUrl}`);
   console.log(`Zero-deploy (?task=z:): ${zUrl.slice(0, 120)}${zUrl.length > 120 ? `... (${zUrl.length} chars)` : ''}`);
-  console.log(`\nPitch:\n${task.pitch}\n`);
+  if (src) {
+    const pitched = buildPlatformPitch({ task, src, link: ghUrl });
+    console.log(`\nPitch for ${src} (${pitched.length}/${pitched.limit} chars):\n${pitched.text}\n`);
+    if (src === 'kwork') {
+      console.log('Kwork может модерировать внешние ссылки — при отказе оставьте ссылку в портфолио профиля.\n');
+    }
+  } else {
+    console.log(`\nPitch:\n${task.pitch}\n`);
+  }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {

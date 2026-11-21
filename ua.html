@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Beelsik — ШІ-агенти, RAG, Vision OCR та автоматизація процесів</title>
 <meta name="description" content="Інтерактивні робочі стенди з живим LLM та Vision API: чат-боти з CRM, корпоративний пошук (RAG), звірка первинних документів у DOCX, парсинг прайсів, розпізнавання рукописів, Claude Code та аудит SaaS.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Beelsik — Боти, звірка рахунків та автоматизація для бізнесу">
+<meta property="og:description" content="Відкритий проєкт LedgerGuard (24/24 проблемних рахунків зупинено в карантині на наборі з 60), 3 пакети від 4 200 ₴ та 11 живих стендів.">
+<meta property="og:url" content="https://beelsik-portfolio.onrender.com/ua">
+<meta property="og:image" content="https://beelsik-portfolio.onrender.com/assets/og-ua.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23161618'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='600' font-size='17' fill='%23f4f4f6'%3EB%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -490,6 +498,17 @@ footer {
   .pkg-table td.pkg-desc { grid-column: 1 / -1; grid-row: 2; padding-top: 2px; }
 }
 
+/* Trust FAQ (#trust) & Task Next Steps (#task-next) */
+#trust { scroll-margin-top: 84px; }
+.faq { border-bottom: 1px solid var(--line); padding: 12px 0; }
+.faq summary { cursor: pointer; font-weight: 500; color: var(--ink); list-style: none; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '+'; float: right; color: var(--ink-muted); }
+.faq[open] summary::after { content: '−'; }
+.faq p { margin: 8px 0 0; color: var(--ink-body); font-size: 14px; max-width: 64ch; }
+.task-steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+.task-q { display: grid; gap: 6px; font-size: 14px; color: var(--ink); margin-top: 10px; }
+
 @media (prefers-reduced-motion: no-preference) {
   .btn[disabled], .ch-btn[disabled] { position: relative; opacity: 0.65; }
   ::view-transition-old(root) { animation: none; }
@@ -617,6 +636,33 @@ footer {
           <p class="note">Обсяг і ціна фіксуються до старту — достатньо написати назву пакета й додати приклад файлу або посилання на репозиторій. Якщо після малого пакета перейдемо до повного впровадження, його вартість зарахується в основний проєкт.</p>
         </div>
 
+        <div class="ch-sheet__body" id="trust">
+          <span class="ch-label">Гарантія та часті питання</span>
+          <p class="callout-note">Гарантія пілоту: до старту домовляємося про метрику — наприклад, частку правильно витягнутих рядків. Якщо на ваших файлах її не досягнемо, пілот не оплачуєте.</p>
+          <div>
+            <details class="faq">
+              <summary>NDA та конфіденційність</summary>
+              <p>Підпишу NDA. Працюю на знеособлених копіях, доступи лише на читання; після здачі ви їх відкликаєте.</p>
+            </details>
+            <details class="faq">
+              <summary>Які доступи потрібні</summary>
+              <p>Для пілоту — приклади файлів і тестова пісочниця CRM/ERP. До бойових даних — лише за узгодженням.</p>
+            </details>
+            <details class="faq">
+              <summary>Як оплачувати</summary>
+              <p>Через безпечну угоду майданчика: пакет або пілот — цілком, проєкт — поетапно після приймання кожного етапу.</p>
+            </details>
+            <details class="faq">
+              <summary>Правки після здачі</summary>
+              <p>Правки в межах узгодженого ТЗ входять у ціну; 14 днів безкоштовно виправляю знайдені помилки.</p>
+            </details>
+            <details class="faq">
+              <summary>Що якщо ви зникнете</summary>
+              <p>Код із першого дня у вашому Git, збірка в Docker та інструкція запуску — продовжити зможе будь-який розробник.</p>
+            </details>
+          </div>
+        </div>
+
         <table class="ch-stamp-block">
           <tr>
             <td style="width:38%"><span class="ch-label">Стек</span><span class="name">Python · FastAPI · PostgreSQL · Node.js · Docker</span></td>
@@ -641,7 +687,10 @@ footer {
           <div class="brief">
             <div class="case-head">
               <span><span class="case-idx">★</span>Open-source проєкт · Python 3.12 · SQLite WAL · без сторонніх залежностей</span>
-              <a class="btn ghost sm" href="https://github.com/Beelsik/portfolio/tree/main/ledgerguard" target="_blank" rel="noopener">Код і тести на GitHub ↗</a>
+              <div class="row">
+                <a class="btn ghost sm" href="ua-case.html">Кейс на один екран ↗</a>
+                <a class="btn ghost sm" href="https://github.com/Beelsik/portfolio/tree/main/ledgerguard" target="_blank" rel="noopener">Код і тести на GitHub ↗</a>
+              </div>
             </div>
             <h2>LedgerGuard: перевірка рахунків перед записом у ERP / KeyCRM</h2>
             <p>Типова ситуація у гуртових, будівельних та інженерних компаніях: менеджери вручну перебивають рахунки з пошти у систему обліку, або підключають «1 промпт у n8n → одразу запис у базу». Обидва підходи втрачають гроші на одних і тих самих деталях: підміна IBAN на інший валідний за модулем 97, ціна на 10% вище договору, арифметика в рядку, плутанина між <code>3×1,5</code> і <code>3×2,5</code>, бухти замість метрів та дублі при повторному листі.</p>
@@ -851,6 +900,20 @@ footer {
             </div>
           </div>
           <div class="callout-note task-foot-callout" id="task-foot-callout" hidden></div>
+          <div class="ch-sheet__body task-next" id="task-next" hidden>
+            <span class="ch-label">Що далі</span>
+            <ol class="task-steps">
+              <li>Дайте відповідь на 3 питання нижче — коротко, прямо тут, і вставте в чат майданчика.</li>
+              <li>Пілот на 10–15 ваших файлах за 1–2 дні — побачите реальну точність до основного договору.</li>
+              <li>Фіксуємо ціну й терміни етапів, оплата поетапно через безпечну угоду.</li>
+            </ol>
+            <div id="task-answers"></div>
+            <div class="row">
+              <button class="btn sm" id="task-copy-answers" type="button">Скопіювати відповіді для чату</button>
+              <span class="note" id="task-copy-note"></span>
+            </div>
+            <textarea id="task-answers-out" rows="6" readonly hidden></textarea>
+          </div>
         </div>
         <table class="ch-stamp-block" data-sheet-stamp="architect">
           <tr>
@@ -1560,7 +1623,7 @@ async function checkout(cart, discountPercent) {
   <footer>
     <div>
       <strong style="color:var(--ink)">Обговорити задачу</strong>
-      <p style="margin:5px 0 0;max-width:64ch">Напишіть у переписці на майданчику, де ви відкрили це посилання, і додайте приклад файлу або короткий опис процесу — відповім із термінами, архітектурою та пропозицією щодо пілоту. Або почніть з одного з <a href="#packages">3 фіксованих пакетів (4 200 – 5 500 ₴) ↑</a>.</p>
+      <p style="margin:5px 0 0;max-width:64ch">Напишіть у переписці на майданчику, де ви відкрили це посилання, і додайте приклад файлу або короткий опис процесу — відповім із термінами, архітектурою та пропозицією щодо пілоту. Або почніть з одного з <a href="#packages">3 фіксованих пакетів (4 200 – 5 500 ₴) ↑</a> · <a href="#trust">Умови та гарантія пілоту ↑</a>.</p>
       <p class="note" style="margin-top:12px;max-width:74ch;opacity:0.85">Усі стенди — демонстрація на вигаданих даних (клініка «Квітень», «ЄвроТранс», «БудІнвест» тощо): реквізити, прайси й замовлення синтетичні, реальні дані клієнтів під NDA не публікуються.</p>
     </div>
     <div class="foot-links" id="foot-links">
@@ -2488,6 +2551,53 @@ async function checkout(cart, discountPercent) {
     box.hidden = false;
   }
 
+  function renderTaskNext(task) {
+    const nextBox = $('#task-next');
+    const ansBox = $('#task-answers');
+    const outTa = $('#task-answers-out');
+    const copyNote = $('#task-copy-note');
+    if (!nextBox || !ansBox) return;
+    ansBox.replaceChildren();
+    outTa.value = '';
+    outTa.hidden = true;
+    copyNote.textContent = '';
+
+    const qs = (Array.isArray(task?.questions) ? task.questions : []).slice(0, 3);
+    qs.forEach((q, idx) => {
+      const lbl = el('label', 'task-q');
+      lbl.append(document.createTextNode(`${idx + 1}. ${q}`));
+      const ta = el('textarea', 'task-answer');
+      ta.rows = 2;
+      ta.dataset.qi = String(idx);
+      ta.placeholder = 'Ваша відповідь…';
+      lbl.append(ta);
+      ansBox.append(lbl);
+    });
+
+    $('#task-copy-answers').onclick = async () => {
+      const titleText = task?.title || $('#arch-title')?.textContent || '';
+      const head = `Щодо розбору «${titleText}»:`;
+      const lines = qs.map((q, i) => {
+        const val = (ansBox.querySelector(`textarea[data-qi="${i}"]`)?.value || '').trim();
+        return `\n${i + 1}) ${q}\n— ${val || '…'}`;
+      });
+      const tail = '\n\nГотовий обговорити пілот.';
+      const isSlug = taskParamBoot && !/^(?:z|b64):/i.test(taskParamBoot);
+      const urlLine = isSlug ? `\n${location.href}` : '';
+      const text = `${head}${lines.join('')}${tail}${urlLine}`;
+      outTa.value = text;
+      outTa.hidden = false;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyNote.textContent = 'Скопійовано — вставте в чат майданчика';
+      } catch {
+        outTa.select();
+        copyNote.textContent = 'Скопіюйте текст із поля нижче';
+      }
+    };
+    nextBox.hidden = false;
+  }
+
   function applyCustomTask(task) {
     activeCustomTask = task;
     const archSec = $('#architect');
@@ -2507,6 +2617,7 @@ async function checkout(cart, discountPercent) {
     renderArchPlan(task);
     $('#arch-note').textContent = 'Готовий розбір під ваше ТЗ · можна уточнити текст вище та перебудувати';
     renderTaskFootCallout(task);
+    renderTaskNext(task);
   }
 
   $('#task-show-presets').onclick = () => {
@@ -2514,6 +2625,7 @@ async function checkout(cart, discountPercent) {
     $('#arch-presets').hidden = false;
     $('#task-brief-head').hidden = true;
     $('#task-foot-callout').hidden = true;
+    $('#task-next').hidden = true;
     $('#arch-eyebrow').innerHTML = defaultArchEyebrowHtml;
     $('#arch-title').innerHTML = defaultArchTitleHtml;
     $('#architect').classList.remove('is-task-hero');
@@ -2688,10 +2800,33 @@ async function checkout(cart, discountPercent) {
     const rowActions = el('div', 'row');
     const btnJson = el('button', 'btn ghost sm', 'Завантажити <slug>.json у tasks/'); btnJson.type = 'button'; btnJson.id = 'cmp-dl-json';
     const btnCopyZ = el('button', 'btn sm', 'Скопіювати миттєве посилання (?task=z:…)'); btnCopyZ.type = 'button'; btnCopyZ.id = 'cmp-copy-z';
+    const btnCopyPitch = el('button', 'btn ghost sm', 'Скопіювати відгук для біржі'); btnCopyPitch.type = 'button'; btnCopyPitch.id = 'cmp-copy-pitch';
     const cmpNote = el('span', 'note'); cmpNote.id = 'cmp-note';
-    const urlOut = el('input'); urlOut.type = 'text'; urlOut.id = 'cmp-url-out'; urlOut.readOnly = true; urlOut.hidden = true;
+    const urlOut = el('textarea'); urlOut.id = 'cmp-url-out'; urlOut.rows = 5; urlOut.readOnly = true; urlOut.hidden = true;
 
     const cleanSrcVal = () => srcIn.value.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+
+    const buildPlatformPitchClient = (obj, src, link) => {
+      const limits = { kwork: 900, fl: 1500, freelancehunt: 1500, codeur: 1200, upwork: 1500, habr: 1000, default: 1200 };
+      const limit = limits[src] || limits.default;
+      const hook = 'Вітаю! Переглянув ваше ТЗ: ';
+      const linkLine = `Підготував схему, етапи та ціни під вашу задачу: ${link}`;
+      const sum = String(obj.summary || '').trim().replace(/\s+/g, ' ');
+      const firstSent = (sum.split(/(?<=[.!?])\s+/)[0] || sum).trim();
+      const q0 = String(obj.questions?.[0] || '').trim();
+      const c0 = String(obj.split?.code?.[0] || '').trim();
+      const partA = `${hook}${firstSent}`;
+      let text = [partA, linkLine, c0, q0].filter(Boolean).join('\n\n');
+      if (text.length > limit) text = [partA, linkLine, q0].filter(Boolean).join('\n\n');
+      if (text.length > limit) {
+        const suffix = [linkLine, q0].filter(Boolean).join('\n\n');
+        const avail = Math.max(0, limit - hook.length - (suffix ? 3 + suffix.length : 1));
+        const trimmed = avail > 0 ? firstSent.slice(0, avail).trimEnd() + '…' : '…';
+        text = [`${hook}${trimmed}`.trim(), suffix].filter(Boolean).join('\n\n');
+      }
+      if (text.length > limit) text = [linkLine, q0].filter(Boolean).join('\n\n');
+      return { text, limit };
+    };
 
     const buildTaskPayload = () => {
       const slug = (slugIn.value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'custom-order').slice(0, 64);
@@ -2738,8 +2873,24 @@ async function checkout(cart, discountPercent) {
         cmpNote.textContent = 'Помилка кодування: ' + (err?.message || err);
       }
     };
+    btnCopyPitch.onclick = async () => {
+      const obj = buildTaskPayload();
+      const src = cleanSrcVal();
+      const srcQ = src ? `src=${encodeURIComponent(src)}&` : '';
+      const slugLink = `${location.origin}${location.pathname}?${srcQ}task=${obj.slug}`;
+      const { text, limit } = buildPlatformPitchClient(obj, src, slugLink);
+      urlOut.value = text;
+      urlOut.hidden = false;
+      try {
+        await navigator.clipboard.writeText(text);
+        cmpNote.textContent = `Скопійовано ${text.length}/${limit} симв.`;
+      } catch {
+        urlOut.select();
+        cmpNote.textContent = `${text.length}/${limit} симв.`;
+      }
+    };
 
-    rowActions.append(caseSel, srcIn, btnJson, btnCopyZ, cmpNote);
+    rowActions.append(caseSel, srcIn, btnJson, btnCopyZ, btnCopyPitch, cmpNote);
     box.append(row1, rowActions, urlOut);
     archBody.append(box);
   }

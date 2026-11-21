@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Beelsik — Боты, RAG, парсеры и автоматизация процессов</title>
 <meta name="description" content="Интерактивные рабочие стенды с живым LLM и Vision API: чат-агенты с CRM, корпоративный RAG, сверка документов в DOCX, парсинг прайсов, Vision OCR, карточки маркетплейсов и аудит SaaS.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Beelsik — Боты, сверка счетов и автоматизация для бизнеса">
+<meta property="og:description" content="Открытый проект LedgerGuard (24/24 проблемных счетов остановлены в карантине на наборе из 60), 3 пакета от 9 000 ₽ и 11 живых стендов.">
+<meta property="og:url" content="https://beelsik-portfolio.onrender.com/">
+<meta property="og:image" content="https://beelsik-portfolio.onrender.com/assets/og-ru.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23161618'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='600' font-size='17' fill='%23f4f4f6'%3EB%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -490,6 +498,17 @@ footer {
   .pkg-table td.pkg-desc { grid-column: 1 / -1; grid-row: 2; padding-top: 2px; }
 }
 
+/* Trust FAQ (#trust) & Task Next Steps (#task-next) */
+#trust { scroll-margin-top: 84px; }
+.faq { border-bottom: 1px solid var(--line); padding: 12px 0; }
+.faq summary { cursor: pointer; font-weight: 500; color: var(--ink); list-style: none; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '+'; float: right; color: var(--ink-muted); }
+.faq[open] summary::after { content: '−'; }
+.faq p { margin: 8px 0 0; color: var(--ink-body); font-size: 14px; max-width: 64ch; }
+.task-steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+.task-q { display: grid; gap: 6px; font-size: 14px; color: var(--ink); margin-top: 10px; }
+
 @media (prefers-reduced-motion: no-preference) {
   .btn[disabled], .ch-btn[disabled] { position: relative; opacity: 0.65; }
   ::view-transition-old(root) { animation: none; }
@@ -690,6 +709,81 @@ footer {
           </p>
         </div>
 
+        <div class="ch-sheet__body" id="trust">
+          <span class="ch-label">
+            <span class="ru">Гарантия и частые вопросы</span>
+            <span class="en">Guarantee &amp; FAQ</span>
+            <span class="fr">Garantie &amp; questions fréquentes</span>
+          </span>
+          <p class="callout-note">
+            <span class="ru">Гарантия пилота: до старта договариваемся о метрике — например, доля верно извлечённых строк. Если на ваших файлах её не достигнем, пилот не оплачиваете.</span>
+            <span class="en">Pilot guarantee: before we start, we agree on a concrete metric (e.g., line-extraction accuracy). If your sample files miss it, you do not pay for the pilot.</span>
+            <span class="fr">Garantie pilote : avant le démarrage, nous fixons une métrique précise (ex. taux de lignes extraites sans erreur). Si vos fichiers ne l'atteignent pas, vous ne payez pas le pilote.</span>
+          </p>
+          <div>
+            <details class="faq">
+              <summary>
+                <span class="ru">NDA и конфиденциальность</span>
+                <span class="en">NDA &amp; confidentiality</span>
+                <span class="fr">NDA et confidentialité</span>
+              </summary>
+              <p>
+                <span class="ru">Подпишу NDA. Работаю на обезличенных копиях, доступы только на чтение; после сдачи вы их отзываете.</span>
+                <span class="en">Happy to sign an NDA. I work on anonymized copies with read-only access, which you revoke on handover.</span>
+                <span class="fr">Je signe volontiers un NDA. Je travaille sur des copies anonymisées en lecture seule, révoquées dès la livraison.</span>
+              </p>
+            </details>
+            <details class="faq">
+              <summary>
+                <span class="ru">Какие доступы нужны</span>
+                <span class="en">What access is needed</span>
+                <span class="fr">Quels accès sont nécessaires</span>
+              </summary>
+              <p>
+                <span class="ru">Для пилота — примеры файлов и тестовая песочница CRM/1С. К боевым данным — только по согласованию.</span>
+                <span class="en">For a pilot, sample files and a CRM/ERP sandbox. Production credentials are requested only when agreed.</span>
+                <span class="fr">Pour le pilote : fichiers exemples et bac à sable CRM/ERP. L'accès production n'est demandé qu'avec votre accord.</span>
+              </p>
+            </details>
+            <details class="faq">
+              <summary>
+                <span class="ru">Как оплачивать</span>
+                <span class="en">Payment &amp; milestones</span>
+                <span class="fr">Modalités de paiement</span>
+              </summary>
+              <p>
+                <span class="ru">Через безопасную сделку площадки: пакет или пилот — целиком, проект — по этапам после приёмки каждого.</span>
+                <span class="en">Via the platform's safe deal / escrow: starter package or pilot in full, full projects milestone by milestone after acceptance.</span>
+                <span class="fr">Via le paiement sécurisé de la plateforme : forfait ou pilote en une fois, projet complet par jalon validé.</span>
+              </p>
+            </details>
+            <details class="faq">
+              <summary>
+                <span class="ru">Правки после сдачи</span>
+                <span class="en">Post-handover fixes</span>
+                <span class="fr">Ajustements après livraison</span>
+              </summary>
+              <p>
+                <span class="ru">Правки в рамках согласованного ТЗ входят в цену; 14 дней бесплатно исправляю найденные ошибки.</span>
+                <span class="en">Adjustments within the agreed scope are included; any bugs spotted within 14 days are fixed at no extra charge.</span>
+                <span class="fr">Les ajustements dans le périmètre convenu sont inclus ; tout bug signalé sous 14 jours est corrigé sans frais.</span>
+              </p>
+            </details>
+            <details class="faq">
+              <summary>
+                <span class="ru">Что если вы пропадёте</span>
+                <span class="en">Bus factor &amp; handover</span>
+                <span class="fr">Pérennité du code</span>
+              </summary>
+              <p>
+                <span class="ru">Код с первого дня в вашем Git, сборка в Docker и инструкция запуска — продолжить может любой разработчик.</span>
+                <span class="en">Code lives in your Git repo from day one with Docker Compose and runbooks — any engineer can pick it up cleanly.</span>
+                <span class="fr">Le code est sur votre dépôt Git dès le premier jour avec Docker et documentation — n'importe quel développeur peut reprendre.</span>
+              </p>
+            </details>
+          </div>
+        </div>
+
         <table class="ch-stamp-block">
           <tr>
             <td style="width:38%"><span class="ch-label"><span class="ru">Стек</span><span class="en">Stack</span><span class="fr">Stack</span></span><span class="name">Python · FastAPI · PostgreSQL · Node.js · Docker</span></td>
@@ -718,11 +812,18 @@ footer {
                 <span class="en">Open-source project · Python 3.12 · SQLite WAL · zero runtime deps</span>
                 <span class="fr">Projet open-source · Python 3.12 · SQLite WAL · zéro dépendance</span>
               </span>
-              <a class="btn ghost sm" href="https://github.com/Beelsik/portfolio/tree/main/ledgerguard" target="_blank" rel="noopener">
-                <span class="ru">Код и тесты на GitHub ↗</span>
-                <span class="en">Source &amp; tests on GitHub ↗</span>
-                <span class="fr">Code et tests sur GitHub ↗</span>
-              </a>
+              <div class="row">
+                <a class="btn ghost sm" href="case.html">
+                  <span class="ru">Кейс на один экран ↗</span>
+                  <span class="en">One-page case ↗</span>
+                  <span class="fr">Cas en une page ↗</span>
+                </a>
+                <a class="btn ghost sm" href="https://github.com/Beelsik/portfolio/tree/main/ledgerguard" target="_blank" rel="noopener">
+                  <span class="ru">Код и тесты на GitHub ↗</span>
+                  <span class="en">Source &amp; tests on GitHub ↗</span>
+                  <span class="fr">Code et tests sur GitHub ↗</span>
+                </a>
+              </div>
             </div>
             <h2>
               <span class="ru">LedgerGuard: проверка счетов перед записью в 1С и ERP</span>
@@ -954,6 +1055,40 @@ footer {
             </div>
           </div>
           <div class="callout-note task-foot-callout" id="task-foot-callout" hidden></div>
+          <div class="ch-sheet__body task-next" id="task-next" hidden>
+            <span class="ch-label">
+              <span class="ru">Что дальше</span>
+              <span class="en">Next steps</span>
+              <span class="fr">Prochaines étapes</span>
+            </span>
+            <ol class="task-steps">
+              <li>
+                <span class="ru">Ответьте на 3 вопроса ниже — коротко, прямо здесь, и вставьте в чат площадки.</span>
+                <span class="en">Answer the 3 quick questions below and paste them back into our chat.</span>
+                <span class="fr">Répondez aux 3 questions ci-dessous et collez-les dans notre discussion.</span>
+              </li>
+              <li>
+                <span class="ru">Пилот на 10–15 ваших файлах за 1–2 дня — увидите реальную точность до основного договора.</span>
+                <span class="en">1–2 day pilot on 10–15 sample files so you see real accuracy before committing to the full build.</span>
+                <span class="fr">Pilote de 1 à 2 jours sur 10 à 15 fichiers pour valider la précision avant le projet complet.</span>
+              </li>
+              <li>
+                <span class="ru">Фиксируем цену и сроки этапов, оплата по этапам через безопасную сделку.</span>
+                <span class="en">We lock milestone pricing and dates, billed stage by stage through escrow.</span>
+                <span class="fr">Tarif et jalons fixés avant démarrage, paiement par étape sécurisée.</span>
+              </li>
+            </ol>
+            <div id="task-answers"></div>
+            <div class="row">
+              <button class="btn sm" id="task-copy-answers" type="button">
+                <span class="ru">Скопировать ответы для чата</span>
+                <span class="en">Copy answers for the chat</span>
+                <span class="fr">Copier les réponses</span>
+              </button>
+              <span class="note" id="task-copy-note"></span>
+            </div>
+            <textarea id="task-answers-out" rows="6" readonly hidden></textarea>
+          </div>
         </div>
         <table class="ch-stamp-block" data-sheet-stamp="architect">
           <tr>
@@ -1793,9 +1928,9 @@ async function checkout(cart, discountPercent) {
         <span class="fr">Discuter d'un projet</span>
       </strong>
       <p style="margin:5px 0 0;max-width:64ch">
-        <span class="ru">Напишите в переписке на площадке, где вы открыли эту ссылку, и приложите пример файла или короткое описание процесса — отвечу со сроками, архитектурой и вариантом пилота. Или начните с одного из <a href="#packages">3 фиксированных пакетов (9 000 – 12 000 ₽) ↑</a>.</span>
-        <span class="en">Reply on the platform where I shared this link with a sample file or a short note on your workflow — I'll get back with a concrete architecture, timeline, and pilot scope. Or start with one of the <a href="#packages">3 fixed-price packages ($140–$180) ↑</a>.</span>
-        <span class="fr">Répondez sur la plateforme où ce lien vous a été transmis avec un fichier exemple ou quelques lignes sur votre flux — je reviendrai avec l'architecture, le délai et le périmètre d'un pilote. Ou démarrez par l'un des <a href="#packages">3 forfaits à prix fixe (130–170 €) ↑</a>.</span>
+        <span class="ru">Напишите в переписке на площадке, где вы открыли эту ссылку, и приложите пример файла или короткое описание процесса — отвечу со сроками, архитектурой и вариантом пилота. Или начните с одного из <a href="#packages">3 фиксированных пакетов (9 000 – 12 000 ₽) ↑</a> · <a href="#trust">Условия и гарантия пилота ↑</a>.</span>
+        <span class="en">Reply on the platform where I shared this link with a sample file or a short note on your workflow — I'll get back with a concrete architecture, timeline, and pilot scope. Or start with one of the <a href="#packages">3 fixed-price packages ($140–$180) ↑</a> · <a href="#trust">Terms &amp; pilot guarantee ↑</a>.</span>
+        <span class="fr">Répondez sur la plateforme où ce lien vous a été transmis avec un fichier exemple ou quelques lignes sur votre flux — je reviendrai avec l'architecture, le délai et le périmètre d'un pilote. Ou démarrez par l'un des <a href="#packages">3 forfaits à prix fixe (130–170 €) ↑</a> · <a href="#trust">Conditions et garantie du pilote ↑</a>.</span>
       </p>
       <p class="note" style="margin-top:12px;max-width:74ch;opacity:0.85">
         <span class="ru">Все стенды — демонстрация на вымышленных данных (клиника «Апрель», TransLogik, «СеверСнаб» и др.): реквизиты, прайсы и заказы синтетические, реальные данные клиентов под NDA не публикуются.</span>
@@ -3282,6 +3417,53 @@ async function checkout(cart, discountPercent) {
     box.hidden = false;
   }
 
+  function renderTaskNext(task) {
+    const nextBox = $('#task-next');
+    const ansBox = $('#task-answers');
+    const outTa = $('#task-answers-out');
+    const copyNote = $('#task-copy-note');
+    if (!nextBox || !ansBox) return;
+    ansBox.replaceChildren();
+    outTa.value = '';
+    outTa.hidden = true;
+    copyNote.textContent = '';
+
+    const qs = (Array.isArray(task?.questions) ? task.questions : []).slice(0, 3);
+    qs.forEach((q, idx) => {
+      const lbl = el('label', 'task-q');
+      lbl.append(document.createTextNode(`${idx + 1}. ${q}`));
+      const ta = el('textarea', 'task-answer');
+      ta.rows = 2;
+      ta.dataset.qi = String(idx);
+      ta.placeholder = T('Ваш ответ…', 'Your answer…', 'Votre réponse…');
+      lbl.append(ta);
+      ansBox.append(lbl);
+    });
+
+    $('#task-copy-answers').onclick = async () => {
+      const titleText = task?.title || $('#arch-title')?.textContent || '';
+      const head = T(`По разбору «${titleText}»:`, `Re: «${titleText}»`, `À propos de «${titleText}» :`);
+      const lines = qs.map((q, i) => {
+        const val = (ansBox.querySelector(`textarea[data-qi="${i}"]`)?.value || '').trim();
+        return `\n${i + 1}) ${q}\n— ${val || '…'}`;
+      });
+      const tail = T('\n\nГотов обсудить пилот.', '\n\nHappy to discuss the pilot.', '\n\nPrêt à discuter du pilote.');
+      const isSlug = taskParamBoot && !/^(?:z|b64):/i.test(taskParamBoot);
+      const urlLine = isSlug ? `\n${location.href}` : '';
+      const text = `${head}${lines.join('')}${tail}${urlLine}`;
+      outTa.value = text;
+      outTa.hidden = false;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyNote.textContent = T('Скопировано — вставьте в чат площадки', 'Copied — paste into the platform chat', 'Copié — collez dans le chat');
+      } catch {
+        outTa.select();
+        copyNote.textContent = T('Скопируйте текст из поля ниже', 'Copy text from the field below', 'Copiez le texte ci-dessous');
+      }
+    };
+    nextBox.hidden = false;
+  }
+
   function applyCustomTask(task) {
     activeCustomTask = task;
     const archSec = $('#architect');
@@ -3305,6 +3487,7 @@ async function checkout(cart, discountPercent) {
       'Cadrage préparé pour votre besoin · modifiable ci-dessus'
     );
     renderTaskFootCallout(task);
+    renderTaskNext(task);
   }
 
   function clearCustomTaskToPresets() {
@@ -3312,6 +3495,7 @@ async function checkout(cart, discountPercent) {
     $('#arch-presets').hidden = false;
     $('#task-brief-head').hidden = true;
     $('#task-foot-callout').hidden = true;
+    $('#task-next').hidden = true;
     $('#arch-eyebrow').innerHTML = defaultArchEyebrowHtml;
     $('#arch-title').innerHTML = defaultArchTitleHtml;
     $('#architect').classList.remove('is-task-hero');
@@ -3343,6 +3527,7 @@ async function checkout(cart, discountPercent) {
       $('#arch-presets').hidden = false;
       $('#task-brief-head').hidden = true;
       $('#task-foot-callout').hidden = true;
+      $('#task-next').hidden = true;
       $('#arch-eyebrow').innerHTML = defaultArchEyebrowHtml;
       $('#arch-title').innerHTML = defaultArchTitleHtml;
       $('#architect').classList.remove('is-task-hero');
@@ -3522,10 +3707,37 @@ async function checkout(cart, discountPercent) {
     const rowActions = el('div', 'row');
     const btnJson = el('button', 'btn ghost sm', 'Скачать <slug>.json в tasks/'); btnJson.type = 'button'; btnJson.id = 'cmp-dl-json';
     const btnCopyZ = el('button', 'btn sm', 'Скопировать мгновенную ссылку (?task=z:…)'); btnCopyZ.type = 'button'; btnCopyZ.id = 'cmp-copy-z';
+    const btnCopyPitch = el('button', 'btn ghost sm', 'Скопировать отклик для биржи'); btnCopyPitch.type = 'button'; btnCopyPitch.id = 'cmp-copy-pitch';
     const cmpNote = el('span', 'note'); cmpNote.id = 'cmp-note';
-    const urlOut = el('input'); urlOut.type = 'text'; urlOut.id = 'cmp-url-out'; urlOut.readOnly = true; urlOut.hidden = true;
+    const urlOut = el('textarea'); urlOut.id = 'cmp-url-out'; urlOut.rows = 5; urlOut.readOnly = true; urlOut.hidden = true;
 
     const cleanSrcVal = () => srcIn.value.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+
+    const buildPlatformPitchClient = (obj, src, link) => {
+      const limits = { kwork: 900, fl: 1500, freelancehunt: 1500, codeur: 1200, upwork: 1500, habr: 1000, default: 1200 };
+      const limit = limits[src] || limits.default;
+      const hook = L === 'fr' ? 'Bonjour ! J’ai lu votre besoin : ' : L === 'en' ? 'Hi! Read your brief: ' : 'Здравствуйте! Посмотрел ваше ТЗ: ';
+      const linkLine = L === 'fr'
+        ? `J’ai préparé le schéma, les étapes et les tarifs pour votre projet : ${link}`
+        : L === 'en'
+          ? `I mapped out the pipeline, milestones, and pricing for your task: ${link}`
+          : `Набросал схему, этапы и цены под вашу задачу: ${link}`;
+      const sum = String(obj.summary || '').trim().replace(/\s+/g, ' ');
+      const firstSent = (sum.split(/(?<=[.!?])\s+/)[0] || sum).trim();
+      const q0 = String(obj.questions?.[0] || '').trim();
+      const c0 = String(obj.split?.code?.[0] || '').trim();
+      const partA = `${hook}${firstSent}`;
+      let text = [partA, linkLine, c0, q0].filter(Boolean).join('\n\n');
+      if (text.length > limit) text = [partA, linkLine, q0].filter(Boolean).join('\n\n');
+      if (text.length > limit) {
+        const suffix = [linkLine, q0].filter(Boolean).join('\n\n');
+        const avail = Math.max(0, limit - hook.length - (suffix ? 3 + suffix.length : 1));
+        const trimmed = avail > 0 ? firstSent.slice(0, avail).trimEnd() + '…' : '…';
+        text = [`${hook}${trimmed}`.trim(), suffix].filter(Boolean).join('\n\n');
+      }
+      if (text.length > limit) text = [linkLine, q0].filter(Boolean).join('\n\n');
+      return { text, limit };
+    };
 
     const buildTaskPayload = () => {
       const slug = (slugIn.value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'custom-order').slice(0, 64);
@@ -3572,8 +3784,25 @@ async function checkout(cart, discountPercent) {
         cmpNote.textContent = 'Ошибка кодирования: ' + (err?.message || err);
       }
     };
+    btnCopyPitch.onclick = async () => {
+      const obj = buildTaskPayload();
+      const src = cleanSrcVal();
+      const srcQ = src ? `src=${encodeURIComponent(src)}&` : '';
+      const slugLink = `${location.origin}${location.pathname}?${srcQ}task=${obj.slug}`;
+      const { text, limit } = buildPlatformPitchClient(obj, src, slugLink);
+      urlOut.value = text;
+      urlOut.hidden = false;
+      const kworkHint = src === 'kwork' ? ' (Kwork: при модерации ссылки оставьте её в профиле)' : '';
+      try {
+        await navigator.clipboard.writeText(text);
+        cmpNote.textContent = `Скопировано ${text.length}/${limit} симв.${kworkHint}`;
+      } catch {
+        urlOut.select();
+        cmpNote.textContent = `${text.length}/${limit} симв.${kworkHint}`;
+      }
+    };
 
-    rowActions.append(caseSel, srcIn, btnJson, btnCopyZ, cmpNote);
+    rowActions.append(caseSel, srcIn, btnJson, btnCopyZ, btnCopyPitch, cmpNote);
     box.append(row1, rowActions, urlOut);
     archBody.append(box);
   }

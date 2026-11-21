@@ -924,6 +924,54 @@ async function getCachedHtml(filename) {
   return entry;
 }
 
+const ASSETS_DIR = path.join(__dirname, 'assets');
+const assetCache = new Map();
+const ASSET_MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' };
+
+async function serveStaticAsset(req, res, name, ext) {
+  const root = path.resolve(ASSETS_DIR);
+  const rel = `${name}.${ext}`;
+  const filePath = path.resolve(root, rel);
+  if (!filePath.startsWith(root + path.sep)) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end(req.method === 'HEAD' ? undefined : 'Not found');
+    return;
+  }
+  let entry;
+  try {
+    const st = await fs.promises.stat(filePath);
+    const cached = assetCache.get(rel);
+    if (cached && cached.mtimeMs === st.mtimeMs) {
+      entry = cached;
+    } else {
+      const raw = await fs.promises.readFile(filePath);
+      const etag = `"${crypto.createHash('sha1').update(raw).digest('hex').slice(0, 16)}"`;
+      entry = { mtimeMs: st.mtimeMs, raw, etag, contentType: ASSET_MIME[ext.toLowerCase()] || 'application/octet-stream' };
+      assetCache.set(rel, entry);
+    }
+  } catch {
+    if (!res.headersSent && !res.destroyed) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(req.method === 'HEAD' ? undefined : 'Not found');
+    }
+    return;
+  }
+  if (res.headersSent || res.destroyed) return;
+  const ifNoneMatch = String(req.headers['if-none-match'] || '').trim();
+  if (ifNoneMatch && ifNoneMatch === entry.etag) {
+    res.writeHead(304, { ETag: entry.etag, 'Cache-Control': 'public, max-age=86400' });
+    res.end();
+    return;
+  }
+  res.writeHead(200, {
+    'Content-Type': entry.contentType,
+    'Content-Length': entry.raw.length,
+    'Cache-Control': 'public, max-age=86400',
+    ETag: entry.etag,
+  });
+  res.end(req.method === 'HEAD' ? undefined : entry.raw);
+}
+
 async function serveHtmlPage(req, res, filename) {
   let entry;
   try {
@@ -1005,6 +1053,61 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       await serveStaticTask(req, res, decoded);
+      return;
+    }
+
+    if (isGetOrHead && urlPath.startsWith('/assets/')) {
+      const m = urlPath.match(/^\/assets\/([a-z0-9][a-z0-9_-]{0,63})\.(png|jpg|jpeg|webp)$/);
+      if (!m) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(headOnly ? undefined : 'Not found');
+        return;
+      }
+      await serveStaticAsset(req, res, m[1], m[2]);
+      return;
+    }
+
+    if (isGetOrHead && (urlPath === '/case' || urlPath === '/case/' || urlPath === '/case.html')) {
+      if (req.method === 'GET' && !isBotUa(req.headers['user-agent'])) {
+        const rawSrc = parsedUrl.searchParams.get('src') || parsedUrl.searchParams.get('utm_source') || '';
+        const rawTask = parsedUrl.searchParams.get('task') || '';
+        if (rawSrc || rawTask) {
+          const ua = String(req.headers['user-agent'] || '');
+          recordVisitEvent({
+            src: rawSrc || 'direct',
+            task: /^(?:z|b64):/i.test(rawTask) ? 'z-inline' : rawTask,
+            page: '/case',
+            lang: parsedUrl.searchParams.get('lang') || '-',
+            dev: /mobile|android|iphone|ipad/i.test(ua) ? 'mobile' : 'desktop',
+            sid: 'http',
+            event: 'hit',
+            stands: ['case'],
+          });
+        }
+      }
+      await serveHtmlPage(req, res, 'case.html');
+      return;
+    }
+
+    if (isGetOrHead && (urlPath === '/ua-case.html' || urlPath === '/ua/case' || urlPath === '/ua/case/')) {
+      if (req.method === 'GET' && !isBotUa(req.headers['user-agent'])) {
+        const rawSrc = parsedUrl.searchParams.get('src') || parsedUrl.searchParams.get('utm_source') || '';
+        const rawTask = parsedUrl.searchParams.get('task') || '';
+        if (rawSrc || rawTask) {
+          const ua = String(req.headers['user-agent'] || '');
+          recordVisitEvent({
+            src: rawSrc || 'direct',
+            task: /^(?:z|b64):/i.test(rawTask) ? 'z-inline' : rawTask,
+            page: '/ua-case.html',
+            lang: 'uk',
+            dev: /mobile|android|iphone|ipad/i.test(ua) ? 'mobile' : 'desktop',
+            sid: 'http',
+            event: 'hit',
+            stands: ['case'],
+          });
+        }
+      }
+      await serveHtmlPage(req, res, 'ua-case.html');
       return;
     }
 
@@ -1807,7 +1910,7 @@ process.on('SIGINT', () => shutdownGracefully('SIGINT'));
 
 server.listen(PORT, '0.0.0.0', () => {
   const actualPort = server.address()?.port ?? PORT;
-  Promise.all([getCachedHtml('index.html'), getCachedHtml('ua.html')]).catch(() => {});
+  Promise.all([getCachedHtml('index.html'), getCachedHtml('ua.html'), getCachedHtml('case.html'), getCachedHtml('ua-case.html')]).catch(() => {});
   console.log(
     `Portfolio server listening on http://0.0.0.0:${actualPort} | Fast: ${LLM_ENABLED ? `${LLM_PROVIDER}/${LLM_MODEL}` : 'off'} | Heavy Vertex AI: ${VERTEX_ENABLED ? `${VERTEX_MODEL} (cap $${DAILY_BUDGET_USD}/day)` : 'off (fallback to Fast)'}`
   );

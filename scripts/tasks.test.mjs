@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { encodeTaskZ, decodeTaskZ } from './make-task.mjs';
+import { encodeTaskZ, decodeTaskZ, PLATFORM_LIMITS, buildPlatformPitch } from './make-task.mjs';
 import { summarizeVisitsText } from './analyze-visits.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -185,6 +185,24 @@ test('server.mjs serves /tasks/*.json with ETag/304, blocks traversal, tracks ?s
     assert.ok(statsJson.bySource?.kwork?.hits >= 1);
     assert.equal(statsJson.byStand?.packages?.views, 1);
     assert.match(serverStdout, /\[visit\].*src=kwork.*event=view.*stands=architect,packages,sales/);
+
+    const rCase = await fetch(`${base}/case`);
+    assert.equal(rCase.status, 200);
+    assert.match(rCase.headers.get('content-type') || '', /^text\/html/);
+
+    const rUaCase = await fetch(`${base}/ua-case.html`);
+    assert.equal(rUaCase.status, 200);
+    assert.match(rUaCase.headers.get('content-type') || '', /^text\/html/);
+
+    const rOg = await fetch(`${base}/assets/og-ru.png`);
+    assert.equal(rOg.status, 200);
+    assert.equal(rOg.headers.get('content-type'), 'image/png');
+
+    const rAssetTrav = await fetch(`${base}/assets/..%2Fserver.mjs.png`);
+    assert.equal(rAssetTrav.status, 404);
+
+    const rAssetMiss = await fetch(`${base}/assets/nope.png`);
+    assert.equal(rAssetMiss.status, 404);
   } finally {
     proc.kill('SIGTERM');
     try { fs.unlinkSync(tmpVisits); } catch {}
@@ -204,4 +222,57 @@ test('analyze-visits.mjs summarizes Render [visit] log lines accurately', () => 
   assert.equal(out.bySource.kwork.tasks['bitrix-invoices'], 2);
   assert.equal(out.byStand.packages.views, 1);
   assert.equal(out.byStand.audit.actions, 1);
+});
+
+test('index.html and ua.html expose #trust (5 FAQ items) and #task-next', () => {
+  for (const fname of ['index.html', 'ua.html']) {
+    const html = fs.readFileSync(path.join(ROOT, fname), 'utf8');
+    assert.match(html, /id="trust"/, `${fname}: missing #trust section`);
+    const faqMatches = html.match(/<details class="faq"/g) || [];
+    assert.equal(faqMatches.length, 5, `${fname}: expected 5 <details class="faq"> items`);
+    assert.match(html, /id="task-next"/, `${fname}: missing #task-next section`);
+    assert.match(html, /id="task-copy-answers"/, `${fname}: missing #task-copy-answers button`);
+  }
+});
+
+test('og:image meta tags, 1200x630 OG PNGs, and ua-case.html language isolation hold', () => {
+  for (const fname of ['index.html', 'ua.html', 'case.html', 'ua-case.html']) {
+    const html = fs.readFileSync(path.join(ROOT, fname), 'utf8');
+    assert.match(html, /<meta property="og:image" content="[^"]+"/i, `${fname}: missing og:image meta`);
+  }
+
+  const uaCase = fs.readFileSync(path.join(ROOT, 'ua-case.html'), 'utf8');
+  assert.doesNotMatch(uaCase, /[ыэъёЫЭЪЁ₽]|ru-RU/, 'ua-case.html must have zero Russian characters or ru-RU locale');
+
+  for (const pngName of ['og-ru.png', 'og-ua.png']) {
+    const buf = fs.readFileSync(path.join(ROOT, 'assets', pngName));
+    assert.equal(buf.toString('ascii', 1, 4), 'PNG', `${pngName} must be a valid PNG`);
+    const width = buf.readUInt32BE(16);
+    const height = buf.readUInt32BE(20);
+    assert.equal(width, 1200, `${pngName}: expected width 1200, got ${width}`);
+    assert.equal(height, 630, `${pngName}: expected height 630, got ${height}`);
+  }
+});
+
+test('buildPlatformPitch fits PLATFORM_LIMITS across tasks/*.json and includes link and first question', () => {
+  const files = fs.readdirSync(TASKS_DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  assert.ok(files.length > 0, 'Expected at least 1 task JSON in tasks/');
+  const platforms = Object.keys(PLATFORM_LIMITS);
+  for (const file of files) {
+    const task = JSON.parse(fs.readFileSync(path.join(TASKS_DIR, file), 'utf8'));
+    const link = `https://beelsik.github.io/portfolio/?task=${task.slug}`;
+    for (const src of platforms) {
+      const { text, limit, length } = buildPlatformPitch({ task, src, link });
+      assert.equal(limit, PLATFORM_LIMITS[src]);
+      assert.equal(length, text.length);
+      assert.ok(length <= limit, `${file} (${src}): pitch length ${length} exceeds limit ${limit}`);
+      assert.ok(text.includes(link), `${file} (${src}): pitch missing link`);
+      if (Array.isArray(task.questions) && task.questions.length > 0) {
+        assert.ok(
+          text.includes(task.questions[0].slice(0, 24)),
+          `${file} (${src}): pitch missing first clarifying question`
+        );
+      }
+    }
+  }
 });

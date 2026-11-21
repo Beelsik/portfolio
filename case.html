@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru" data-l="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LedgerGuard — Кейс на один экран · Beelsik</title>
+<meta name="description" content="Синтетический набор из 60 счетов: 24 из 24 проблемных счетов остановлены до записи в 1С и ERP за 2–4 мс.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="LedgerGuard — 24 из 24 проблемных счетов остановлены до записи в 1С">
+<meta property="og:description" content="Синтетический набор из 60 счетов, открытый код Python 3.12 на GitHub. Время на документ 2–4 мс (p95 3,96 мс), 0,0% тихих ошибок.">
+<meta property="og:url" content="https://beelsik-portfolio.onrender.com/case">
+<meta property="og:image" content="https://beelsik-portfolio.onrender.com/assets/og-ru.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23161618'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='600' font-size='17' fill='%23f4f4f6'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root, :root[data-theme="light"] {
+  --paper: #fbfbfa;
+  --panel: #f4f4f2;
+  --paper-raised: #ffffff;
+  --ink: #161618;
+  --ink-body: #3d3d40;
+  --ink-muted: #71717a;
+  --line: #e6e6e3;
+  --line-strong: #d4d4cf;
+  --code-bg: rgba(22, 22, 24, 0.055);
+  --on-ink: #fbfbfa;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0f1012;
+  --panel: #16181c;
+  --paper-raised: #1d2026;
+  --ink: #ededf0;
+  --ink-body: #aeb4bf;
+  --ink-muted: #78808e;
+  --line: #262932;
+  --line-strong: #363b47;
+  --code-bg: rgba(255, 255, 255, 0.075);
+  --on-ink: #0f1012;
+}
+:root { --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink-body); font: 400 15px/1.65 var(--font-sans); -webkit-font-smoothing: antialiased; }
+html[data-l="ru"] .en, html[data-l="ru"] .fr { display: none !important; }
+html[data-l="en"] .ru, html[data-l="en"] .fr { display: none !important; }
+html[data-l="fr"] .ru, html[data-l="fr"] .en { display: none !important; }
+.wrap { max-width: 840px; margin: 0 auto; padding: 0 32px; }
+@media (max-width: 680px) { .wrap { padding: 0 18px; } }
+a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--ink); }
+code { font-family: var(--font-mono); font-size: 12.5px; background: var(--code-bg); color: var(--ink); padding: 1.5px 5px; border-radius: 4px; }
+.topbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.topbar-in { display: flex; justify-content: space-between; align-items: center; gap: 14px; min-height: 54px; padding: 8px 0; flex-wrap: wrap; }
+.ident { display: inline-flex; align-items: baseline; gap: 10px; text-decoration: none !important; color: var(--ink); }
+.ident-text { font: 600 15px/1 var(--font-sans); letter-spacing: -0.02em; text-transform: lowercase; }
+.ident-sub { font: 400 13px/1 var(--font-sans); color: var(--ink-muted); }
+@media (max-width: 640px) { .ident-sub { display: none; } }
+.controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+.seg button { border: 0; background: transparent; color: var(--ink-muted); font: 500 12.5px/1.3 var(--font-sans); padding: 5px 11px; border-radius: 5px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--paper-raised); color: var(--ink); }
+:root[data-theme="dark"] .seg button[aria-pressed="true"] { background: var(--line); }
+.icon-btn, .btn { font: 500 13.5px/1.3 var(--font-sans); border-radius: 7px; padding: 7px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none !important; white-space: nowrap; }
+.icon-btn, .btn.ghost { background: transparent; color: var(--ink-body); border: 1px solid var(--line); }
+.icon-btn:hover, .btn.ghost:hover { color: var(--ink); border-color: var(--line-strong); background: var(--panel); }
+.btn { background: var(--ink); color: var(--on-ink); border: 1px solid var(--ink); }
+.btn:hover { opacity: 0.88; }
+main.wrap { padding-top: 38px; padding-bottom: 72px; display: grid; gap: 28px; }
+.ch-label { font: 500 12.5px/1.4 var(--font-sans); color: var(--ink-muted); display: block; margin-bottom: 8px; }
+h1 { margin: 4px 0 8px; font-size: clamp(24px, 3vw, 30px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.24; color: var(--ink); }
+h2 { margin: 0 0 10px; font-size: 16px; font-weight: 600; color: var(--ink); }
+.note { font-size: 13.5px; color: var(--ink-muted); margin: 0; }
+.bullets { margin: 0; padding-left: 20px; display: grid; gap: 7px; max-width: 68ch; }
+.tbl { overflow-x: auto; max-width: 100%; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.5; }
+th { font: 500 12px/1.4 var(--font-sans); color: var(--ink-muted); text-align: left; padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line-strong); }
+td { padding: 12px 14px 12px 0; border-bottom: 1px solid var(--line); color: var(--ink-body); vertical-align: top; }
+strong { font-weight: 500; color: var(--ink); }
+.figs { display: grid; gap: 20px; }
+figure { margin: 0; display: grid; gap: 8px; }
+figure img { max-width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; background: #ffffff; }
+figcaption { font-size: 13px; color: var(--ink-muted); }
+.cta-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-top: 12px; border-top: 1px solid var(--line); }
+main.wrap > *, .figs > *, figure > * { min-width: 0; }
+.cta-row .btn { max-width: 100%; }
+@media (max-width: 680px) {
+  .cta-row .btn { white-space: normal; text-align: left; line-height: 1.4; }
+  .cta-row #case-cta-pkg { width: 100%; justify-content: center; text-align: center; }
+  h1 { overflow-wrap: anywhere; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a href="./" class="ident">
+      <span class="ident-text">beelsik</span>
+      <span class="ident-sub"><span class="ru">Кейс LedgerGuard</span><span class="en">LedgerGuard case study</span><span class="fr">Cas LedgerGuard</span></span>
+    </a>
+    <div class="controls">
+      <button class="icon-btn" id="theme-btn" type="button"><span id="theme-ico">Тёмная тема</span></button>
+      <div class="seg" role="group" aria-label="Language">
+        <button id="l-ru" type="button" aria-pressed="true">RU</button>
+        <button id="l-en" type="button" aria-pressed="false">EN</button>
+        <button id="l-fr" type="button" aria-pressed="false">FR</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <header>
+    <span class="ch-label"><span class="ru">Кейс на один экран</span><span class="en">One-page case study</span><span class="fr">Étude de cas en une page</span></span>
+    <h1>
+      <span class="ru">LedgerGuard: 24 из 24 проблемных счетов остановлены до записи в 1С</span>
+      <span class="en">LedgerGuard: 24 of 24 faulty invoices stopped before ERP posting</span>
+      <span class="fr">LedgerGuard : 24 factures atypiques sur 24 bloquées avant l'ERP</span>
+    </h1>
+    <p class="note">
+      <span class="ru">Синтетический набор из 60 счетов, открытый код на GitHub</span>
+      <span class="en">Synthetic benchmark of 60 invoices, open-source Python 3.12 code on GitHub</span>
+      <span class="fr">Jeu synthétique de 60 dossiers, code open-source sur GitHub</span>
+    </p>
+  </header>
+
+  <section>
+    <h2><span class="ru">Проблема</span><span class="en">The problem</span><span class="fr">Le problème</span></h2>
+    <ul class="bullets">
+      <li><span class="ru">Подмена расчётного счёта на формально валидный по БИК/IBAN — при ручной приёмке или 1 промпте платёж уходит мимо контрагента.</span><span class="en">Checksum-valid bank account swaps slip past manual entry and single-prompt LLM pipelines.</span><span class="fr">Substitutions d'IBAN syntaxiquement valides qui passent les contrôles basiques.</span></li>
+      <li><span class="ru">Цена выше договора и арифметика в длинных строках сметы приводят к тихим переплатам.</span><span class="en">Unit prices above contract caps and silent line-item math drift cause direct overbilling.</span><span class="fr">Prix unitaires supérieurs au contrat et écarts arithmétiques dans les lignes.</span></li>
+      <li><span class="ru">«3 бухты» уходят в учёт как «3 м» по цене бухты, а повторное письмо создаёт дубль накладной.</span><span class="en">“3 coils” booked as “3 m” at coil price, while re-forwarded emails create duplicate bills.</span><span class="fr">« 3 couronnes » saisies comme 3 m, et renvois d'e-mails créant des doublons.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="ru">Было → Стало</span><span class="en">Before → After</span><span class="fr">Avant → Après</span></h2>
+    <div class="tbl">
+      <table>
+        <thead>
+          <tr>
+            <th><span class="ru">Критерий</span><span class="en">Metric</span><span class="fr">Critère</span></th>
+            <th><span class="ru">Было</span><span class="en">Before</span><span class="fr">Avant</span></th>
+            <th><span class="ru">Стало (LedgerGuard)</span><span class="en">After (LedgerGuard)</span><span class="fr">Après (LedgerGuard)</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong><span class="ru">Время на документ</span><span class="en">Time per invoice</span><span class="fr">Temps par dossier</span></strong></td>
+            <td><span class="ru">12–15 мин вручную</span><span class="en">12–15 min manual</span><span class="fr">12–15 min manuel</span></td>
+            <td><strong><span class="ru">2–4 мс автопроверка (p95 3,96 мс)</span><span class="en">2–4 ms verification (p95 3.96 ms)</span><span class="fr">2–4 ms (p95 : 3,96 ms)</span></strong></td>
+          </tr>
+          <tr>
+            <td><strong><span class="ru">Тихие ошибки в ERP</span><span class="en">Silent ERP leakage</span><span class="fr">Erreurs silencieuses</span></strong></td>
+            <td><span class="ru">40,0% (24/60)</span><span class="en">40.0% (24/60)</span><span class="fr">40,0 % (24/60)</span></td>
+            <td><strong><span class="ru">0,0% — 24/24 в карантине</span><span class="en">0.0% — 24/24 quarantined</span><span class="fr">0,0 % — 24/24 en quarantaine</span></strong></td>
+          </tr>
+          <tr>
+            <td><strong><span class="ru">Единицы и артикулы</span><span class="en">Units &amp; SKUs</span><span class="fr">Unités &amp; SKU</span></strong></td>
+            <td><span class="ru">3 бухты уходят как 3 м</span><span class="en">3 coils booked as 3 m</span><span class="fr">3 couronnes saisies en 3 m</span></td>
+            <td><strong><span class="ru">100% автопроход чистых (36/36)</span><span class="en">100% clean auto-pass (36/36)</span><span class="fr">100 % des sains validés (36/36)</span></strong></td>
+          </tr>
+          <tr>
+            <td><strong><span class="ru">Дубли и аудит</span><span class="en">Duplicates &amp; audit</span><span class="fr">Doublons &amp; audit</span></strong></td>
+            <td><span class="ru">повторное письмо = дубль</span><span class="en">re-sent email = duplicate</span><span class="fr">e-mail renvoyé = doublon</span></td>
+            <td><strong><span class="ru">ключ <code>SHA-256</code> блокирует дубль</span><span class="en"><code>SHA-256</code> key blocks replays</span><span class="fr">clé <code>SHA-256</code> anti-doublon</span></strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="figs">
+    <figure>
+      <img src="assets/case-lg-before-after.png" width="800" height="492" loading="lazy" alt="Сравнение «Без шлюза» и «С проверкой LedgerGuard»">
+      <figcaption><span class="ru">Сравнение «Без шлюза → LedgerGuard» на счёте № 184: пойманы подмена расчётного счёта, превышение договора и ошибка НДС.</span><span class="en">Before vs LedgerGuard comparison on test invoice #184: swapped bank account, contract cap overrun, and VAT drift flagged before ERP write.</span><span class="fr">Comparaison avant/après sur le dossier n° 184 : substitution d'IBAN, dépassement contrat et erreur de TVA détectés avant écriture.</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/case-lg-lines.png" width="800" height="340" loading="lazy" alt="Построчная проверка номенклатуры, единиц и цен">
+      <figcaption><span class="ru">Построчная проверка: нормализация бухт в метры (<code>2 × 100 м = 200 м</code>) и фиксация строк с расхождением цены и суммы.</span><span class="en">Line-by-line audit: coil-to-meter normalization and deterministic flagging of over-cap price and math drift.</span><span class="fr">Audit ligne à ligne : conversion des couronnes en mètres et alerte sur les dépassements de prix.</span></figcaption>
+    </figure>
+  </section>
+
+  <div class="cta-row">
+    <a class="btn" id="case-cta-pkg" href="./#packages">
+      <span class="ru">Сверка счетов на 50 ваших файлах — 9 000 ₽ · 2 дня</span>
+      <span class="en">Invoice verification on 50 sample files — $140 · 2 days</span>
+      <span class="fr">Contrôle de factures sur 50 fichiers — 130 € · 2 jours</span>
+    </a>
+    <a class="btn ghost" id="case-cta-gh" href="https://github.com/Beelsik/portfolio/tree/main/ledgerguard" target="_blank" rel="noopener">
+      <span class="ru">Код на GitHub ↗</span><span class="en">GitHub repo ↗</span><span class="fr">Code GitHub ↗</span>
+    </a>
+    <a class="btn ghost" id="case-cta-all" href="./">
+      <span class="ru">Все стенды ↗</span><span class="en">All demos ↗</span><span class="fr">Toutes les démos ↗</span>
+    </a>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const urlP = new URLSearchParams(location.search);
+  let L = 'ru';
+  try {
+    const ul = urlP.get('lang');
+    const sl = localStorage.getItem('pf-lang');
+    const nl = (navigator.language || '').slice(0, 2).toLowerCase();
+    if (['ru', 'en', 'fr'].includes(ul)) L = ul;
+    else if (['ru', 'en', 'fr'].includes(sl)) L = sl;
+    else if (nl === 'fr') L = 'fr';
+    else if (nl !== 'ru') L = 'en';
+  } catch {}
+  const applyLang = (l) => {
+    L = l;
+    document.documentElement.dataset.l = l;
+    document.documentElement.lang = l;
+    ['ru', 'en', 'fr'].forEach((c) => $(`#l-${c}`).setAttribute('aria-pressed', l === c));
+    try { localStorage.setItem('pf-lang', l); } catch {}
+    updateThemeBtn();
+  };
+
+  let theme = 'light';
+  try {
+    const st = localStorage.getItem('pf-theme');
+    if (st === 'dark' || st === 'light') theme = st;
+    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+  } catch {}
+  const updateThemeBtn = () => {
+    const d = theme === 'dark';
+    $('#theme-ico').textContent = L === 'fr' ? (d ? 'Thème clair' : 'Thème sombre') : L === 'en' ? (d ? 'Light mode' : 'Dark mode') : (d ? 'Светлая тема' : 'Тёмная тема');
+  };
+  const applyTheme = (t) => { theme = t; document.documentElement.dataset.theme = t; updateThemeBtn(); try { localStorage.setItem('pf-theme', t); } catch {} };
+  applyTheme(theme);
+  applyLang(L);
+  $('#theme-btn').onclick = () => applyTheme(theme === 'dark' ? 'light' : 'dark');
+  $('#l-ru').onclick = () => applyLang('ru');
+  $('#l-en').onclick = () => applyLang('en');
+  $('#l-fr').onclick = () => applyLang('fr');
+
+  const API_BASE = (location.hostname.endsWith('.github.io') || location.hostname.endsWith('.pages.dev') || location.hostname.endsWith('.netlify.app') || location.protocol === 'file:')
+    ? 'https://beelsik-portfolio.onrender.com'
+    : '';
+  let src = '';
+  try {
+    const rawSrc = urlP.get('src') || urlP.get('utm_source') || '';
+    const clean = rawSrc.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+    if (clean) { src = clean; sessionStorage.setItem('pf-src', clean); }
+    else src = sessionStorage.getItem('pf-src') || '';
+    if (!src && document.referrer) {
+      const host = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
+      if (host && host !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|localhost|127\.0\.0\.1)$/i.test(host)) {
+        src = ('ref:' + host).slice(0, 40);
+        sessionStorage.setItem('pf-src', src);
+      }
+    }
+  } catch {}
+  if (!src) src = 'direct';
+
+  let sid = '';
+  try {
+    sid = sessionStorage.getItem('pf-sid') || '';
+    if (!sid) { sid = Math.random().toString(36).slice(2, 10); sessionStorage.setItem('pf-sid', sid); }
+  } catch { sid = Math.random().toString(36).slice(2, 10); }
+
+  const ep = (API_BASE || '') + '/api/event';
+  const sendVisit = (event, stands) => {
+    const body = JSON.stringify({ src, task: '-', page: location.pathname, lang: L, dev: window.innerWidth <= 720 ? 'mobile' : 'desktop', sid, event, stands });
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon(ep, new Blob([body], { type: 'text/plain;charset=UTF-8' }))) return;
+      fetch(ep, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body, keepalive: true }).catch(() => {});
+    } catch {}
+  };
+  if (location.protocol === 'http:' || location.protocol === 'https:' || API_BASE) {
+    sendVisit('open', ['case']);
+    ['case-cta-pkg', 'case-cta-gh', 'case-cta-all'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', () => sendVisit('act', ['case:' + id]), { passive: true });
+    });
+  }
+})();
+</script>
+</body>
+</html>
