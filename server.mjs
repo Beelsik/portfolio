@@ -1296,7 +1296,7 @@ const server = http.createServer(async (req, res) => {
         const a = Buffer.from(supplied, 'utf8');
         const b = Buffer.from(STATS_KEY, 'utf8');
         authorized = a.length === b.length && crypto.timingSafeEqual(a, b);
-      } else if (!process.env.RENDER) {
+      } else if (!process.env.RENDER && !req.headers['x-forwarded-for'] && !req.headers['x-envoy-external-address']) {
         const remote = String(req.socket?.remoteAddress || '');
         authorized = remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
       }

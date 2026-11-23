@@ -16,13 +16,22 @@ const ALLOWED_KINDS = ['io', 'code', 'ai', 'db', 'human'];
 // Conservative character limits per freelance platform so proposals do not truncate
 export const PLATFORM_LIMITS = {
   kwork: 900,
+  'kwork-en': 900,
+  profi: 1500,
   fl: 1500,
   freelancehunt: 1500,
+  weblancer: 1500,
+  pph: 1500,
+  freelancer: 1500,
   codeur: 1200,
   upwork: 1500,
   habr: 1000,
   default: 1200,
 };
+
+export const DEFAULT_RU_PORTFOLIO_URL = 'https://beelsik-portfolio-beelsik.mia0.amvera.tech';
+export const DEFAULT_EU_PORTFOLIO_URL = 'https://beelsik-portfolio.onrender.com';
+export const DEFAULT_UA_PORTFOLIO_URL = 'https://beelsik-portfolio.onrender.com/ua';
 
 function printHelp() {
   console.log(`Usage:
@@ -250,12 +259,21 @@ function sanitizeSrc(s) {
   return String(s || '').trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
 }
 
-function buildTaskLink(lang, taskVal, src = '') {
+export function buildTaskLink(lang, taskVal, src = '') {
   const s = sanitizeSrc(src);
   const srcQ = s ? `src=${encodeURIComponent(s)}&` : '';
-  return lang === 'uk'
-    ? `https://beelsik.github.io/portfolio/ua/?${srcQ}task=${taskVal}`
-    : `https://beelsik.github.io/portfolio/?${srcQ}task=${taskVal}`;
+  const ruBase = (process.env.RU_PORTFOLIO_URL || DEFAULT_RU_PORTFOLIO_URL).replace(/\/+$/, '');
+  const euBase = (process.env.EU_PORTFOLIO_URL || DEFAULT_EU_PORTFOLIO_URL).replace(/\/+$/, '');
+  const uaBase = (process.env.UA_PORTFOLIO_URL || DEFAULT_UA_PORTFOLIO_URL).replace(/\/+$/, '');
+
+  if (lang === 'uk' || s === 'freelancehunt') {
+    return `${uaBase}?${srcQ}task=${taskVal}`;
+  }
+  if (lang === 'en' || lang === 'fr' || ['pph', 'freelancer', 'codeur', 'upwork', 'kwork-en'].includes(s)) {
+    const langQ = lang === 'fr' ? 'lang=fr&' : lang === 'en' ? 'lang=en&' : '';
+    return `${euBase}/?${langQ}${srcQ}task=${taskVal}`;
+  }
+  return `${ruBase}/?${srcQ}task=${taskVal}`;
 }
 
 async function generatePlanWithLlm(env, brief, lang, slug, src = '') {
@@ -579,23 +597,37 @@ async function main() {
   fs.writeFileSync(outPath, JSON.stringify(task, null, 2) + '\n', 'utf8');
 
   const srcQ = src ? `src=${encodeURIComponent(src)}&` : '';
-  const ghUrl = buildTaskLink(lang, slug, src);
-  const renderUrl = `https://beelsik-portfolio.onrender.com${lang === 'uk' ? `/ua?${srcQ}task=${slug}` : `/?${srcQ}task=${slug}`}`;
+  const primaryUrl = buildTaskLink(lang, slug, src);
+  const amveraBase = (process.env.RU_PORTFOLIO_URL || DEFAULT_RU_PORTFOLIO_URL).replace(/\/+$/, '');
+  const renderBase = (process.env.EU_PORTFOLIO_URL || DEFAULT_EU_PORTFOLIO_URL).replace(/\/+$/, '');
+  const amveraUrl = `${amveraBase}${lang === 'uk' ? `/ua?${srcQ}task=${slug}` : `/?${srcQ}task=${slug}`}`;
+  const renderUrl = `${renderBase}${lang === 'uk' ? `/ua?${srcQ}task=${slug}` : `/?${lang === 'en' || lang === 'fr' ? `lang=${lang}&` : ''}${srcQ}task=${slug}`}`;
   const zPayload = encodeTaskZ(task);
   const zUrl = buildTaskLink(lang, zPayload, src);
 
   if (opts.push) {
     execFileSync('git', ['add', `tasks/${slug}.json`], { cwd: ROOT, stdio: 'inherit' });
     execFileSync('git', ['commit', '-m', `Add task proposal: ${slug}`], { cwd: ROOT, stdio: 'inherit' });
-    execFileSync('git', ['push'], { cwd: ROOT, stdio: 'inherit' });
+    execFileSync('git', ['push', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
+    try {
+      const remotes = execFileSync('git', ['remote'], { cwd: ROOT, encoding: 'utf8' })
+        .split(/\r?\n/)
+        .map((r) => r.trim());
+      if (remotes.includes('amvera')) {
+        execFileSync('git', ['push', 'amvera', 'main:master'], { cwd: ROOT, stdio: 'inherit' });
+      }
+    } catch (err) {
+      console.warn(`[make-task warn] Amvera push skipped/failed: ${err.message}`);
+    }
   }
 
   console.log(`\nSaved: ${outPath}`);
-  console.log(`GitHub Pages (instant): ${ghUrl}`);
-  console.log(`Render URL:             ${renderUrl}`);
+  console.log(`Regional target URL:    ${primaryUrl}`);
+  console.log(`Amvera URL (RU fast):   ${amveraUrl}`);
+  console.log(`Render URL (EU/UA):     ${renderUrl}`);
   console.log(`Zero-deploy (?task=z:): ${zUrl.slice(0, 120)}${zUrl.length > 120 ? `... (${zUrl.length} chars)` : ''}`);
   if (src) {
-    const pitched = buildPlatformPitch({ task, src, link: ghUrl });
+    const pitched = buildPlatformPitch({ task, src, link: primaryUrl });
     console.log(`\nPitch for ${src} (${pitched.length}/${pitched.limit} chars):\n${pitched.text}\n`);
     if (src === 'kwork') {
       console.log('Kwork может модерировать внешние ссылки — при отказе оставьте ссылку в портфолио профиля.\n');

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { encodeTaskZ, decodeTaskZ, PLATFORM_LIMITS, buildPlatformPitch } from './make-task.mjs';
+import { encodeTaskZ, decodeTaskZ, PLATFORM_LIMITS, buildPlatformPitch, buildTaskLink } from './make-task.mjs';
 import { summarizeVisitsText } from './analyze-visits.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -345,4 +345,23 @@ test('LedgerGuard tables lead with 24/24 & 36/36 accuracy without misleading 12-
     assert.doesNotMatch(html, /12–15\s*(?:мин|хв|min)/i, `${fname}: must not compare 12-15 min manual timing against 2-4 ms`);
     assert.ok(html.includes('24') && html.includes('36'), `${fname}: LedgerGuard table must report 24/24 and 36/36 metrics`);
   }
+});
+
+test('buildTaskLink routes RU to Amvera, UK to Render /ua, and EN/FR to Render', () => {
+  assert.equal(
+    buildTaskLink('ru', 'openwebui-deepseek', 'fl'),
+    'https://beelsik-portfolio-beelsik.mia0.amvera.tech/?src=fl&task=openwebui-deepseek'
+  );
+  assert.equal(
+    buildTaskLink('uk', 'fh-1c-sync', 'freelancehunt'),
+    'https://beelsik-portfolio.onrender.com/ua?src=freelancehunt&task=fh-1c-sync'
+  );
+  assert.equal(
+    buildTaskLink('en', 'pph-django-audit', 'pph'),
+    'https://beelsik-portfolio.onrender.com/?lang=en&src=pph&task=pph-django-audit'
+  );
+  assert.equal(
+    buildTaskLink('fr', 'codeur-claude-supabase', 'codeur'),
+    'https://beelsik-portfolio.onrender.com/?lang=fr&src=codeur&task=codeur-claude-supabase'
+  );
 });
