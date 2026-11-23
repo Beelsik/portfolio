@@ -921,7 +921,7 @@ function applyCors(req, res) {
     origin === 'https://beelsik-portfolio.onrender.com' ||
     origin === 'null' ||
     /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin) ||
-    /^https:\/\/[a-z0-9.-]+\.(?:pages\.dev|netlify\.app|amvera\.io|twc1\.net|timeweb\.cloud)$/i.test(origin);
+    /^https:\/\/[a-z0-9.-]+\.(?:pages\.dev|netlify\.app|amvera\.io|amvera\.tech|twc1\.net|timeweb\.cloud)$/i.test(origin);
   if (allowed) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');

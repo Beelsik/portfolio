@@ -3894,7 +3894,7 @@ async function checkout(cart, discountPercent) {
       }
       if (!src && document.referrer) {
         const refHost = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
-        if (refHost && refHost !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|amvera\.io|twc1\.net|localhost|127\.0\.0\.1)$/i.test(refHost)) {
+        if (refHost && refHost !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|amvera\.io|amvera\.tech|twc1\.net|localhost|127\.0\.0\.1)$/i.test(refHost)) {
           src = ('ref:' + refHost).slice(0, 40);
           sessionStorage.setItem('pf-src', src);
         }
@@ -4576,7 +4576,7 @@ async function checkout(cart, discountPercent) {
       }
       if (!s && document.referrer) {
         const refHost = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
-        if (refHost && refHost !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|amvera\.io|twc1\.net|localhost|127\.0\.0\.1)$/i.test(refHost)) {
+        if (refHost && refHost !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|amvera\.io|amvera\.tech|twc1\.net|localhost|127\.0\.0\.1)$/i.test(refHost)) {
           s = ('ref:' + refHost).slice(0, 40);
           sessionStorage.setItem('pf-src', s);
         }

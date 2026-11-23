@@ -225,7 +225,7 @@ html.from-marketplace .direct-only { display: none !important; }
     else src = sessionStorage.getItem('pf-src') || '';
     if (!src && document.referrer) {
       const host = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
-      if (host && host !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|amvera\.io|twc1\.net|localhost|127\.0\.0\.1)$/i.test(host)) {
+      if (host && host !== location.hostname.toLowerCase() && !/(^|\.)(beelsik\.github\.io|beelsik-portfolio\.onrender\.com|amvera\.io|amvera\.tech|twc1\.net|localhost|127\.0\.0\.1)$/i.test(host)) {
         src = ('ref:' + host).slice(0, 40);
         sessionStorage.setItem('pf-src', src);
       }
