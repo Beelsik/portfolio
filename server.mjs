@@ -202,8 +202,9 @@ const inquiryHits = new Map();
 const MAX_RATE_MAP_KEYS = 2000;
 
 const STATS_KEY = (process.env.STATS_KEY || '').trim();
-const VISITS_LOG_PATH = (process.env.VISITS_LOG_PATH || path.join(__dirname, 'visits.jsonl')).trim();
-const INQUIRIES_LOG_PATH = (process.env.INQUIRIES_LOG_PATH || path.join(__dirname, 'inquiries.jsonl')).trim();
+const DEFAULT_DATA_DIR = fs.existsSync('/data') ? '/data' : __dirname;
+const VISITS_LOG_PATH = (process.env.VISITS_LOG_PATH || path.join(DEFAULT_DATA_DIR, 'visits.jsonl')).trim();
+const INQUIRIES_LOG_PATH = (process.env.INQUIRIES_LOG_PATH || path.join(DEFAULT_DATA_DIR, 'inquiries.jsonl')).trim();
 const NOTIFY_WEBHOOK_URL = (process.env.NOTIFY_WEBHOOK_URL || '').trim();
 const TELEGRAM_BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
 const TELEGRAM_CHAT_ID = (process.env.TELEGRAM_CHAT_ID || '').trim();
@@ -214,6 +215,14 @@ const visitStats = {
   recent: [],
   inquiries: [],
 };
+try {
+  if (INQUIRIES_LOG_PATH && fs.existsSync(INQUIRIES_LOG_PATH)) {
+    const lines = fs.readFileSync(INQUIRIES_LOG_PATH, 'utf8').trim().split('\n').filter(Boolean).slice(-100);
+    for (const line of lines) {
+      try { visitStats.inquiries.push(JSON.parse(line)); } catch {}
+    }
+  }
+} catch {}
 
 function sanitizeTag(val, max = 40) {
   return String(val || '')
@@ -912,7 +921,7 @@ function applyCors(req, res) {
     origin === 'https://beelsik-portfolio.onrender.com' ||
     origin === 'null' ||
     /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin) ||
-    /^https:\/\/[a-z0-9-]+\.(?:pages\.dev|netlify\.app)$/i.test(origin);
+    /^https:\/\/[a-z0-9.-]+\.(?:pages\.dev|netlify\.app|amvera\.io|twc1\.net|timeweb\.cloud)$/i.test(origin);
   if (allowed) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
