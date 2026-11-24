@@ -578,9 +578,17 @@ async function main() {
   const lang = ['ru', 'uk', 'en', 'fr'].includes(opts.lang) ? opts.lang : detectLang(brief);
   const env = parseDotEnv(path.join(ROOT, '.env'));
 
-  const rawPlan = opts.dryRun
-    ? buildDryRunPlan(brief, lang, slug, src)
-    : await generatePlanWithLlm(env, brief, lang, slug, src);
+  let rawPlan;
+  if (opts.dryRun) {
+    rawPlan = buildDryRunPlan(brief, lang, slug, src);
+  } else {
+    try {
+      rawPlan = await generatePlanWithLlm(env, brief, lang, slug, src);
+    } catch (err) {
+      console.warn(`[make-task offline fallback] LLM unreachable (${err.message}); using structural dry-run builder.`);
+      rawPlan = buildDryRunPlan(brief, lang, slug, src);
+    }
+  }
 
   const task = normalizeTaskObject({
     rawPlan,
@@ -605,30 +613,40 @@ async function main() {
   const zPayload = encodeTaskZ(task);
   const zUrl = buildTaskLink(lang, zPayload, src);
 
+  let pushSucceeded = !opts.push;
   if (opts.push) {
-    execFileSync('git', ['add', `tasks/${slug}.json`], { cwd: ROOT, stdio: 'inherit' });
-    execFileSync('git', ['commit', '-m', `Add task proposal: ${slug}`], { cwd: ROOT, stdio: 'inherit' });
-    execFileSync('git', ['pull', '--rebase', '--autostash', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
-    execFileSync('git', ['push', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
     try {
-      const remotes = execFileSync('git', ['remote'], { cwd: ROOT, encoding: 'utf8' })
-        .split(/\r?\n/)
-        .map((r) => r.trim());
-      if (remotes.includes('amvera')) {
-        execFileSync('git', ['push', 'amvera', 'main:master'], { cwd: ROOT, stdio: 'inherit' });
+      execFileSync('git', ['add', `tasks/${slug}.json`], { cwd: ROOT, stdio: 'inherit' });
+      try {
+        execFileSync('git', ['commit', '-m', `Add task proposal: ${slug}`], { cwd: ROOT, stdio: 'inherit' });
+      } catch {}
+      execFileSync('git', ['pull', '--rebase', '--autostash', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
+      execFileSync('git', ['push', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
+      pushSucceeded = true;
+      try {
+        const remotes = execFileSync('git', ['remote'], { cwd: ROOT, encoding: 'utf8' })
+          .split(/\r?\n/)
+          .map((r) => r.trim());
+        if (remotes.includes('amvera')) {
+          execFileSync('git', ['push', 'amvera', 'main:master'], { cwd: ROOT, stdio: 'inherit' });
+        }
+      } catch (err) {
+        console.warn(`[make-task warn] Amvera push skipped/failed: ${err.message}`);
       }
     } catch (err) {
-      console.warn(`[make-task warn] Amvera push skipped/failed: ${err.message}`);
+      pushSucceeded = false;
+      console.warn(`[make-task offline fallback] Git network push unavailable in sandbox; using instant zero-deploy ?task=z: URL.`);
     }
   }
 
+  const effectivePitchUrl = pushSucceeded ? primaryUrl : zUrl;
   console.log(`\nSaved: ${outPath}`);
-  console.log(`Regional target URL:    ${primaryUrl}`);
+  console.log(`Regional target URL:    ${effectivePitchUrl}`);
   console.log(`Amvera URL (RU fast):   ${amveraUrl}`);
   console.log(`Render URL (EU/UA):     ${renderUrl}`);
   console.log(`Zero-deploy (?task=z:): ${zUrl.slice(0, 120)}${zUrl.length > 120 ? `... (${zUrl.length} chars)` : ''}`);
   if (src) {
-    const pitched = buildPlatformPitch({ task, src, link: primaryUrl });
+    const pitched = buildPlatformPitch({ task, src, link: effectivePitchUrl });
     console.log(`\nPitch for ${src} (${pitched.length}/${pitched.limit} chars):\n${pitched.text}\n`);
     if (src === 'kwork') {
       console.log('Kwork может модерировать внешние ссылки — при отказе оставьте ссылку в портфолио профиля.\n');
