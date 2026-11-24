@@ -608,6 +608,7 @@ async function main() {
   if (opts.push) {
     execFileSync('git', ['add', `tasks/${slug}.json`], { cwd: ROOT, stdio: 'inherit' });
     execFileSync('git', ['commit', '-m', `Add task proposal: ${slug}`], { cwd: ROOT, stdio: 'inherit' });
+    execFileSync('git', ['pull', '--rebase', '--autostash', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
     execFileSync('git', ['push', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
     try {
       const remotes = execFileSync('git', ['remote'], { cwd: ROOT, encoding: 'utf8' })
